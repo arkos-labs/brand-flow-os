@@ -513,6 +513,20 @@ export const dict = {
   "pricing.faq.cancel.answer": { fr: "Oui, sans engagement. Vos données restent exportables pendant 30 jours après résiliation.", en: "Yes, no commitment. Your data remains exportable for 30 days after cancellation." },
   "pricing.faq.facturx": { fr: "La conformité Factur-X est-elle incluse ?", en: "Is Factur-X compliance included?" },
   "pricing.faq.facturx.answer": { fr: "Oui. Tous les plans génèrent des factures PDF/A-3 avec XML embarqué, conformes aux exigences 2026.", en: "Yes. All plans generate PDF/A-3 invoices with embedded XML, compliant with 2026 requirements." },
+
+  // Notifications
+  "notif.title": { fr: "Notifications", en: "Notifications" },
+  "notif.empty": { fr: "Aucune alerte en cours", en: "No active alerts" },
+  "notif.empty.desc": { fr: "Tout est à jour ✓", en: "Everything is up to date ✓" },
+  "notif.late_invoices": { fr: "Facture(s) en retard", en: "Overdue invoice(s)" },
+  "notif.late_invoices.desc": { fr: "Relancez vos clients pour débloquer la trésorerie.", en: "Send reminders to unlock your cash flow." },
+  "notif.expired_quotes": { fr: "Devis expiré(s)", en: "Expired quote(s)" },
+  "notif.expired_quotes.desc": { fr: "Ces devis n'ont pas été signés à temps.", en: "These quotes were not signed in time." },
+  "notif.unbilled_hours": { fr: "Heure(s) non facturée(s)", en: "Unbilled hour(s)" },
+  "notif.unbilled_hours.desc": { fr: "Des heures saisies ne sont pas encore facturées.", en: "Some tracked hours have not been invoiced yet." },
+  "notif.view_invoices": { fr: "Voir les factures", en: "View invoices" },
+  "notif.view_quotes": { fr: "Voir les devis", en: "View quotes" },
+  "notif.view_time": { fr: "Voir le suivi temps", en: "View time tracking" },
 } satisfies Dict;
 
 export type Key = keyof typeof dict;
