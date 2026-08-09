@@ -232,9 +232,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
 
-  // If this is a public portal route, don't show the admin shell
-  if (location.pathname.startsWith("/portail")) {
-    return <main className="min-h-screen bg-muted/20">{children}</main>;
+  // Public routes don't show the admin shell (login, landing, pricing, etc.)
+  if (PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith("/portail")) {
+    return <>{children}</>;
   }
 
   const { company } = useData();
