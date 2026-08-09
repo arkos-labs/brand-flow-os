@@ -397,7 +397,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
         </div>
         <button
-          onClick={() => { window.location.href = "/connexion"; }}
+          onClick={() => { window.location.href = "/index.html"; }}
           title="Se déconnecter"
           aria-label="Se déconnecter"
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/40 transition-colors hover:bg-destructive/15 hover:text-destructive"

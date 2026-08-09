@@ -83,15 +83,15 @@
   <!-- ═══ TAILWIND + FONTS ══════════════════════════════════════════════════ -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter','sans-serif'], display: ['Syne','sans-serif'] },
+          fontFamily: { sans: ['Manrope','sans-serif'], display: ['Playfair Display','serif'] },
           colors: {
-            brand: { 50:'#eef2ff', 100:'#e0e7ff', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 900:'#1e1b4b' }
+            brand: { 50:'#f4f7f8', 100:'#e3ecef', 500:'#1f6070', 600:'#164c5a', 700:'#103b47', 900:'#092b34' }
           }
         }
       }
@@ -100,11 +100,11 @@
 
   <style>
     * { -webkit-font-smoothing: antialiased; }
-    body { font-family: 'Inter', sans-serif; }
-    .font-display { font-family: 'Syne', sans-serif; }
-    .gradient-hero { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%); }
-    .gradient-cta  { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
-    .gradient-text { background: linear-gradient(135deg, #a5b4fc, #e879f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    body { font-family: 'Manrope', sans-serif; }
+    .font-display { font-family: 'Playfair Display', serif; letter-spacing: -.04em; }
+    .gradient-hero { background: radial-gradient(circle at 78% 20%, rgba(205,127,50,.24), transparent 30%), linear-gradient(135deg, #092b34 0%, #103b47 55%, #164c5a 100%); }
+    .gradient-cta  { background: linear-gradient(135deg, #d97732 0%, #b85220 100%); }
+    .gradient-text { background: linear-gradient(135deg, #f7c48d, #e98545); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .card-glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
     .card-feature { transition: transform .2s, box-shadow .2s; }
     .card-feature:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(99,102,241,.15); }
@@ -114,6 +114,8 @@
     .ticker { animation: ticker 25s linear infinite; }
     @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
     html { scroll-behavior: smooth; }
+    /* Les contenus détaillés sont accessibles depuis leurs pages dédiées. */
+    #fonctionnalites, #metiers, #tarifs, #avis, #faq { display: none; }
   </style>
 </head>
 
@@ -150,11 +152,11 @@
         </div>
 
         <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <a href="#fonctionnalites" class="hover:text-brand-600 transition-colors">Fonctionnalités</a>
-          <a href="#metiers" class="hover:text-brand-600 transition-colors">Métiers</a>
-          <a href="#tarifs" class="hover:text-brand-600 transition-colors">Tarifs</a>
-          <a href="#avis" class="hover:text-brand-600 transition-colors">Avis</a>
-          <a href="#faq" class="hover:text-brand-600 transition-colors">FAQ</a>
+          <a href="/fonctionnalites.html" class="hover:text-brand-600 transition-colors">Fonctionnalités</a>
+          <a href="/metiers.html" class="hover:text-brand-600 transition-colors">Métiers</a>
+          <a href="/tarifs.html" class="hover:text-brand-600 transition-colors">Tarifs</a>
+          <a href="/avis.html" class="hover:text-brand-600 transition-colors">Avis</a>
+          <a href="/faq.html" class="hover:text-brand-600 transition-colors">FAQ</a>
         </div>
 
         <div class="flex items-center gap-3">
@@ -183,13 +185,13 @@
         <!-- Badge IA -->
         <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm text-indigo-200 font-medium mb-6 badge-new">
           <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Nouveau — IA intégrée pour générer vos devis en 30 secondes
+          L'atelier digital qui travaille avec vous
         </div>
 
         <!-- Titre H1 — optimisé SEO -->
         <h1 class="font-display text-4xl sm:text-5xl lg:text-7xl font-bold text-white leading-tight mb-6">
-          Fini les devis<br/>
-          <span class="gradient-text">sur Word ou Excel.</span>
+          Vos devis. Vos factures.<br/>
+          <span class="gradient-text">Sans perdre vos soirées.</span>
         </h1>
 
         <p class="text-lg sm:text-xl text-indigo-200 max-w-2xl mx-auto mb-4">
@@ -205,12 +207,12 @@
           <a href="/app"
              class="w-full sm:w-auto gradient-cta text-white font-bold text-lg px-8 py-4 rounded-2xl shadow-2xl shadow-indigo-900/50 hover:opacity-90 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Essayer gratuitement — 30 jours
+            Découvrir la plateforme
           </a>
           <a href="#demo"
              class="w-full sm:w-auto card-glass text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Voir la démo IA
+            Voir un chantier en action
           </a>
         </div>
         <p class="text-xs text-indigo-400 mt-4">Sans carte bancaire · Sans engagement · Sans mot de passe</p>
@@ -581,64 +583,44 @@
   </section>
 
   <!-- ═══ POINTS DE DOULEUR ═════════════════════════════════════════════════ -->
-  <section class="py-20 bg-white" id="probleme">
-    <div class="max-w-5xl mx-auto px-4 text-center">
-      <p class="text-sm font-semibold uppercase tracking-widest text-brand-600 mb-3">Vous vous reconnaissez ?</p>
-      <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-        La paperasse vous coûte des heures chaque semaine
-      </h2>
-      <p class="text-gray-500 max-w-xl mx-auto mb-14">
-        Vous êtes artisan, pas comptable. Pourtant vous passez plus de temps sur vos devis que sur votre chantier.
-      </p>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {[
-          { emoji:"😤", stat:"45 min", label:"par devis sur Word ou Excel", sub:"Mise en page, calcul TVA, relecture..." },
-          { emoji:"😰", stat:"1 sur 3", label:"facture non réglée à 60 jours", sub:"Faute de relances, les clients oublient." },
-          { emoji:"😱", stat:"2026", label:"Factur-X obligatoire en France", sub:"Format XML+PDF — incompatible avec Word." }
-        ].map = undefined}
-
-        <!-- Pain 1 -->
-        <div class="bg-red-50 border border-red-100 rounded-2xl p-6 text-left">
-          <span class="text-3xl">😤</span>
-          <p class="text-4xl font-display font-bold text-red-600 mt-3">45 min</p>
-          <p class="font-semibold text-gray-800 mt-1">par devis sur Word ou Excel</p>
-          <p class="text-sm text-gray-500 mt-1">Mise en page, calcul TVA, relecture... pour un seul devis.</p>
+  <section class="py-20 bg-[#f7f4ef]" id="probleme">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="overflow-hidden rounded-[28px] bg-[#092b34] shadow-2xl shadow-[#092b34]/15 lg:grid lg:grid-cols-[1.05fr_.95fr]">
+        <div class="relative p-8 sm:p-12 lg:p-14">
+          <div class="absolute -left-10 -top-10 h-48 w-48 rounded-full bg-orange-400/15 blur-3xl"></div>
+          <p class="relative text-[11px] font-bold uppercase tracking-[.18em] text-orange-300">Le quotidien d’un artisan</p>
+          <h2 class="relative mt-4 font-display text-4xl font-bold leading-[1.04] text-white sm:text-5xl">Votre métier, c’est le chantier.<br><span class="text-orange-300">Pas la paperasse.</span></h2>
+          <p class="relative mt-6 max-w-lg text-base leading-7 text-slate-300">Entre deux interventions, vous devez encore préparer un devis, retrouver vos tarifs, relancer un client et savoir ce qui est réellement encaissé.</p>
+          <div class="relative mt-9 flex items-center gap-3 border-t border-white/10 pt-6">
+            <div class="grid h-10 w-10 place-items-center rounded-full bg-orange-400/15 text-lg">↳</div>
+            <p class="text-sm font-semibold text-white">Devizia remet ces tâches à leur place :<br><span class="font-normal text-slate-400">en quelques minutes, pas le soir.</span></p>
+          </div>
         </div>
-
-        <!-- Pain 2 -->
-        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-6 text-left">
-          <span class="text-3xl">😰</span>
-          <p class="text-4xl font-display font-bold text-orange-600 mt-3">1 sur 3</p>
-          <p class="font-semibold text-gray-800 mt-1">facture non réglée à 60 jours</p>
-          <p class="text-sm text-gray-500 mt-1">Sans relances automatiques, les clients oublient de payer.</p>
-        </div>
-
-        <!-- Pain 3 -->
-        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-left">
-          <span class="text-3xl">😱</span>
-          <p class="text-4xl font-display font-bold text-indigo-600 mt-3">2026</p>
-          <p class="font-semibold text-gray-800 mt-1">Factur-X obligatoire en France</p>
-          <p class="text-sm text-gray-500 mt-1">Format XML+PDF incompatible avec Word. Amende possible.</p>
+        <div class="bg-white p-5 sm:p-8 lg:p-10">
+          <p class="text-[11px] font-bold uppercase tracking-[.18em] text-[#ce7131]">Ce qui vous ralentit vraiment</p>
+          <div class="mt-5 divide-y divide-[#dce6e5] border-y border-[#dce6e5]">
+            <div class="flex gap-4 py-5"><span class="font-display text-4xl font-bold text-[#ce7131]">01</span><div><h3 class="font-bold text-[#092b34]">Le devis part trop tard</h3><p class="mt-1 text-sm leading-6 text-slate-500">Les informations sont éparpillées, la mise en page prend du temps et le prospect attend.</p></div></div>
+            <div class="flex gap-4 py-5"><span class="font-display text-4xl font-bold text-[#ce7131]">02</span><div><h3 class="font-bold text-[#092b34]">Le paiement se fait oublier</h3><p class="mt-1 text-sm leading-6 text-slate-500">Sans vue claire ni relance planifiée, les factures en attente passent sous le radar.</p></div></div>
+            <div class="flex gap-4 py-5"><span class="font-display text-4xl font-bold text-[#ce7131]">03</span><div><h3 class="font-bold text-[#092b34]">Vous manquez de visibilité</h3><p class="mt-1 text-sm leading-6 text-slate-500">Difficile de savoir ce qui est signé, à facturer ou déjà encaissé quand tout vit dans plusieurs outils.</p></div></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ═══ SOLUTION — IA ═════════════════════════════════════════════════════ -->
-  <section class="py-20 bg-gray-50" id="demo">
+  <section class="py-20 bg-white" id="demo">
     <div class="max-w-6xl mx-auto px-4">
-      <div class="text-center mb-14">
-        <span class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 font-semibold text-sm px-3 py-1 rounded-full mb-4">
-          ✨ Intelligence Artificielle
-        </span>
-        <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-          Décrivez votre chantier.<br/>L'IA fait le reste.
-        </h2>
-        <p class="text-gray-500 max-w-xl mx-auto">
-          Plus besoin de chercher vos tarifs, de calculer la TVA ou de mettre en page.
-          L'IA connaît les prix du marché pour votre corps de métier.
-        </p>
+      <div class="mb-12 grid items-end gap-8 lg:grid-cols-[1fr_.72fr]">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[.18em] text-[#ce7131]">Assistant devis</p>
+          <h2 class="mt-4 font-display text-4xl font-bold leading-[1.04] text-[#092b34] sm:text-5xl">
+            Dites ce que vous devez faire.<br><span class="text-[#ce7131]">L’IA prépare le brouillon.</span>
+          </h2>
+        </div>
+        <div class="border-l-2 border-[#ce7131] pl-5 text-base leading-7 text-slate-500">
+          Décrivez le chantier avec vos mots. Devizia propose les lignes, quantités et taux de TVA à contrôler — vous gardez toujours la main avant l’envoi.
+        </div>
       </div>
 
       <!-- Demo visuelle -->
@@ -667,15 +649,6 @@
           <!-- Résultat généré -->
           <div class="space-y-2">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">✓ Devis généré en 3 secondes</p>
-            {[
-              { desc:"Dépose ancien carrelage (20m²)", qte:"20 m²", pu:"18,00 €", tva:"10%", total:"360,00 €" },
-              { desc:"Pose carrelage sol (20m²)", qte:"20 m²", pu:"45,00 €", tva:"10%", total:"900,00 €" },
-              { desc:"Faïence murale (15m²)", qte:"15 m²", pu:"42,00 €", tva:"10%", total:"630,00 €" },
-              { desc:"Receveur douche italienne + pose", qte:"1 forfait", pu:"680,00 €", tva:"10%", total:"680,00 €" },
-              { desc:"Robinetterie thermostatique", qte:"1 u.", pu:"320,00 €", tva:"20%", total:"320,00 €" },
-              { desc:"WC suspendu + bâti-support + pose", qte:"1 forfait", pu:"850,00 €", tva:"10%", total:"850,00 €" },
-            ].map = undefined}
-
             <div class="overflow-x-auto rounded-xl border border-gray-100">
               <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-100">
@@ -1113,3 +1086,4 @@
 
 </body>
 </html>
+
