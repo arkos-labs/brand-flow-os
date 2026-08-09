@@ -40,7 +40,7 @@ const groups: {
   {
     section: "nav.section.sales",
     items: [
-      { to: "/", label: "nav.dashboard", icon: LayoutDashboard },
+      { to: "/tableau-de-bord", label: "nav.dashboard", icon: LayoutDashboard },
       { to: "/pipeline", label: "nav.pipeline", icon: KanbanSquare },
       { to: "/clients", label: "nav.clients", icon: Users },
       { to: "/devis", label: "nav.quotes", icon: FileText },
@@ -59,6 +59,8 @@ const groups: {
     ],
   },
 ];
+
+const PUBLIC_PATHS = ["/", "/connexion", "/inscription", "/mot-de-passe-oublie", "/tarifs"];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
