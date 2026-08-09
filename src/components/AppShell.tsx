@@ -40,7 +40,7 @@ const groups: {
   {
     section: "nav.section.sales",
     items: [
-      { to: "/", label: "nav.dashboard", icon: LayoutDashboard },
+      { to: "/tableau-de-bord", label: "nav.dashboard", icon: LayoutDashboard },
       { to: "/pipeline", label: "nav.pipeline", icon: KanbanSquare },
       { to: "/clients", label: "nav.clients", icon: Users },
       { to: "/devis", label: "nav.quotes", icon: FileText },
@@ -59,6 +59,8 @@ const groups: {
     ],
   },
 ];
+
+const PUBLIC_PATHS = ["/", "/connexion", "/inscription", "/mot-de-passe-oublie", "/tarifs"];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -230,9 +232,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
 
-  // If this is a public portal route, don't show the admin shell
-  if (location.pathname.startsWith("/portail")) {
-    return <main className="min-h-screen bg-muted/20">{children}</main>;
+  // Public routes don't show the admin shell (login, landing, pricing, etc.)
+  if (PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith("/portail")) {
+    return <>{children}</>;
   }
 
   const { company } = useData();
@@ -333,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to}
                     onClick={onNavigate}
-                    activeOptions={{ exact: item.to === "/" }}
+                    activeOptions={{ exact: item.to === "/tableau-de-bord" }}
                     className="group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                     activeProps={{
                       className:

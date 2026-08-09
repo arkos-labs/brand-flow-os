@@ -1,33 +1,34 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, Mail, Lock, Eye, EyeOff, Zap, ArrowRight } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
-export const Route = createFileRoute("/connexion")({
+export const Route = createFileRoute("/inscription")({
   head: () => ({
     meta: [
-      { title: "Connexion — InvoicePro" },
+      { title: "Inscription — InvoicePro" },
       {
         name: "description",
-        content: "Connectez-vous à votre espace InvoicePro.",
+        content: "Créez votre compte InvoicePro et démarrez votre essai gratuit.",
       },
-      { property: "og:title", content: "Connexion — InvoicePro" },
+      { property: "og:title", content: "Inscription — InvoicePro" },
       {
         property: "og:description",
-        content: "Connectez-vous à votre espace InvoicePro.",
+        content: "Créez votre compte InvoicePro et démarrez votre essai gratuit.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ConnexionPage,
+  component: InscriptionPage,
 });
 
-function ConnexionPage() {
+function InscriptionPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [devLoading, setDevLoading] = useState(false);
@@ -68,8 +69,8 @@ function ConnexionPage() {
 
         <div className="flex-1 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-white leading-snug mb-3">
-            Vos devis & factures.<br />
-            <span className="text-indigo-300">Propulsés par l'IA.</span>
+            Lancez votre activité.<br />
+            <span className="text-indigo-300">Conformité dès le premier jour.</span>
           </h2>
           <p className="text-indigo-200 text-sm leading-relaxed max-w-sm mb-6">
             {t("landing.hero.subtitle")}
@@ -79,7 +80,7 @@ function ConnexionPage() {
             {[
               t("landing.features.ai_quotes.title"),
               t("landing.features.facturx.title"),
-              t("landing.features.signature.title"),
+              t("landing.features.crm.title"),
               t("landing.features.cashflow.title"),
             ].map((f) => (
               <div key={f} className="flex items-center gap-3">
@@ -89,61 +90,6 @@ function ConnexionPage() {
                 <p className="text-indigo-200 text-sm">{f}</p>
               </div>
             ))}
-          </div>
-
-          {/* Mini dashboard preview */}
-          <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40">
-            <div className="flex items-center gap-2 bg-black/40 px-3 py-2 backdrop-blur">
-              <div className="flex gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-                <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
-                <div className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-              </div>
-              <div className="flex-1 rounded bg-white/10 px-2 py-0.5 text-[10px] text-white/40 text-center">
-                invoicepro.fr/app
-              </div>
-            </div>
-            <div className="bg-[#0f1117] p-4">
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {[
-                  { label: "CA ce mois", value: "18 400 €", color: "text-emerald-400" },
-                  { label: "Devis en attente", value: "7", color: "text-amber-400" },
-                  { label: "Factures dues", value: "3", color: "text-rose-400" },
-                ].map((k) => (
-                  <div key={k.label} className="rounded-lg bg-white/5 border border-white/8 p-2">
-                    <p className="text-[9px] text-white/40 mb-0.5">{k.label}</p>
-                    <p className={`text-sm font-bold ${k.color}`}>{k.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-lg bg-indigo-600/20 border border-indigo-500/30 p-3 mb-2">
-                <p className="text-[9px] text-indigo-300 font-semibold mb-1.5">✨ IA — Devis généré</p>
-                <div className="space-y-1">
-                  {[
-                    { desc: "Pose carrelage sol", total: "900 €" },
-                    { desc: "Faïence murale", total: "630 €" },
-                    { desc: "WC suspendu + pose", total: "850 €" },
-                  ].map((l) => (
-                    <div key={l.desc} className="flex justify-between text-[9px]">
-                      <span className="text-white/60">{l.desc}</span>
-                      <span className="text-white font-semibold">{l.total}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-white/10 pt-1 mt-1 flex justify-between text-[10px]">
-                    <span className="text-indigo-300 font-semibold">Total HT</span>
-                    <span className="text-indigo-300 font-bold">3 740 €</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1 rounded-lg bg-indigo-600 py-1.5 text-center text-[9px] font-bold text-white">
-                  Envoyer
-                </div>
-                <div className="flex-1 rounded-lg bg-white/8 border border-white/10 py-1.5 text-center text-[9px] text-white/60">
-                  PDF Factur-X
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -165,8 +111,8 @@ function ConnexionPage() {
             <span className="font-bold text-lg text-foreground">InvoicePro</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground mb-1">{t("auth.login.title")}</h1>
-          <p className="text-sm text-muted-foreground mb-8">{t("auth.login.subtitle")}</p>
+          <h1 className="text-2xl font-bold text-foreground mb-1">{t("auth.signup.title")}</h1>
+          <p className="text-sm text-muted-foreground mb-8">{t("auth.signup.subtitle")}</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -186,12 +132,9 @@ function ConnexionPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-foreground">{t("auth.password")}</label>
-                <Link to="/mot-de-passe-oublie" className="text-xs text-primary hover:underline">
-                  {t("auth.forgot_password")}
-                </Link>
-              </div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                {t("auth.password")}
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
@@ -211,6 +154,22 @@ function ConnexionPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                {t("auth.password.confirm")}
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -219,11 +178,11 @@ function ConnexionPage() {
               {loading ? (
                 <>
                   <span className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                  {t("auth.login")}…
+                  {t("auth.signup")}…
                 </>
               ) : (
                 <>
-                  {t("auth.login")}
+                  {t("auth.signup.cta")}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -253,13 +212,17 @@ function ConnexionPage() {
           </p>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            {t("auth.no_account")}{" "}
+            {t("auth.signup.has_account")}{" "}
             <Link
-              to="/inscription"
+              to="/connexion"
               className="font-semibold text-primary hover:underline"
             >
-              {t("auth.signup")} →
+              {t("auth.login")} →
             </Link>
+          </p>
+
+          <p className="text-center text-[11px] text-muted-foreground/60 mt-6">
+            {t("auth.terms")}
           </p>
         </div>
       </div>
