@@ -335,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to}
                     onClick={onNavigate}
-                    activeOptions={{ exact: item.to === "/" }}
+                    activeOptions={{ exact: item.to === "/tableau-de-bord" }}
                     className="group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                     activeProps={{
                       className:
