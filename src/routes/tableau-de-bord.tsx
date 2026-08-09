@@ -32,7 +32,9 @@ export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({
     meta: [
       { title: "Tableau de bord — InvoicePro" },
-      { name: "description", content: "Dashboard" },
+      { name: "description", content: "Dashboard InvoicePro — suivez votre activité, vos devis, factures et trésorerie." },
+      { property: "og:title", content: "Tableau de bord — InvoicePro" },
+      { property: "og:description", content: "Dashboard InvoicePro — suivez votre activité, vos devis, factures et trésorerie." },
     ],
   }),
   component: Dashboard,
