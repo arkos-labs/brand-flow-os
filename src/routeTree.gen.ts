@@ -21,6 +21,7 @@ import { Route as PaiementsRouteImport } from './routes/paiements'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as SituationsRouteImport } from './routes/situations'
+import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
 
@@ -84,6 +85,11 @@ const SituationsRoute = SituationsRouteImport.update({
   path: '/situations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableauDeBordRoute = TableauDeBordRouteImport.update({
+  id: '/tableau-de-bord',
+  path: '/tableau-de-bord',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TresorerieRoute = TresorerieRouteImport.update({
   id: '/tresorerie',
   path: '/tresorerie',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/pipeline'
     | '/situations'
+    | '/tableau-de-bord'
     | '/tresorerie'
     | '/portail/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/pipeline'
     | '/situations'
+    | '/tableau-de-bord'
     | '/tresorerie'
     | '/portail/$id'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/pipeline'
     | '/situations'
+    | '/tableau-de-bord'
     | '/tresorerie'
     | '/portail/$id'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   ParametresRoute: typeof ParametresRoute
   PipelineRoute: typeof PipelineRoute
   SituationsRoute: typeof SituationsRoute
+  TableauDeBordRoute: typeof TableauDeBordRoute
   TresorerieRoute: typeof TresorerieRoute
   PortailIdRoute: typeof PortailIdRoute
 }
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SituationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableau-de-bord': {
+      id: '/tableau-de-bord'
+      path: '/tableau-de-bord'
+      fullPath: '/tableau-de-bord'
+      preLoaderRoute: typeof TableauDeBordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tresorerie': {
       id: '/tresorerie'
       path: '/tresorerie'
@@ -328,19 +348,10 @@ const rootRouteChildren: RootRouteChildren = {
   ParametresRoute: ParametresRoute,
   PipelineRoute: PipelineRoute,
   SituationsRoute: SituationsRoute,
+  TableauDeBordRoute: TableauDeBordRoute,
   TresorerieRoute: TresorerieRoute,
   PortailIdRoute: PortailIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

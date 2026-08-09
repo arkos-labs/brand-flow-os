@@ -28,7 +28,7 @@ import { useData } from "@/lib/data-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({
     meta: [
       { title: "Tableau de bord — InvoicePro" },
