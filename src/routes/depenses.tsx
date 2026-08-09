@@ -144,14 +144,14 @@ function ExpensesPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="card-elevated p-5">
           <p className="text-sm font-medium text-muted-foreground">{lang === "fr" ? "Total Dépenses TTC" : "Total Expenses (incl. VAT)"}</p>
           <p className="text-3xl font-bold mt-2 text-foreground">{money(totalTTC)}</p>
         </div>
       </div>
 
-      <div className="card-elevated flex flex-col sm:flex-row gap-4 p-4 mb-6">
+      <div className="card-elevated flex flex-row gap-4 p-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

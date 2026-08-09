@@ -331,7 +331,7 @@ function Invoices() {
           <div className="flex items-center gap-2">
             <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="hidden sm:flex">
+                <Button variant="outline" className="flex">
                   <Download className="mr-2 h-4 w-4" />
                   {lang === "fr" ? "Export Comptable" : "Accounting Export"}
                 </Button>
@@ -522,7 +522,7 @@ function Invoices() {
             <CheckCircle2 className="h-4 w-4 text-success" />
             Devis signés en attente de facturation
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {pendingQuotes.map((q) => (
               <div key={q.number} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm hover:border-primary/50 transition-colors">
                 <div>
@@ -549,9 +549,9 @@ function Invoices() {
       )}
 
       {/* KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 mb-6">
         {/* CA total — hero */}
-        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-5 sm:col-span-2 xl:col-span-1">
+        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-5 col-span-2 xl:col-span-1">
           <div className="pointer-events-none absolute -right-3 -top-3 opacity-[0.07]">
             <ReceiptEuro className="h-24 w-24" />
           </div>

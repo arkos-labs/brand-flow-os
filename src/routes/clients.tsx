@@ -466,7 +466,7 @@ function ClientsPage() {
 
             {/* Tab: Informations */}
             {tab === "info" && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-4">
                 {/* Identité */}
                 <div className="card-elevated p-5">
                   <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -531,7 +531,7 @@ function ClientsPage() {
 
                 {/* Notes */}
                 {selectedClient.notes && (
-                  <div className="card-elevated p-5 sm:col-span-2">
+                  <div className="card-elevated p-5 col-span-2">
                     <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("cli.notes")}</h3>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedClient.notes}</p>
                   </div>
@@ -673,8 +673,8 @@ function ClientsPage() {
                 </h3>
 
                 {form.type === "pro" && (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5 sm:col-span-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5 col-span-2">
                       <Label>{t("cli.companyName")} *</Label>
                       <Input
                         required
@@ -719,7 +719,7 @@ function ClientsPage() {
                   </div>
                 )}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label>{t("cli.firstName")} {form.type === "particulier" ? "*" : ""}</Label>
                     <Input
@@ -746,8 +746,8 @@ function ClientsPage() {
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("cli.section.contact")}
                 </h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 col-span-2">
                     <Label>{t("cli.email")} *</Label>
                     <Input
                       required
@@ -783,8 +783,8 @@ function ClientsPage() {
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("cli.section.address")}
                 </h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 col-span-2">
                     <Label>{t("cli.address")}</Label>
                     <Input
                       value={form.address}

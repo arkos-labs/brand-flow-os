@@ -323,8 +323,8 @@ function SettingsPage() {
           {activeSection === "identity" && (
             <div className="card-elevated p-6 space-y-5">
               <h2 className="text-sm font-semibold">{t("set.section.identity")}</h2>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
+              <div className="grid grid-cols-2 gap-5">
+                <div className="col-span-2">
                   <FieldRow label={t("set.name")} required>
                     <Input
                       value={form.name}
@@ -403,8 +403,8 @@ function SettingsPage() {
           {activeSection === "contact" && (
             <div className="card-elevated p-6 space-y-5">
               <h2 className="text-sm font-semibold">{t("set.section.contact")}</h2>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
+              <div className="grid grid-cols-2 gap-5">
+                <div className="col-span-2">
                   <FieldRow label={t("set.address")} required>
                     <Input
                       value={form.address}
@@ -577,7 +577,7 @@ function SettingsPage() {
                 <h3 className="text-sm font-semibold text-primary mb-3">
                   {lang === "fr" ? "Design & Modèles" : "Design & Templates"}
                 </h3>
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-5">
                   <FieldRow label={lang === "fr" ? "Couleur Principale" : "Primary Color"} hint={lang === "fr" ? "Couleur utilisée dans les PDFs" : "Color used in PDFs"}>
                     <div className="flex gap-2">
                       <Input
@@ -594,7 +594,7 @@ function SettingsPage() {
                     </div>
                   </FieldRow>
                   
-                  <div className="hidden sm:block"></div>
+                  <div className="block"></div>
 
                   <FieldRow label={lang === "fr" ? "Modèle Devis par défaut" : "Default Quote Template"}>
                     <select
@@ -624,7 +624,7 @@ function SettingsPage() {
                     </select>
                   </FieldRow>
 
-                  <div className="sm:col-span-2 mt-4 pt-4 border-t border-border/50">
+                  <div className="col-span-2 mt-4 pt-4 border-t border-border/50">
                     <FieldRow 
                       label={lang === "fr" ? "Factures de situation (BTP)" : "Progress billings (Construction)"} 
                       hint={lang === "fr" ? "Active le menu pour facturer selon l'avancement d'un chantier" : "Enable menu to invoice by progress"}
@@ -644,7 +644,7 @@ function SettingsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-5">
                 <FieldRow label={t("set.quotePrefix")} hint={lang === "fr" ? "Ex: DV → DV-2026-001" : "E.g. DV → DV-2026-001"}>
                   <Input
                     value={form.quotePrefix}
@@ -720,7 +720,7 @@ function SettingsPage() {
                   </div>
                 </FieldRow>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <FieldRow
                     label={t("set.footerNote")}
                     hint={lang === "fr"
@@ -777,7 +777,7 @@ function SettingsPage() {
                   ? "Affiché sur les factures pour faciliter le virement. Non obligatoire mais recommandé."
                   : "Shown on invoices to facilitate bank transfers. Optional but recommended."}
               </p>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-5">
                 <FieldRow label={t("set.bankName")}>
                   <Input
                     value={form.bankName ?? ""}
@@ -786,7 +786,7 @@ function SettingsPage() {
                   />
                 </FieldRow>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <FieldRow label={t("set.iban")} hint="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
                     <Input
                       value={form.iban ?? ""}

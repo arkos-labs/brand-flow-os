@@ -276,59 +276,101 @@ function Catalogue() {
       <PageHeader title={t("cat.title")} subtitle={t("cat.subtitle")} />
 
       {/* KPIs */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="card-elevated flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Package className="h-5 w-5 text-primary" />
+      <div className="grid grid-cols-3 gap-2 lg:gap-4">
+        <div className="card-elevated flex flex-col gap-1 p-3 lg:flex-row lg:items-center lg:gap-4 lg:p-5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 lg:h-10 lg:w-10">
+            <Package className="h-3.5 w-3.5 text-primary lg:h-5 lg:w-5" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground lg:text-xs">
               {t("cat.kpi.total")}
             </p>
-            <p className="font-display text-2xl font-semibold">{kpiTotal}</p>
+            <p className="font-display text-lg font-semibold lg:text-2xl">{kpiTotal}</p>
           </div>
         </div>
-        <div className="card-elevated flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/10">
-            <CheckCircle2 className="h-5 w-5 text-success" />
+        <div className="card-elevated flex flex-col gap-1 p-3 lg:flex-row lg:items-center lg:gap-4 lg:p-5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/10 lg:h-10 lg:w-10">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success lg:h-5 lg:w-5" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground lg:text-xs">
               {t("cat.kpi.active")}
             </p>
-            <p className="font-display text-2xl font-semibold">{kpiActive}</p>
+            <p className="font-display text-lg font-semibold lg:text-2xl">{kpiActive}</p>
           </div>
         </div>
-        <div className="card-elevated flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Layers className="h-5 w-5 text-primary" />
+        <div className="card-elevated flex flex-col gap-1 p-3 lg:flex-row lg:items-center lg:gap-4 lg:p-5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 lg:h-10 lg:w-10">
+            <Layers className="h-3.5 w-3.5 text-primary lg:h-5 lg:w-5" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground lg:text-xs">
               {t("cat.kpi.categories")}
             </p>
-            <p className="font-display text-2xl font-semibold">{kpiCats}</p>
+            <p className="font-display text-lg font-semibold lg:text-2xl">{kpiCats}</p>
           </div>
         </div>
       </div>
 
       {/* Barre outils */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("cat.search")}
-            className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+      <div className="mt-4 flex flex-col gap-2 lg:mt-6 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3">
+        {/* Ligne 1 : recherche + boutons icônes */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("cat.search")}
+              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 lg:min-w-48"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            {/* Modèle CSV — icône seule sur mobile */}
+            <button
+              onClick={downloadCsvTemplate}
+              title={t("cat.import_template")}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:px-3"
+            >
+              <FileDown className="h-4 w-4 shrink-0" />
+              <span className="hidden lg:inline">{t("cat.import_template")}</span>
+            </button>
+            {/* Import CSV */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              title={t("cat.import_csv")}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:px-3"
+            >
+              <Upload className="h-4 w-4 shrink-0" />
+              <span className="hidden lg:inline">{t("cat.import_csv")}</span>
+            </button>
+            {/* Export Excel */}
+            <button
+              onClick={handleExportExcel}
+              disabled={exportLoading || items.length === 0}
+              title={t("cat.export_excel")}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed lg:px-3"
+            >
+              <Download className={cn("h-4 w-4 shrink-0", exportLoading && "animate-bounce")} />
+              <span className="hidden lg:inline">{t("cat.export_excel")}</span>
+            </button>
+            {/* Nouvelle prestation */}
+            <button
+              onClick={openNew}
+              className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 lg:px-4"
+            >
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className="hidden lg:inline">{t("cat.new")}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        {/* Ligne 2 : filtres catégories en scroll horizontal */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-wrap lg:pb-0">
           <button
             onClick={() => setCategoryFilter("all")}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               categoryFilter === "all"
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -340,7 +382,7 @@ function Catalogue() {
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 categoryFilter === cat
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -349,45 +391,6 @@ function Catalogue() {
               {tv(CATEGORY_LABELS[cat])}
             </button>
           ))}
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* Modèle CSV */}
-          <button
-            onClick={downloadCsvTemplate}
-            title={t("cat.import_template")}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <FileDown className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("cat.import_template")}</span>
-          </button>
-          {/* Import CSV */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            title={t("cat.import_csv")}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("cat.import_csv")}</span>
-          </button>
-          {/* Export Excel */}
-          <button
-            onClick={handleExportExcel}
-            disabled={exportLoading || items.length === 0}
-            title={t("cat.export_excel")}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download className={cn("h-4 w-4", exportLoading && "animate-bounce")} />
-            <span className="hidden sm:inline">{t("cat.export_excel")}</span>
-          </button>
-          {/* Nouvelle prestation */}
-          <button
-            onClick={openNew}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            {t("cat.new")}
-          </button>
         </div>
       </div>
 
@@ -412,16 +415,16 @@ function Catalogue() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t("cat.col.label")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground hidden md:table-cell">
+                <th className="hidden px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">
                   {t("cat.col.category")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
+                <th className="hidden px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">
                   {t("cat.col.unit")}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t("cat.col.price")}
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground hidden lg:table-cell">
+                <th className="hidden px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">
                   {t("cat.col.vat")}
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -449,20 +452,20 @@ function Catalogue() {
                       {tv(p.description)}
                     </p>
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
+                  <td className="hidden px-4 py-3 lg:table-cell">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${CATEGORY_COLORS[p.category]}`}
                     >
                       {tv(CATEGORY_LABELS[p.category])}
                     </span>
                   </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">
+                  <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
                     {tv(UNIT_LABELS[p.unit])}
                   </td>
                   <td className="px-4 py-3 text-right font-display font-semibold whitespace-nowrap">
                     {money(p.priceHT)}
                   </td>
-                  <td className="px-4 py-3 text-center hidden lg:table-cell">
+                  <td className="hidden px-4 py-3 text-center lg:table-cell">
                     <span className="inline-flex flex-col items-center gap-0.5">
                       <span className="font-medium">{p.vatRate} %</span>
                       {VAT_NOTES[p.vatRate] && (

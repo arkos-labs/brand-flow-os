@@ -267,23 +267,19 @@ function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 text-center lg:flex-row lg:items-center lg:justify-between lg:text-left">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground lg:text-3xl">{t("dash.title")}</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">{t("dash.welcome")}</p>
+          <h1 className="text-xl font-semibold text-foreground lg:text-3xl">{t("dash.title")}</h1>
+          <p className="mt-1 text-xs text-muted-foreground lg:mt-1.5 lg:text-sm">{t("dash.welcome")}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex justify-center gap-2 lg:justify-start">
           <Button asChild variant="outline" size="sm">
             <Link to="/factures">
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               {t("dash.new_invoice")}
             </Link>
           </Button>
-          <Button
-            asChild
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
+          <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Link to="/devis">
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               {t("dash.new_quote")}
@@ -293,72 +289,58 @@ function Dashboard() {
       </div>
 
       {/* ── KPI row ── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* CA — hero card */}
-        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-6">
-          {/* Background icon watermark */}
+      <div className="grid grid-cols-3 gap-2 lg:gap-4">
+        {/* CA */}
+        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-3 lg:p-6">
           <div className="pointer-events-none absolute -right-4 -top-4 opacity-[0.08]">
-            <Receipt className="h-32 w-32" />
+            <Receipt className="h-20 w-20 lg:h-32 lg:w-32" />
           </div>
-          {/* Subtle top glow */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20" />
-
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-white/55 lg:text-[11px]">
             {t("dash.kpi.ca")}
           </p>
-          <p className="mt-2.5 font-display text-3xl font-bold text-white">{money(totalRevenue)}</p>
-          <p className="mt-1.5 text-xs text-white/50">{t("dash.kpi.ca.hint")}</p>
-
-          <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
-             <div>
-               <p className="text-[10px] uppercase tracking-wider text-white/50">{lang === "fr" ? "Dépenses HT" : "Expenses HT"}</p>
-               <p className="text-sm font-semibold text-white/80">{money(totalExpenses)}</p>
-             </div>
-             <div className="text-right">
-               <p className="text-[10px] uppercase tracking-wider text-white/50">{lang === "fr" ? "Bénéfice Net" : "Net Profit"}</p>
-               <p className="text-xl font-bold text-emerald-400">{money(netProfit)}</p>
-             </div>
-           </div>
+          <p className="mt-1 font-display text-sm font-bold text-white lg:mt-2.5 lg:text-3xl">
+            {money(totalRevenue)}
+          </p>
+          <div className="mt-2 border-t border-white/10 pt-2 lg:mt-6 lg:pt-4">
+            <p className="text-[9px] text-white/50 lg:text-[10px]">{lang === "fr" ? "Net" : "Profit"}</p>
+            <p className="text-xs font-bold text-emerald-400 lg:text-xl">{money(netProfit)}</p>
+          </div>
         </div>
 
         {/* Devis en attente */}
-        <div className="card-elevated card-hover card-warning-accent p-6">
+        <div className="card-elevated card-hover card-warning-accent p-3 lg:p-6">
           <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {t("dash.kpi.pending_quotes")}
-              </p>
-              <p className="mt-2.5 font-display text-3xl font-bold text-foreground">
-                {pendingQuotes.length}
-              </p>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 shadow-sm">
-              <FileText className="h-5 w-5 text-warning-foreground" />
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground lg:text-[11px]">
+              {t("dash.kpi.pending_quotes")}
+            </p>
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 lg:h-10 lg:w-10 lg:rounded-xl">
+              <FileText className="h-3 w-3 text-warning-foreground lg:h-5 lg:w-5" />
             </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("dash.kpi.pending_quotes.hint")} :{" "}
+          <p className="mt-1.5 font-display text-2xl font-bold text-foreground lg:mt-2.5 lg:text-3xl">
+            {pendingQuotes.length}
+          </p>
+          <p className="mt-1 text-[9px] text-muted-foreground lg:text-xs">
             <span className="font-bold text-foreground">{money(pendingQuotesTotal)}</span>
           </p>
         </div>
 
         {/* En attente d'encaissement */}
-        <div className="card-elevated card-hover card-destructive-accent p-6">
+        <div className="card-elevated card-hover card-destructive-accent p-3 lg:p-6">
           <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {t("dash.kpi.pending_invoices")}
-              </p>
-              <p className="mt-2.5 font-display text-3xl font-bold text-foreground">
-                {money(pendingRevenue)}
-              </p>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 shadow-sm">
-              <Clock className="h-5 w-5 text-destructive" />
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground lg:text-[11px]">
+              {t("dash.kpi.pending_invoices")}
+            </p>
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-destructive/10 lg:h-10 lg:w-10 lg:rounded-xl">
+              <Clock className="h-3 w-3 text-destructive lg:h-5 lg:w-5" />
             </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("dash.kpi.pending_invoices.hint")} ({pendingInvoices.length})
+          <p className="mt-1.5 font-display text-base font-bold text-foreground lg:mt-2.5 lg:text-3xl">
+            {money(pendingRevenue)}
+          </p>
+          <p className="mt-1 text-[9px] text-muted-foreground lg:text-xs">
+            {pendingInvoices.length} {lang === "fr" ? "fact." : "inv."}
           </p>
         </div>
       </div>

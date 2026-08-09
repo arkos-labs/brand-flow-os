@@ -21,6 +21,7 @@ import {
   Monitor,
   CreditCard,
   Repeat,
+  Menu,
 } from "lucide-react";
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
@@ -115,7 +116,7 @@ function NotificationPanel({ items, onClose }: { items: NotifItem[]; onClose: ()
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-2 z-50 w-80 rounded-xl border border-border bg-background shadow-xl"
+      className="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-border bg-background shadow-xl lg:absolute lg:right-0 lg:top-full lg:mt-2 lg:w-80"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -296,119 +297,150 @@ export function AppShell({ children }: { children: ReactNode }) {
     },
   ].filter(Boolean) as NotifItem[];
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Ferme le drawer au changement de page
+  const locationPath = location.pathname;
+  useEffect(() => { setMobileOpen(false); }, [locationPath]);
+
+  // ── Sidebar content (partagé desktop + mobile drawer) ────────────────────
+  const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <>
+      {/* ── Brand ── */}
+      <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/30">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/40 text-sm font-bold text-primary-foreground">
+          IP
+          <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
+        </div>
+        <div className="leading-tight">
+          <p className="font-display text-sm font-bold tracking-tight">{t("app.name")}</p>
+          <p className="text-[10px] text-sidebar-foreground/50 font-medium">{t("app.tagline")}</p>
+        </div>
+      </div>
+
+      <nav className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto">
+        {filteredGroups.map((group) => (
+          <div key={group.section}>
+            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/35">
+              {t(group.section)}
+            </p>
+            <div className="flex flex-col gap-px">
+              {group.items.map((item) => {
+                const badgeCount = badges[item.to] ?? 0;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={onNavigate}
+                    activeOptions={{ exact: item.to === "/" }}
+                    className="group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+                    activeProps={{
+                      className:
+                        "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[9px]",
+                    }}
+                  >
+                    <span className="relative">
+                      <item.icon className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
+                      <NotifBadge count={badgeCount} />
+                    </span>
+                    <span className="flex-1 truncate">{t(item.label)}</span>
+                    {badgeCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[9px] font-bold text-white">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* ── Compliance badge ── */}
+      <div className="mt-4 rounded-xl border border-sidebar-border/40 bg-sidebar-accent/30 p-3 backdrop-blur">
+        <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground/70">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
+          <span className="font-medium">Factur-X · PAF · RGPD</span>
+        </div>
+        <p className="mt-0.5 pl-6 text-[10px] text-sidebar-foreground/40">Conforme 2026</p>
+      </div>
+
+      {/* ── Settings Link ── */}
+      <div className="mt-2 px-1">
+        <Link
+          to="/parametres"
+          onClick={onNavigate}
+          className="group flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+          activeProps={{
+            className:
+              "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[5px]",
+          }}
+        >
+          <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
+          <span className="flex-1 truncate">{t("nav.settings")}</span>
+        </Link>
+      </div>
+
+      {/* ── User area ── */}
+      <div className="mt-3 flex items-center gap-3 rounded-xl border border-sidebar-border/30 bg-sidebar-accent/20 px-3 py-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary-foreground">
+          CM
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-sidebar-foreground/90">
+            Nicolas Cherki
+          </p>
+          <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background">
+      {/* ── Sidebar desktop ── */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col surface-navy px-3 py-3 lg:flex">
-        {/* ── Brand ── */}
-        <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/30">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/40 text-sm font-bold text-primary-foreground">
-            IP
-            <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-sm font-bold tracking-tight">{t("app.name")}</p>
-            <p className="text-[10px] text-sidebar-foreground/50 font-medium">{t("app.tagline")}</p>
-          </div>
-        </div>
+        <SidebarContent />
+      </aside>
 
-        <nav className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto">
-          {filteredGroups.map((group) => (
-            <div key={group.section}>
-              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/35">
-                {t(group.section)}
-              </p>
-              <div className="flex flex-col gap-px">
-                {group.items.map((item) => {
-                  const badgeCount = badges[item.to] ?? 0;
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      activeOptions={{ exact: item.to === "/" }}
-                      className="group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
-                      activeProps={{
-                        className:
-                          "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[9px]",
-                      }}
-                    >
-                      <span className="relative">
-                        <item.icon className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
-                        <NotifBadge count={badgeCount} />
-                      </span>
-                      <span className="flex-1 truncate">{t(item.label)}</span>
-                      {badgeCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[9px] font-bold text-white">
-                          {badgeCount > 99 ? "99+" : badgeCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
+      {/* ── Overlay mobile ── */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-        {/* ── Compliance badge ── */}
-        <div className="mt-4 rounded-xl border border-sidebar-border/40 bg-sidebar-accent/30 p-3 backdrop-blur">
-          <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground/70">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
-            <span className="font-medium">Factur-X · PAF · RGPD</span>
-          </div>
-          <p className="mt-0.5 pl-6 text-[10px] text-sidebar-foreground/40">Conforme 2026</p>
-        </div>
-
-        {/* ── Settings Link ── */}
-        <div className="mt-2 px-1">
-          <Link
-            to="/parametres"
-            className="group flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
-            activeProps={{
-              className:
-                "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[5px]",
-            }}
-          >
-            <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
-            <span className="flex-1 truncate">{t("nav.settings")}</span>
-          </Link>
-        </div>
-
-        {/* ── User area ── */}
-        <div className="mt-3 flex items-center gap-3 rounded-xl border border-sidebar-border/30 bg-sidebar-accent/20 px-3 py-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary-foreground">
-            CM
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-sidebar-foreground/90">
-              Nicolas Cherki
-            </p>
-            <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
-          </div>
-        </div>
+      {/* ── Drawer mobile (slide-in) ── */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col surface-navy px-3 py-3 transition-transform duration-300 ease-in-out lg:hidden",
+          mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
+        )}
+      >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+          aria-label="Fermer"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <SidebarContent onNavigate={() => setMobileOpen(false)} />
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/90 px-5 backdrop-blur-md">
-          {/* Mobile nav */}
-          <nav className="flex gap-1 overflow-x-auto lg:hidden">
-            {filteredGroups
-              .flatMap((g) => g.items)
-              .map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  activeOptions={{ exact: item.to === "/" }}
-                  className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground transition-colors"
-                  activeProps={{ className: "bg-secondary text-foreground font-semibold" }}
-                >
-                  {t(item.label)}
-                </Link>
-              ))}
-          </nav>
-
-          {/* Desktop left: empty space for flex alignment */}
-          <div className="hidden items-center gap-2 lg:flex">
-          </div>
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/90 px-3 backdrop-blur-md lg:px-5">
+          {/* Hamburger mobile */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-secondary transition-colors lg:hidden"
+            aria-label="Menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          {/* Spacer desktop */}
+          <div className="hidden lg:flex" />
 
           <div className="flex items-center gap-2">
             {/* Search */}
@@ -501,12 +533,12 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-7 flex items-start justify-between gap-4">
+    <div className="mb-5 flex flex-col gap-2 text-center lg:mb-7 lg:flex-row lg:items-start lg:justify-between lg:text-left">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground lg:text-3xl">{title}</h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="text-xl font-semibold text-foreground lg:text-3xl">{title}</h1>
+        <p className="mt-1 max-w-2xl text-xs text-muted-foreground lg:mt-1.5 lg:text-sm">{subtitle}</p>
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="flex justify-center lg:justify-start">{action}</div>}
     </div>
   );
 }

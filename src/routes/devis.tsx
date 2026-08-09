@@ -897,41 +897,31 @@ function QuotesInner() {
         </div>
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/25" />
 
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Left */}
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-lg shadow-black/20">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 shadow-lg shadow-black/20 lg:h-11 lg:w-11">
+              <Sparkles className="h-4 w-4 text-white lg:h-5 lg:w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
-                  Nouveau
-                </p>
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white/90">
-                  IA
-                </span>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/55">Nouveau</p>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white/90">IA</span>
               </div>
-              <h2 className="mt-0.5 font-display text-xl font-bold text-white">
+              <h2 className="mt-0.5 font-display text-lg font-bold text-white lg:text-xl">
                 Créer un devis avec l'IA
               </h2>
-              <p className="mt-1 text-[13px] text-white/60">
+              <p className="mt-1 text-xs text-white/60 lg:text-[13px]">
                 Décrivez le projet en quelques mots — l'IA génère les lignes, quantités et tarifs.
               </p>
-
-              {/* Feature chips */}
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5 lg:mt-3 lg:gap-2">
                 {[
-                  { icon: Clock, label: "Génération en 3 secondes" },
-                  { icon: FileText, label: "Lignes éditables avant envoi" },
-                  { icon: Sparkles, label: "Prix estimés automatiquement" },
+                  { icon: Clock, label: "3 secondes" },
+                  { icon: FileText, label: "Éditables" },
+                  { icon: Sparkles, label: "Prix auto" },
                 ].map(({ icon: Icon, label }) => (
-                  <span
-                    key={label}
-                    className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/75"
-                  >
-                    <Icon className="h-3 w-3" />
-                    {label}
+                  <span key={label} className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/75">
+                    <Icon className="h-3 w-3" />{label}
                   </span>
                 ))}
               </div>
@@ -941,7 +931,7 @@ function QuotesInner() {
           {/* CTA */}
           <button
             type="button"
-            className="flex shrink-0 items-center gap-2 self-start rounded-xl bg-white/20 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 backdrop-blur-sm transition-all hover:bg-white/30 sm:self-center"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 backdrop-blur-sm transition-all hover:bg-white/30 lg:w-auto lg:shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               setIsAIWidgetOpen(true);

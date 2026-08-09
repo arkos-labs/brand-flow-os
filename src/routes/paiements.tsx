@@ -73,7 +73,7 @@ function PaymentsPage() {
               Aucune facture en retard.
             </p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               {lateInvoices.map((inv) => (
                 <div key={inv.number} className="p-5 rounded-xl border-destructive/30 border bg-card shadow-sm hover:shadow-md transition-shadow flex flex-col">
                   <div className="flex justify-between items-start mb-4">
@@ -126,7 +126,7 @@ function PaymentsPage() {
               Aucun paiement enregistré pour le moment.
             </p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               {paidInvoices.map((inv) => (
                 <div key={inv.number} className="p-5 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-4">
@@ -157,7 +157,7 @@ function PaymentsPage() {
               Aucune prestation validée ou terminée.
             </p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               {signedQuotes.map((q) => (
                 <div key={q.number} className="p-5 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow opacity-90">
                   <div className="flex justify-between items-start mb-4">

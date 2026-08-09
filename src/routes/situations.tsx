@@ -280,7 +280,7 @@ function Situations() {
       />
 
       {/* KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 mb-6">
         {[
           { label: t("sit.kpi.marches"), value: String(activeMarches), icon: Building2, tone: "text-primary", bg: "bg-primary/10" },
           { label: t("sit.kpi.facture"), value: money(totalBilled), icon: ReceiptEuro, tone: "text-foreground", bg: "bg-muted" },
@@ -508,7 +508,7 @@ function Situations() {
                                 </div>
 
                                 {/* Montants */}
-                                <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-4">
+                                <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm grid-cols-4">
                                   <div>
                                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t("sit.col.ht")}</p>
                                     <p className="font-medium">{money(sit.montantHT)}</p>

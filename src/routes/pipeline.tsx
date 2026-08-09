@@ -174,8 +174,8 @@ function Pipeline() {
       />
 
       {/* Métriques */}
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-4 sm:col-span-2 lg:col-span-1">
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-4 col-span-2 lg:col-span-1">
           <div className="pointer-events-none absolute -right-2 -top-2 opacity-[0.07]">
             <KanbanSquare className="h-20 w-20" />
           </div>
@@ -228,7 +228,7 @@ function Pipeline() {
       </div>
 
       {/* Kanban */}
-      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5 min-h-[60vh]">
+      <div className="grid grid-cols-3 gap-3 xl:grid-cols-5 min-h-[60vh]">
         {columns.map((col) => {
           const items = pipelineQuotes.filter(
             (q) => getColumnId(q.status.fr) === col.id,

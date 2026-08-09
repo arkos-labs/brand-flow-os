@@ -110,7 +110,7 @@ function Cashflow() {
       />
 
       {/* ── KPIs ── */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 mb-6">
         {/* Solde réel — hero */}
         <div className="card-revenue card-hover relative overflow-hidden rounded-xl p-5">
           <div className="pointer-events-none absolute -right-3 -top-3 opacity-[0.07]">
