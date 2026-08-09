@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>InvoicePro — Présentation Produit</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{--brand:#6366f1;--brand-dark:#4338ca;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--bg:#09090b;--surface:#111113;--surface2:#1a1a1e;--border:#27272a;--text:#fafafa;--text2:#a1a1aa;--text3:#52525b}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  /* ── Layout ── */
+  #player{position:relative;width:100vw;height:100vh;display:flex;flex-direction:column}
+
+  /* ── Header bar ── */
+  #topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(9,9,11,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:absolute;top:0;left:0;right:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-icon{width:36px;height:36px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .logo-text{font-weight:700;font-size:16px}
+  .logo-sub{font-size:10px;color:var(--text2)}
+  #chapter-label{font-size:12px;color:var(--text2);font-weight:500;letter-spacing:.04em}
+  #progress-outer{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border)}
+  #progress-bar{height:100%;background:var(--brand);transition:width .3s linear;width:0%}
+
+  /* ── Controls ── */
+  #controls{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:rgba(17,17,19,.85);border:1px solid var(--border);border-radius:999px;padding:10px 20px;backdrop-filter:blur(16px);z-index:100}
+  .ctrl-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:8px;font-size:13px;font-weight:600;transition:.15s;display:flex;align-items:center;gap:6px}
+  .ctrl-btn:hover{background:var(--surface2);color:var(--text)}
+  .ctrl-btn.primary{background:var(--brand);color:#fff;padding:6px 16px}
+  .ctrl-btn.primary:hover{background:var(--brand-dark)}
+  #slide-counter{font-size:11px;color:var(--text3);min-width:40px;text-align:center}
+  #play-btn .icon-play{display:inline}
+  #play-btn .icon-pause{display:none}
+  #play-btn.playing .icon-play{display:none}
+  #play-btn.playing .icon-pause{display:inline}
+
+  /* ── Slides ── */
+  #stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:80px 24px 80px}
+  .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:80px 40px;opacity:0;pointer-events:none;transition:opacity .5s ease}
+  .slide.active{opacity:1;pointer-events:all}
+
+  /* ── Slide 1 — Hero ── */
+  .hero-slide{flex-direction:column;text-align:center;gap:24px}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:999px;padding:6px 16px;font-size:12px;color:#a5b4fc;font-weight:600}
+  .hero-dot{width:7px;height:7px;border-radius:50%;background:#10b981;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .hero-h1{font-size:clamp(32px,5vw,64px);font-weight:800;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#a5b4fc 60%,#e879f9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-sub{font-size:clamp(14px,1.8vw,18px);color:var(--text2);max-width:560px;line-height:1.6}
+  .hero-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .chip{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--text2);font-weight:500}
+  .chip span{color:var(--text);font-weight:700}
+
+  /* ── Slide 2 — Problème ── */
+  .problem-slide{gap:32px;max-width:900px;margin:auto}
+  .prob-header{text-align:center;margin-bottom:8px}
+  .prob-title{font-size:clamp(24px,3.5vw,42px);font-weight:800;line-height:1.2}
+  .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+  .prob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 20px;text-align:center}
+  .prob-emoji{font-size:32px;margin-bottom:12px}
+  .prob-stat{font-size:36px;font-weight:800;margin-bottom:4px}
+  .prob-label{font-size:12px;color:var(--text2);line-height:1.4}
+  .red{color:var(--danger)}.orange{color:var(--warning)}.blue{color:#6366f1}
+
+  /* ── Slide 3 — IA demo ── */
+  .ia-slide{gap:40px;max-width:1000px;width:100%;margin:auto}
+  .ia-left{flex:1;display:flex;flex-direction:column;gap:16px}
+  .ia-right{flex:1}
+  .section-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a5b4fc;margin-bottom:8px}
+  .ia-title{font-size:clamp(22px,3vw,36px);font-weight:800;line-height:1.2;margin-bottom:12px}
+  .ia-input-box{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(168,85,247,.1));border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px 18px}
+  .ia-input-label{font-size:10px;font-weight:700;color:#a5b4fc;letter-spacing:.08em;margin-bottom:8px}
+  .ia-input-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.6}
+  .ia-gen-btn{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;margin-top:12px;width:100%;justify-content:center}
+  .ia-result{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .ia-result-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--success);display:flex;align-items:center;gap:6px}
+  .ia-table{width:100%;border-collapse:collapse}
+  .ia-table th{padding:8px 12px;font-size:10px;color:var(--text3);font-weight:600;text-align:left;border-bottom:1px solid var(--border)}
+  .ia-table td{padding:8px 12px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.04)}
+  .ia-table tfoot td{font-weight:700;color:var(--brand);font-size:12px;padding-top:10px}
+  .tva-badge{background:rgba(245,158,11,.15);color:#f59e0b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
+
+  /* ── Slide 4 — Features ── */
+  .feat-slide{flex-direction:column;gap:24px;max-width:960px;width:100%;margin:auto}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%}
+  .feat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:.2s}
+  .feat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+  .feat-name{font-size:14px;font-weight:700;margin-bottom:4px}
+  .feat-desc{font-size:11px;color:var(--text2);line-height:1.5}
+  .feat-tag{margin-top:10px;font-size:9px;font-weight:700;letter-spacing:.06em}
+
+  /* ── Slide 5 — Dashboard ── */
+  .dash-slide{flex-direction:column;gap:20px;max-width:880px;width:100%;margin:auto}
+  .browser-frame{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;width:100%;box-shadow:0 40px 80px rgba(0,0,0,.6)}
+  .browser-bar{background:rgba(0,0,0,.4);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+  .b-dots{display:flex;gap:5px}
+  .b-dot{width:10px;height:10px;border-radius:50%}
+  .b-url{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:4px 12px;font-size:10px;color:var(--text3);text-align:center}
+  .dash-inner{padding:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .kpi-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:14px}
+  .kpi-label{font-size:10px;color:var(--text2);margin-bottom:4px}
+  .kpi-value{font-size:22px;font-weight:800}
+  .kpi-trend{font-size:10px;color:var(--success);margin-top:2px}
+  .chart-area{grid-column:1/-1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px;height:80px;position:relative;overflow:hidden}
+  .chart-label{font-size:10px;color:var(--text3);margin-bottom:8px}
+  .chart-bars{display:flex;align-items:flex-end;gap:6px;height:50px}
+  .bar{background:var(--brand);border-radius:4px 4px 0 0;flex:1;opacity:.7;transition:.3s}
+  .bar:last-child{opacity:1}
+
+  /* ── Slide 6 — Métriques ── */
+  .metrics-slide{flex-direction:column;gap:28px;text-align:center}
+  .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:800px;width:100%}
+  .metric-item{display:flex;flex-direction:column;gap:4px}
+  .metric-val{font-size:clamp(28px,4vw,52px);font-weight:800;background:linear-gradient(135deg,#a5b4fc,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .metric-label{font-size:12px;color:var(--text2)}
+
+  /* ── Slide 7 — CTA ── */
+  .cta-slide{flex-direction:column;text-align:center;gap:24px}
+  .cta-title{font-size:clamp(32px,5vw,60px);font-weight:800;line-height:1.1}
+  .cta-sub{font-size:16px;color:var(--text2);max-width:480px}
+  .cta-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .cta-primary{background:var(--brand);color:#fff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:14px;border:none;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .cta-secondary{background:transparent;color:var(--text2);font-weight:600;font-size:15px;padding:14px 32px;border-radius:14px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
+
+  /* ── Slide dots ── */
+  #dots{display:flex;gap:6px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:.2s;cursor:pointer}
+  .dot.active{background:var(--brand);width:20px;border-radius:3px}
+
+  /* ── Animated entrance ── */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .5s ease, transform .5s ease}
+  .active .reveal{opacity:1;transform:none}
+  .active .reveal:nth-child(1){transition-delay:.1s}
+  .active .reveal:nth-child(2){transition-delay:.25s}
+  .active .reveal:nth-child(3){transition-delay:.4s}
+  .active .reveal:nth-child(4){transition-delay:.55s}
+  .active .reveal:nth-child(5){transition-delay:.7s}
+
+  /* ── Typing animation ── */
+  @keyframes typing{from{width:0}to{width:100%}}
+  .typing{overflow:hidden;white-space:nowrap;animation:typing 2s steps(60,end) .8s both}
+
+  /* ── Number count animation ── */
+  .count-up{display:inline-block}
+
+  /* Background gradient */
+  #bg-gradient{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(168,85,247,.06) 0%,transparent 50%)}
+
+  @media(max-width:700px){
+    .prob-grid,.feat-grid,.metrics-grid{grid-template-columns:1fr 1fr}
+    .ia-slide{flex-direction:column}
+    .dash-inner{grid-template-columns:1fr 1fr}
+    .metrics-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<div id="bg-gradient"></div>
+
+<!-- Topbar -->
+<div id="topbar">
+  <div class="logo">
+    <div class="logo-icon">IP</div>
+    <div>
+      <div class="logo-text">InvoicePro</div>
+      <div class="logo-sub">Business OS</div>
+    </div>
+  </div>
+  <div id="chapter-label">Présentation produit</div>
+  <div id="progress-outer"><div id="progress-bar"></div></div>
+</div>
+
+<!-- Stage -->
+<div id="stage">
+
+  <!-- Slide 1 — Hero -->
+  <div class="slide hero-slide" data-chapter="Bienvenue">
+    <div class="hero-badge reveal"><div class="hero-dot"></div> IA intégrée — devis en 30 secondes</div>
+    <div class="hero-h1 reveal">Fini les devis<br/>sur Word & Excel.</div>
+    <div class="hero-sub reveal">InvoicePro est le Business OS des artisans et des professionnels. Devis IA, facturation Factur-X, CRM, trésorerie — tout en un.</div>
+    <div class="hero-chips reveal">
+      <div class="chip">🔧 <span>Plombiers</span></div>
+      <div class="chip">⚡ <span>Électriciens</span></div>
+      <div class="chip">🪵 <span>Menuisiers</span></div>
+      <div class="chip">🎨 <span>Peintres</span></div>
+      <div class="chip">🧱 <span>Maçons</span></div>
+      <div class="chip">+ tous les métiers</div>
+    </div>
+  </div>
+
+  <!-- Slide 2 — Problème -->
+  <div class="slide" style="flex-direction:column;gap:28px;max-width:860px;margin:auto;width:100%" data-chapter="Le problème">
+    <div class="prob-header reveal">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f87171;margin-bottom:10px">Avant InvoicePro</div>
+      <div class="prob-title">La paperasse vous coûte<br/><span style="color:#f87171">des heures chaque semaine</span></div>
+    </div>
+    <div class="prob-grid reveal">
+      <div class="prob-card">
+        <div class="prob-emoji">😤</div>
+        <div class="prob-stat red">45 min</div>
+        <div class="prob-label">par devis sur Word ou Excel — mise en page, TVA, relecture…</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-emoji">😰</div>
+        <div class="prob-stat orange">1 / 3</div>
+        <div class="prob-label">factures non réglées à 60 jours faute de relances</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-emoji">😱</div>
+        <div class="prob-stat blue">2026</div>
+        <div class="prob-label">Factur-X obligatoire — Word incompatible, amende possible</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 3 — IA Demo -->
+  <div class="slide ia-slide" style="display:flex;flex-direction:row" data-chapter="L'IA en action">
+    <div class="ia-left reveal">
+      <div>
+        <div class="section-tag">✨ Intelligence Artificielle</div>
+        <div class="ia-title">Décrivez le chantier.<br/>L'IA fait le reste.</div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">Langage naturel → lignes de devis structurées avec quantités, prix marché et TVA adaptés à votre métier. En 3 secondes.</p>
+      </div>
+      <div class="ia-input-box">
+        <div class="ia-input-label">✦ Décrivez votre chantier</div>
+        <div class="ia-input-text typing">"Rénovation salle de bain : pose carrelage 20m², faïence 15m², douche italienne, WC suspendu."</div>
+        <button class="ia-gen-btn">⚡ Générer le devis — 3 sec</button>
+      </div>
+    </div>
+    <div class="ia-right reveal" style="transition-delay:.3s">
+      <div class="ia-result">
+        <div class="ia-result-header">✓ Devis généré en 3 secondes</div>
+        <table class="ia-table">
+          <thead><tr><th>Désignation</th><th>Qté</th><th>TVA</th><th style="text-align:right">Total HT</th></tr></thead>
+          <tbody>
+            <tr><td>Dépose carrelage</td><td>20 m²</td><td><span class="tva-badge">10%</span></td><td style="text-align:right;font-weight:600">360 €</td></tr>
+            <tr><td>Pose carrelage sol</td><td>20 m²</td><td><span class="tva-badge">10%</span></td><td style="text-align:right;font-weight:600">900 €</td></tr>
+            <tr><td>Faïence murale</td><td>15 m²</td><td><span class="tva-badge">10%</span></td><td style="text-align:right;font-weight:600">630 €</td></tr>
+            <tr><td>Douche italienne</td><td>1 u.</td><td><span class="tva-badge">10%</span></td><td style="text-align:right;font-weight:600">680 €</td></tr>
+            <tr><td>WC suspendu + pose</td><td>1 u.</td><td><span class="tva-badge">10%</span></td><td style="text-align:right;font-weight:600">850 €</td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="3" style="color:var(--text2);font-size:11px">Total HT</td><td style="text-align:right;color:#a5b4fc;font-size:15px">3 420 €</td></tr></tfoot>
+        </table>
+        <div style="padding:12px 14px;display:flex;gap:8px;border-top:1px solid var(--border)">
+          <button style="flex:1;background:var(--brand);color:#fff;font-size:11px;font-weight:700;padding:8px;border-radius:8px;border:none;cursor:pointer">Envoyer par email</button>
+          <button style="flex:1;background:rgba(255,255,255,.06);color:var(--text2);font-size:11px;padding:8px;border-radius:8px;border:1px solid var(--border);cursor:pointer">PDF Factur-X</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4 — Features -->
+  <div class="slide feat-slide" data-chapter="Fonctionnalités">
+    <div style="text-align:center" class="reveal">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a5b4fc;margin-bottom:10px">Tout ce qu'il vous faut</div>
+      <div style="font-size:clamp(24px,3.5vw,40px);font-weight:800">Un Business OS complet</div>
+    </div>
+    <div class="feat-grid reveal">
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(99,102,241,.15)">🤖</div>
+        <div class="feat-name">Devis IA</div>
+        <div class="feat-desc">Description naturelle → devis complet en 30 secondes avec prix et TVA.</div>
+        <div class="feat-tag" style="color:var(--success)">✓ DISPONIBLE</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(16,185,129,.15)">🛡️</div>
+        <div class="feat-name">Factur-X 2026</div>
+        <div class="feat-desc">PDF + XML conforme. Numérotation, mentions légales, PAF automatiques.</div>
+        <div class="feat-tag" style="color:var(--success)">✓ CERTIFIÉ</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(168,85,247,.15)">✍️</div>
+        <div class="feat-name">Signature eIDAS</div>
+        <div class="feat-desc">Votre client signe depuis son téléphone. Valeur légale en France.</div>
+        <div class="feat-tag" style="color:var(--success)">✓ CERTIFIÉ</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(245,158,11,.15)">🔔</div>
+        <div class="feat-name">Relances auto</div>
+        <div class="feat-desc">J+3, J+7, J+15 — emails automatiques pour les factures impayées.</div>
+        <div class="feat-tag" style="color:var(--warning)">⏳ PHASE 2</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(59,130,246,.15)">💳</div>
+        <div class="feat-name">Paiement Stripe</div>
+        <div class="feat-desc">Lien de paiement sur vos devis. Acompte encaissé en 2 minutes.</div>
+        <div class="feat-tag" style="color:var(--warning)">⏳ PHASE 2</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(236,72,153,.15)">📊</div>
+        <div class="feat-name">Trésorerie 90j</div>
+        <div class="feat-desc">Cashflow prédictif. Anticipez les creux d'activité avant qu'ils arrivent.</div>
+        <div class="feat-tag" style="color:var(--success)">✓ DISPONIBLE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5 — Dashboard -->
+  <div class="slide dash-slide" data-chapter="Le tableau de bord">
+    <div style="text-align:center" class="reveal">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a5b4fc;margin-bottom:8px">Votre cockpit business</div>
+      <div style="font-size:clamp(22px,3vw,38px);font-weight:800">Tout votre business en un coup d'œil</div>
+    </div>
+    <div class="browser-frame reveal">
+      <div class="browser-bar">
+        <div class="b-dots">
+          <div class="b-dot" style="background:#ef4444"></div>
+          <div class="b-dot" style="background:#f59e0b"></div>
+          <div class="b-dot" style="background:#10b981"></div>
+        </div>
+        <div class="b-url">invoicepro.fr/app</div>
+      </div>
+      <div class="dash-inner">
+        <div class="kpi-card">
+          <div class="kpi-label">CA ce mois</div>
+          <div class="kpi-value" style="color:#10b981">24 850 €</div>
+          <div class="kpi-trend">↑ +18% vs mois dernier</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Devis en attente</div>
+          <div class="kpi-value" style="color:#f59e0b">7</div>
+          <div class="kpi-trend" style="color:#f59e0b">3 à relancer</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Factures dues</div>
+          <div class="kpi-value" style="color:#ef4444">3</div>
+          <div class="kpi-trend" style="color:#ef4444">12 400 € en retard</div>
+        </div>
+        <div class="chart-area" style="grid-column:1/-1">
+          <div class="chart-label">Chiffre d'affaires — 6 derniers mois</div>
+          <div class="chart-bars">
+            <div class="bar" style="height:40%"></div>
+            <div class="bar" style="height:55%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar" style="height:70%"></div>
+            <div class="bar" style="height:60%"></div>
+            <div class="bar" style="height:90%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 6 — Chiffres -->
+  <div class="slide metrics-slide" data-chapter="Nos chiffres">
+    <div class="reveal">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a5b4fc;margin-bottom:10px">Ils nous font confiance</div>
+      <div style="font-size:clamp(28px,4vw,48px);font-weight:800">InvoicePro en chiffres</div>
+    </div>
+    <div class="metrics-grid reveal">
+      <div class="metric-item">
+        <div class="metric-val">2 400+</div>
+        <div class="metric-label">artisans actifs</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">30 sec</div>
+        <div class="metric-label">pour créer un devis IA</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">4.9 / 5</div>
+        <div class="metric-label">note moyenne utilisateurs</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">100%</div>
+        <div class="metric-label">conforme Factur-X 2026</div>
+      </div>
+    </div>
+    <div class="reveal" style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+        <span style="color:#10b981;font-size:18px">★★★★★</span> "Je gagne 5h par semaine" — Jean-Denis M., plombier
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 7 — CTA -->
+  <div class="slide cta-slide" data-chapter="Commencez maintenant">
+    <div class="cta-title reveal">
+      Votre premier devis IA<br/>
+      <span style="background:linear-gradient(135deg,#a5b4fc,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">en moins de 2 minutes.</span>
+    </div>
+    <div class="cta-sub reveal">Sans carte bancaire. Sans installation. Sans mot de passe pour l'instant.</div>
+    <div class="cta-btns reveal">
+      <a href="/app" class="cta-primary">⚡ Accéder à l'application →</a>
+      <a href="/connexion" class="cta-secondary">Se connecter</a>
+    </div>
+    <div class="reveal" style="font-size:12px;color:var(--text3);margin-top:8px">
+      Essai gratuit 30 jours · Conforme Factur-X · Données hébergées en France 🇫🇷
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<!-- Controls -->
+<div id="controls">
+  <button class="ctrl-btn" id="prev-btn" onclick="changeSlide(-1)">← Préc.</button>
+  <div id="dots"></div>
+  <button class="ctrl-btn" id="play-btn" onclick="togglePlay()">
+    <span class="icon-play">▶ Auto</span>
+    <span class="icon-pause">⏸ Pause</span>
+  </button>
+  <span id="slide-counter">1 / 7</span>
+  <button class="ctrl-btn" id="next-btn" onclick="changeSlide(1)">Suiv. →</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dots = document.getElementById('dots');
+const counter = document.getElementById('slide-counter');
+const progressBar = document.getElementById('progress-bar');
+const chapterLabel = document.getElementById('chapter-label');
+const playBtn = document.getElementById('play-btn');
+
+let current = 0;
+let autoTimer = null;
+const DURATION = 6000; // 6s par slide
+
+// Build dots
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dots.appendChild(d);
+});
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  dots.querySelectorAll('.dot')[current].classList.remove('active');
+  current = (n + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  dots.querySelectorAll('.dot')[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${slides.length}`;
+  chapterLabel.textContent = slides[current].dataset.chapter || '';
+  progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+}
+
+function changeSlide(dir) { goTo(current + dir); }
+
+function startAuto() {
+  stopAuto();
+  playBtn.classList.add('playing');
+  autoTimer = setInterval(() => {
+    if (current === slides.length - 1) { stopAuto(); return; }
+    goTo(current + 1);
+  }, DURATION);
+}
+
+function stopAuto() {
+  clearInterval(autoTimer);
+  autoTimer = null;
+  playBtn.classList.remove('playing');
+}
+
+function togglePlay() {
+  autoTimer ? stopAuto() : startAuto();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+  if (e.key === 'ArrowLeft') changeSlide(-1);
+  if (e.key === 'p' || e.key === 'P') togglePlay();
+});
+
+// Init
+goTo(0);
+startAuto();
+</script>
+</body>
+</html>

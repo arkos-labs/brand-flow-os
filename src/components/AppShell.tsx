@@ -22,6 +22,7 @@ import {
   CreditCard,
   Repeat,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
@@ -382,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      {/* ── User area ── */}
+      {/* ── User area + Logout ── */}
       <div className="mt-3 flex items-center gap-3 rounded-xl border border-sidebar-border/30 bg-sidebar-accent/20 px-3 py-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary-foreground">
           CM
@@ -393,6 +394,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </p>
           <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
         </div>
+        <button
+          onClick={() => { window.location.href = "/connexion"; }}
+          title="Se déconnecter"
+          aria-label="Se déconnecter"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/40 transition-colors hover:bg-destructive/15 hover:text-destructive"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
       </div>
     </>
   );

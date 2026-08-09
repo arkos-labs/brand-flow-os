@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AbonnementsRouteImport } from './routes/abonnements'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as DepensesRouteImport } from './routes/depenses'
 import { Route as DevisRouteImport } from './routes/devis'
 import { Route as FacturesRouteImport } from './routes/factures'
@@ -41,6 +42,11 @@ const CatalogueRoute = CatalogueRouteImport.update({
 const ClientsRoute = ClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnexionRoute = ConnexionRouteImport.update({
+  id: '/connexion',
+  path: '/connexion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DepensesRoute = DepensesRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/abonnements': typeof AbonnementsRoute
   '/catalogue': typeof CatalogueRoute
   '/clients': typeof ClientsRoute
+  '/connexion': typeof ConnexionRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/abonnements': typeof AbonnementsRoute
   '/catalogue': typeof CatalogueRoute
   '/clients': typeof ClientsRoute
+  '/connexion': typeof ConnexionRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/abonnements': typeof AbonnementsRoute
   '/catalogue': typeof CatalogueRoute
   '/clients': typeof ClientsRoute
+  '/connexion': typeof ConnexionRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/abonnements'
     | '/catalogue'
     | '/clients'
+    | '/connexion'
     | '/depenses'
     | '/devis'
     | '/factures'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/abonnements'
     | '/catalogue'
     | '/clients'
+    | '/connexion'
     | '/depenses'
     | '/devis'
     | '/factures'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/abonnements'
     | '/catalogue'
     | '/clients'
+    | '/connexion'
     | '/depenses'
     | '/devis'
     | '/factures'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AbonnementsRoute: typeof AbonnementsRoute
   CatalogueRoute: typeof CatalogueRoute
   ClientsRoute: typeof ClientsRoute
+  ConnexionRoute: typeof ConnexionRoute
   DepensesRoute: typeof DepensesRoute
   DevisRoute: typeof DevisRoute
   FacturesRoute: typeof FacturesRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connexion': {
+      id: '/connexion'
+      path: '/connexion'
+      fullPath: '/connexion'
+      preLoaderRoute: typeof ConnexionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/depenses': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   AbonnementsRoute: AbonnementsRoute,
   CatalogueRoute: CatalogueRoute,
   ClientsRoute: ClientsRoute,
+  ConnexionRoute: ConnexionRoute,
   DepensesRoute: DepensesRoute,
   DevisRoute: DevisRoute,
   FacturesRoute: FacturesRoute,
