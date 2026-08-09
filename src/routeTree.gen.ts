@@ -17,11 +17,14 @@ import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as DepensesRouteImport } from './routes/depenses'
 import { Route as DevisRouteImport } from './routes/devis'
 import { Route as FacturesRouteImport } from './routes/factures'
+import { Route as InscriptionRouteImport } from './routes/inscription'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as PaiementsRouteImport } from './routes/paiements'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as SituationsRouteImport } from './routes/situations'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
+import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
 
@@ -65,6 +68,16 @@ const FacturesRoute = FacturesRouteImport.update({
   path: '/factures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InscriptionRoute = InscriptionRouteImport.update({
+  id: '/inscription',
+  path: '/inscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaiementsRoute = PaiementsRouteImport.update({
   id: '/paiements',
   path: '/paiements',
@@ -90,6 +103,11 @@ const TableauDeBordRoute = TableauDeBordRouteImport.update({
   path: '/tableau-de-bord',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TarifsRoute = TarifsRouteImport.update({
+  id: '/tarifs',
+  path: '/tarifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TresorerieRoute = TresorerieRouteImport.update({
   id: '/tresorerie',
   path: '/tresorerie',
@@ -110,11 +128,14 @@ export interface FileRoutesByFullPath {
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -127,11 +148,14 @@ export interface FileRoutesByTo {
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -145,11 +169,14 @@ export interface FileRoutesById {
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
 }
@@ -164,11 +191,14 @@ export interface FileRouteTypes {
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
     | '/situations'
     | '/tableau-de-bord'
+    | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -181,11 +211,14 @@ export interface FileRouteTypes {
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
     | '/situations'
     | '/tableau-de-bord'
+    | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
   id:
@@ -198,11 +231,14 @@ export interface FileRouteTypes {
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
     | '/situations'
     | '/tableau-de-bord'
+    | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
   fileRoutesById: FileRoutesById
@@ -216,11 +252,14 @@ export interface RootRouteChildren {
   DepensesRoute: typeof DepensesRoute
   DevisRoute: typeof DevisRoute
   FacturesRoute: typeof FacturesRoute
+  InscriptionRoute: typeof InscriptionRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PaiementsRoute: typeof PaiementsRoute
   ParametresRoute: typeof ParametresRoute
   PipelineRoute: typeof PipelineRoute
   SituationsRoute: typeof SituationsRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
+  TarifsRoute: typeof TarifsRoute
   TresorerieRoute: typeof TresorerieRoute
   PortailIdRoute: typeof PortailIdRoute
 }
@@ -283,6 +322,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inscription': {
+      id: '/inscription'
+      path: '/inscription'
+      fullPath: '/inscription'
+      preLoaderRoute: typeof InscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/paiements': {
       id: '/paiements'
       path: '/paiements'
@@ -318,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TableauDeBordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tarifs': {
+      id: '/tarifs'
+      path: '/tarifs'
+      fullPath: '/tarifs'
+      preLoaderRoute: typeof TarifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tresorerie': {
       id: '/tresorerie'
       path: '/tresorerie'
@@ -344,14 +404,27 @@ const rootRouteChildren: RootRouteChildren = {
   DepensesRoute: DepensesRoute,
   DevisRoute: DevisRoute,
   FacturesRoute: FacturesRoute,
+  InscriptionRoute: InscriptionRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
   PaiementsRoute: PaiementsRoute,
   ParametresRoute: ParametresRoute,
   PipelineRoute: PipelineRoute,
   SituationsRoute: SituationsRoute,
   TableauDeBordRoute: TableauDeBordRoute,
+  TarifsRoute: TarifsRoute,
   TresorerieRoute: TresorerieRoute,
   PortailIdRoute: PortailIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
