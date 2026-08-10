@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -19,8 +20,9 @@
  */
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --color-surface: var(--surface);
   --color-navy: var(--navy);
   --color-navy-foreground: var(--navy-foreground);
@@ -72,6 +74,9 @@
 
 :root {
   --radius: 0.5rem;
+  --shape-control: 0.2rem;
+  --shadow-offset: 4px 4px 0 var(--navy);
+  --shadow-offset-sm: 2px 2px 0 var(--navy);
   --background: oklch(0.978 0.012 255);
   --foreground: oklch(0.21 0.045 255);
 
@@ -191,6 +196,35 @@
   h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .app-workspace {
+    background-color: var(--color-background);
+    background-image:
+      linear-gradient(oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .shadow-offset {
+    box-shadow: var(--shadow-offset);
+  }
+
+  .shadow-offset-sm {
+    box-shadow: var(--shadow-offset-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
