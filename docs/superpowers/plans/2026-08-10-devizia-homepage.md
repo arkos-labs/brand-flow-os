@@ -10,7 +10,7 @@
 
 - Keep `/` as the public homepage and preserve `/inscription`, `/connexion`, and `/tarifs` navigation.
 - Display the Devizia brand; do not show InvoicePro on the homepage.
-- Use the approved direction C: cream, charcoal, signal yellow, and orange-red; strong sans-serif typography; minimal rounding; no floating premium-card aesthetic.
+- Use the approved direction C with the dashboard palette: pale lavender, navy, primary violet, success green, and warning amber; strong sans-serif typography; minimal rounding; no floating premium-card aesthetic.
 - Add no runtime dependency and no network request.
 - Do not invent customer counts, ratings, certifications, hosting claims, or quantified savings.
 - Support keyboard navigation, visible focus, mobile layouts, and `prefers-reduced-motion`.

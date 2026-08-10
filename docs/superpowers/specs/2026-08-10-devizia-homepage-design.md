@@ -30,7 +30,7 @@ Les exemples doivent rester assez variés pour que ces trois publics se reconnai
 
 ## Direction visuelle
 
-L'identité est directe, énergique et inspirée du terrain : crème utilitaire, noir charbon, jaune signal et rouge-orangé. Une typographie sans-serif forte et condensée porte les titres, associée à une sans-serif très lisible pour les textes et les éléments d'interface. Le rendu doit être professionnel sans ressembler à une agence de luxe ou à un logiciel financier abstrait.
+L'identité est directe, énergique et inspirée du terrain, tout en reprenant le design system du tableau de bord : fond lavande très clair, bleu nuit structurel, violet principal pour les actions, vert pour les succès et ambre pour les alertes. Une typographie sans-serif forte et condensée porte les titres, associée à une sans-serif très lisible pour les textes et les éléments d'interface. Le rendu doit être professionnel sans ressembler à une agence de luxe ou à un logiciel financier abstrait.
 
 La composition emprunte aux plannings de chantier, fiches d'intervention et tableaux d'atelier : lignes franches, grands aplats, étiquettes fonctionnelles et informations immédiatement scannables. Les bordures sont nettes, les angles peu arrondis et les ombres rares. Les nombreuses cartes flottantes de la première version sont supprimées. Les animations restent courtes et fonctionnelles : déplacement d'un indicateur, changement d'état ou apparition d'une ligne de suivi.
 
