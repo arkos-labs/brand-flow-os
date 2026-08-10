@@ -31,7 +31,7 @@ import "./homepage.css";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Devizia — Devis, factures et paiements sans perdre vos soirées" },
+      { title: "Devizia — Un devis propre. Une facture prête. La journée est finie." },
       {
         name: "description",
         content:
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
       },
       {
         property: "og:title",
-        content: "Devizia — L'administratif qui ne déborde plus sur vos soirées",
+        content: "Devizia — L'administratif avance, la journée se termine",
       },
       {
         property: "og:description",
@@ -240,8 +240,8 @@ function Hero() {
       <div className="devizia-container devizia-hero__layout">
         <div className="devizia-hero__copy">
           <div className="devizia-eyebrow"><Zap /> Devis · Factures · Paiements</div>
-          <h1>Votre administratif avance.<br /><em>Vos soirées restent à vous.</em></h1>
-          <p>Devizia réunit vos devis, factures, clients et paiements dans un outil clair — pour travailler sereinement et garder le cap sur votre activité.</p>
+          <h1>Un devis propre.<br />Une facture prête.<br /><em>La journée est finie.</em></h1>
+          <p>Devizia vous aide à gérer l’administratif vite et bien, sur ordinateur comme sur le terrain. Moins de clics, plus de visibilité, rien qui traîne.</p>
           <div className="devizia-hero__actions">
             <Link to="/inscription" className="devizia-button devizia-button--hero">Commencer gratuitement <ArrowRight /></Link>
             <a href="#fonctionnement" className="devizia-text-link"><MousePointerClick /> Voir comment ça marche</a>

@@ -3,13 +3,14 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Build a polished, responsive Devizia homepage that converts artisans, independents, and small businesses through time savings, growth, and compliance messaging.
-**Architecture:** Replace the current TanStack Router homepage composition with focused local React sections driven by typed content arrays. Add a small route-specific stylesheet for the editorial visual language and motion, while preserving existing global tokens and routes.
+**Architecture:** Replace the current TanStack Router homepage composition with focused local React sections driven by typed content arrays. Use a route-specific stylesheet for a direct, field-inspired visual language based on work schedules, status boards, sharp lines, and functional motion while preserving existing routes.
 **Tech Stack:** React 19, TypeScript, TanStack Router, Tailwind CSS 4, Lucide React, Vite
 
 ## Global Constraints
 
 - Keep `/` as the public homepage and preserve `/inscription`, `/connexion`, and `/tarifs` navigation.
 - Display the Devizia brand; do not show InvoicePro on the homepage.
+- Use the approved direction C: cream, charcoal, signal yellow, and orange-red; strong sans-serif typography; minimal rounding; no floating premium-card aesthetic.
 - Add no runtime dependency and no network request.
 - Do not invent customer counts, ratings, certifications, hosting claims, or quantified savings.
 - Support keyboard navigation, visible focus, mobile layouts, and `prefers-reduced-motion`.
@@ -49,7 +50,7 @@ Add one `h1` using the approved promise, supporting copy, primary and secondary 
 
 - [ ] **Step 4: Add the editorial visual foundation**
 
-Create `homepage.css` with scoped CSS variables, subtle paper texture, document-inspired shapes, refined typography fallbacks, focus states, hero composition, product preview styling, and reduced-motion handling.
+Create `homepage.css` with scoped CSS variables, utility-paper texture, strong sans-serif typography, visible focus states, planning-board composition, compact product statuses, and reduced-motion handling.
 
 - [ ] **Step 5: Verify the shell**
 
