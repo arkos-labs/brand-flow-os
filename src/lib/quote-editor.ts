@@ -56,9 +56,18 @@ export function buildEditedQuote(original: Quote, form: QuoteEditorForm): Quote 
     ? form.companyName.trim()
     : `${form.firstName} ${form.lastName}`.trim();
   const clientId = form.clientId ?? original.clientId;
+  const nextCycle = { ...original };
+  if (original.status.fr === "Refusé") {
+    nextCycle.status = { fr: "Brouillon", en: "Draft" };
+    delete nextCycle.sentAt;
+    delete nextCycle.signedAt;
+    delete nextCycle.refusedAt;
+    delete nextCycle.closedAt;
+    delete nextCycle.signatureData;
+  }
 
   return {
-    ...original,
+    ...nextCycle,
     client: displayName || original.client,
     ...(clientId ? { clientId } : {}),
     amount: totals.totalTTC,

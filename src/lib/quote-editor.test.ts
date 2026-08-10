@@ -22,8 +22,14 @@ const original: Quote = {
   status: { fr: "Refusé", en: "Refused" },
   date: "2026-08-02",
   sentAt: "2026-08-03T09:00:00.000Z",
+  signedAt: "2026-08-03T12:00:00.000Z",
   refusedAt: "2026-08-04T10:00:00.000Z",
   closedAt: "2026-08-05T11:00:00.000Z",
+  signatureData: {
+    signerName: "Jean Dupont",
+    signedAt: "2026-08-03T12:00:00.000Z",
+    consent: true,
+  },
   invoicedLineIds: ["old-line"],
   details: {
     clientType: "particulier",
@@ -53,9 +59,11 @@ assert.deepEqual(totals, { totalHT: 270, totalVAT: 27, totalTTC: 297 });
 const updated = buildEditedQuote(original, form);
 assert.equal(updated.amount, 297);
 assert.equal(updated.number, original.number);
-assert.deepEqual(updated.status, original.status);
-assert.equal(updated.sentAt, original.sentAt);
-assert.equal(updated.refusedAt, original.refusedAt);
-assert.equal(updated.closedAt, original.closedAt);
+assert.deepEqual(updated.status, { fr: "Brouillon", en: "Draft" });
+assert.equal("sentAt" in updated, false);
+assert.equal("signedAt" in updated, false);
+assert.equal("refusedAt" in updated, false);
+assert.equal("closedAt" in updated, false);
+assert.equal("signatureData" in updated, false);
 assert.deepEqual(updated.invoicedLineIds, original.invoicedLineIds);
 assert.equal(updated.clientId, client.id);
