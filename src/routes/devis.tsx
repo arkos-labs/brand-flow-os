@@ -1320,7 +1320,7 @@ function QuotesInner() {
                       setInvoiceDueDate(dueDateStr);
                       setInvoiceNote("");
                     }}
-                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
+                    className="flex h-8 items-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-3 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
                   >
                     <ReceiptEuro className="h-3.5 w-3.5" />
                     {lang === "fr" ? "Facturer" : "Invoice"}

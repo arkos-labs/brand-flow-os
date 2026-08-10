@@ -530,7 +530,7 @@ function Dashboard() {
                 <p className="text-xs text-muted-foreground">{t("dash.funnel.empty.desc")}</p>
                 <Link
                   to="/devis"
-                  className="mt-2 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+                  className="mt-2 flex h-9 items-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-4 text-xs font-bold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {t("dash.new_quote")}
