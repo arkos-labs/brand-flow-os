@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "test:domain": "node src/lib/invoice-from-quote.test.ts && node src/lib/document-workflow.test.ts && node src/lib/showcase-data.test.ts && node src/lib/quote-editor.test.ts && node src/lib/quote-actions.test.ts",
+    "test:domain": "node src/lib/invoice-from-quote.test.ts && node src/lib/document-workflow.test.ts && node src/lib/showcase-data.test.ts && node src/lib/quote-editor.test.ts && node src/lib/quote-actions.test.ts && node src/lib/navigation-badge.test.ts",
     "typecheck": "tsc --noEmit --pretty false",
     "check": "npm run test:domain && npm run typecheck && npm run build",
     "lint": "eslint .",

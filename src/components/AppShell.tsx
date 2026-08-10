@@ -31,6 +31,7 @@ import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { useTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { formatNavigationBadge } from "@/lib/navigation-badge";
 import { GlobalSearch } from "./GlobalSearch";
 import { Search as SearchIcon } from "lucide-react";
 
@@ -76,17 +77,6 @@ function isQuoteExpired(q: { status: { fr: string }; date: string; sentAt?: stri
   if (finalStatuses.includes(q.status.fr)) return q.status.fr === "Expiré";
   if (!["Envoyé", "Vu"].includes(q.status.fr)) return false;
   return q.sentAt ? daysSince(q.sentAt) > QUOTE_VALIDITY_DAYS : false;
-}
-
-// ── NotificationBadge ─────────────────────────────────────────────────────────
-
-function NotifBadge({ count }: { count: number }) {
-  if (count <= 0) return null;
-  return (
-    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
-      {count > 9 ? "9+" : count}
-    </span>
-  );
 }
 
 // ── NotificationPanel ─────────────────────────────────────────────────────────
@@ -339,6 +329,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex flex-col gap-px">
               {group.items.map((item) => {
                 const badgeCount = badges[item.to] ?? 0;
+                const badgeLabel = formatNavigationBadge(badgeCount);
                 return (
                   <Link
                     key={item.to}
@@ -351,14 +342,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                         "bg-primary text-primary-foreground font-semibold shadow-sm",
                     }}
                   >
-                    <span className="relative">
-                      <item.icon className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
-                      <NotifBadge count={badgeCount} />
-                    </span>
+                    <item.icon className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
                     <span className="flex-1 truncate">{t(item.label)}</span>
-                    {badgeCount > 0 && (
+                    {badgeLabel && (
                       <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[9px] font-bold text-white">
-                        {badgeCount > 99 ? "99+" : badgeCount}
+                        {badgeLabel}
                       </span>
                     )}
                   </Link>
