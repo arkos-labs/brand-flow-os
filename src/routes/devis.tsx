@@ -772,7 +772,7 @@ function QuotesInner() {
                           type="button"
                           variant="secondary"
                           size="sm"
-                          className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-200"
+                          className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200"
                           onClick={() => setIsAIWidgetOpen(true)}
                         >
                           <Sparkles className="h-4 w-4 mr-2" />
@@ -1232,7 +1232,7 @@ function QuotesInner() {
                   q.status.fr === "Facturé" && "bg-primary/8 text-primary ring-1 ring-primary/20",
                   q.status.fr === "Payé" && "bg-success/10 text-success ring-1 ring-success/25",
                   q.status.fr === "Envoyé" && "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-                  q.status.fr === "Vu" && "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+                  q.status.fr === "Vu" && "bg-orange-50 text-orange-700 ring-1 ring-orange-200",
                   q.status.fr === "Refusé" &&
                     "bg-destructive/8 text-destructive ring-1 ring-destructive/20",
                   q.status.fr === "Expiré" &&
@@ -1249,7 +1249,7 @@ function QuotesInner() {
                     q.status.fr === "Facturé" && "bg-primary",
                     q.status.fr === "Payé" && "bg-success",
                     q.status.fr === "Envoyé" && "bg-blue-500",
-                    q.status.fr === "Vu" && "bg-violet-500",
+                    q.status.fr === "Vu" && "bg-orange-500",
                     q.status.fr === "Refusé" && "bg-destructive",
                     q.status.fr === "Expiré" && "bg-warning",
                     !["Signé", "Facturé", "Payé", "Envoyé", "Vu", "Refusé", "Expiré"].includes(
@@ -1297,7 +1297,7 @@ function QuotesInner() {
                         navigator.clipboard.writeText(url);
                         alert("Lien copié : " + url);
                       }}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-violet-50 hover:text-violet-600"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-orange-50 hover:text-orange-600"
                     >
                       <Link className="h-3.5 w-3.5" />
                     </button>

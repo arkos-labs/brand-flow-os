@@ -62,16 +62,16 @@ function ConnexionPage() {
           </div>
           <div>
             <p className="font-bold text-white text-lg leading-tight">InvoicePro</p>
-            <p className="text-indigo-300 text-xs">Business OS</p>
+            <p className="text-orange-300 text-xs">Business OS</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-white leading-snug mb-3">
             Vos devis & factures.<br />
-            <span className="text-indigo-300">Propulsés par l'IA.</span>
+            <span className="text-orange-300">Propulsés par l'IA.</span>
           </h2>
-          <p className="text-indigo-200 text-sm leading-relaxed max-w-sm mb-6">
+          <p className="text-orange-100 text-sm leading-relaxed max-w-sm mb-6">
             {t("landing.hero.subtitle")}
           </p>
 
@@ -83,10 +83,10 @@ function ConnexionPage() {
               t("landing.features.cashflow.title"),
             ].map((f) => (
               <div key={f} className="flex items-center gap-3">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-400/30">
-                  <span className="text-indigo-300 text-xs">✓</span>
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-400/30">
+                  <span className="text-orange-300 text-xs">✓</span>
                 </div>
-                <p className="text-indigo-200 text-sm">{f}</p>
+                <p className="text-orange-100 text-sm">{f}</p>
               </div>
             ))}
           </div>
@@ -116,8 +116,8 @@ function ConnexionPage() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-lg bg-indigo-600/20 border border-indigo-500/30 p-3 mb-2">
-                <p className="text-[9px] text-indigo-300 font-semibold mb-1.5">✨ IA — Devis généré</p>
+              <div className="rounded-lg bg-orange-600/20 border border-orange-500/30 p-3 mb-2">
+                <p className="text-[9px] text-orange-300 font-semibold mb-1.5">✨ IA — Devis généré</p>
                 <div className="space-y-1">
                   {[
                     { desc: "Pose carrelage sol", total: "900 €" },
@@ -130,13 +130,13 @@ function ConnexionPage() {
                     </div>
                   ))}
                   <div className="border-t border-white/10 pt-1 mt-1 flex justify-between text-[10px]">
-                    <span className="text-indigo-300 font-semibold">Total HT</span>
-                    <span className="text-indigo-300 font-bold">3 740 €</span>
+                    <span className="text-orange-300 font-semibold">Total HT</span>
+                    <span className="text-orange-300 font-bold">3 740 €</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 rounded-lg bg-indigo-600 py-1.5 text-center text-[9px] font-bold text-white">
+                <div className="flex-1 rounded-lg bg-orange-600 py-1.5 text-center text-[9px] font-bold text-white">
                   Envoyer
                 </div>
                 <div className="flex-1 rounded-lg bg-white/8 border border-white/10 py-1.5 text-center text-[9px] text-white/60">

@@ -64,7 +64,7 @@ const CATEGORY_COLORS: Record<ProductCategory, string> = {
   "main-oeuvre": "bg-blue-50 text-blue-700",
   materiaux: "bg-amber-50 text-amber-700",
   deplacement: "bg-slate-100 text-slate-600",
-  "sous-traitance": "bg-purple-50 text-purple-700",
+  "sous-traitance": "bg-orange-50 text-orange-700",
   equipement: "bg-emerald-50 text-emerald-700",
   autre: "bg-gray-100 text-gray-600",
 };

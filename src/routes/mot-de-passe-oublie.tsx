@@ -52,16 +52,16 @@ function ResetPasswordPage() {
           </div>
           <div>
             <p className="font-bold text-white text-lg leading-tight">InvoicePro</p>
-            <p className="text-indigo-300 text-xs">Business OS</p>
+            <p className="text-orange-300 text-xs">Business OS</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-white leading-snug mb-3">
             Récupérez l'accès.<br />
-            <span className="text-indigo-300">En toute sécurité.</span>
+            <span className="text-orange-300">En toute sécurité.</span>
           </h2>
-          <p className="text-indigo-200 text-sm leading-relaxed max-w-sm">
+          <p className="text-orange-100 text-sm leading-relaxed max-w-sm">
             {t("auth.reset.subtitle")}
           </p>
         </div>

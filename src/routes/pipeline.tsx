@@ -79,10 +79,10 @@ const columns: {
     id: "Facturé",
     label: "Facturé",
     sublabel: "Facture brouillon",
-    dotColor: "bg-violet-500",
-    accentBg: "bg-violet-100",
-    accentText: "text-violet-700",
-    headerBg: "bg-violet-50",
+    dotColor: "bg-orange-500",
+    accentBg: "bg-orange-100",
+    accentText: "text-orange-700",
+    headerBg: "bg-orange-50",
   },
   {
     id: "APayer",
@@ -425,7 +425,7 @@ function Pipeline() {
                               .filter((invoice) => invoice.status === "draft")
                               .forEach((invoice) => updateInvoice(invoice.number, { ...invoice, status: "sent", sentAt: new Date().toISOString() }));
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-violet-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-violet-700"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-orange-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-orange-700"
                         >
                           <Send className="h-3.5 w-3.5" />
                           Envoyer la facture
