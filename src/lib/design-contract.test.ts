@@ -7,6 +7,7 @@ const catalogue = readFileSync("src/routes/catalogue.tsx", "utf8");
 const pipeline = readFileSync("src/routes/pipeline.tsx", "utf8");
 const devis = readFileSync("src/routes/devis.tsx", "utf8");
 const factures = readFileSync("src/routes/factures.tsx", "utf8");
+const connexion = readFileSync("src/routes/connexion.tsx", "utf8");
 
 function buttonOpeningBefore(source: string, label: string) {
   const labelIndex = source.indexOf(label);
@@ -75,5 +76,19 @@ assert.ok(
   elevatedCard.includes("border: 2px") && elevatedCard.includes("var(--shape-control)"),
   "card-elevated doit utiliser une bordure de 2 px et le rayon court",
 );
+
+assert.ok(connexion.includes("Devizia"), "Connexion doit afficher la marque Devizia");
+assert.ok(!connexion.includes("InvoicePro"), "Connexion ne doit plus afficher la marque InvoicePro");
+for (const signature of [
+  "devizia-auth-grid",
+  "border-2",
+  "rounded-[var(--shape-control)]",
+  "shadow-offset",
+  "handleSubmit",
+  "handleDevAccess",
+  "setShowPassword",
+]) {
+  assert.ok(connexion.includes(signature), `Connexion doit conserver ${signature}`);
+}
 
 console.log("design-contract.test.ts: OK");
