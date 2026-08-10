@@ -61,9 +61,9 @@ function ConnexionPage() {
             <span className="mb-5 inline-flex items-center gap-2 rounded-full border-2 border-navy/15 bg-white px-4 py-2 text-sm font-bold text-navy shadow-offset-sm">
               <Sparkles className="h-4 w-4 text-primary" /> Votre activité, enfin sous contrôle
             </span>
-            <h1 className="max-w-2xl text-5xl font-black leading-[1.04] tracking-tight text-navy xl:text-6xl">
+            <p className="max-w-2xl text-5xl font-black leading-[1.04] tracking-tight text-navy xl:text-6xl">
               Retrouvez votre entreprise là où vous l'avez laissée.
-            </h1>
+            </p>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
               Devis, factures, clients et paiements réunis dans un espace simple, conçu pour les artisans et les indépendants.
             </p>
@@ -82,7 +82,7 @@ function ConnexionPage() {
               <span className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 <ShieldCheck className="h-4 w-4" /> Espace sécurisé
               </span>
-              <h2 id="connexion-title" className="text-3xl font-black tracking-tight text-navy">{t("auth.login.title")}</h2>
+              <h1 id="connexion-title" className="text-3xl font-black tracking-tight text-navy">{t("auth.login.title")}</h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("auth.login.subtitle")}</p>
             </div>
 

@@ -79,6 +79,10 @@ assert.ok(
 
 assert.ok(connexion.includes("Devizia"), "Connexion doit afficher la marque Devizia");
 assert.ok(!connexion.includes("InvoicePro"), "Connexion ne doit plus afficher la marque InvoicePro");
+assert.ok(
+  connexion.includes('<h1 id="connexion-title"'),
+  "Le titre visible du formulaire doit être le titre principal accessible",
+);
 for (const signature of [
   "devizia-auth-grid",
   "border-2",
