@@ -63,7 +63,7 @@ const CATEGORIES: { id: ExpenseCategory; icon: LucideIcon; color: string; label:
   { id: "software", icon: Monitor, color: "text-blue-500", label: { fr: "Logiciels & Abonnements", en: "Software & Subs" } },
   { id: "hardware", icon: ShoppingCart, color: "text-amber-500", label: { fr: "Matériel", en: "Hardware" } },
   { id: "travel", icon: Plane, color: "text-emerald-500", label: { fr: "Déplacements", en: "Travel" } },
-  { id: "subcontractor", icon: Briefcase, color: "text-purple-500", label: { fr: "Sous-traitance", en: "Subcontractor" } },
+  { id: "subcontractor", icon: Briefcase, color: "text-orange-500", label: { fr: "Sous-traitance", en: "Subcontractor" } },
   { id: "office", icon: Coffee, color: "text-orange-500", label: { fr: "Frais de bureau", en: "Office" } },
   { id: "other", icon: CreditCard, color: "text-slate-500", label: { fr: "Autre", en: "Other" } },
 ];

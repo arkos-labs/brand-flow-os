@@ -81,11 +81,11 @@ function avatarColor(name: string): string {
   const colors = [
     "bg-blue-500",
     "bg-emerald-500",
-    "bg-violet-500",
-    "bg-amber-500",
+    "bg-blue-500",
+    "bg-sky-500",
     "bg-rose-500",
     "bg-cyan-500",
-    "bg-indigo-500",
+    "bg-blue-700",
     "bg-teal-500",
   ];
   let h = 0;
@@ -807,7 +807,7 @@ function ClientsPage() {
                           type="button"
                           disabled={!form.siret || form.siret.length !== 14 || isFetchingSiret}
                           onClick={() => handleSiretLookup(form.siret || "")}
-                          className="flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 transition-colors"
+                          className="flex h-9 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy bg-primary px-3 text-sm font-bold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none disabled:opacity-50"
                           title={lang === "fr" ? "Rechercher via API" : "Search via API"}
                         >
                           {isFetchingSiret ? <Search className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}

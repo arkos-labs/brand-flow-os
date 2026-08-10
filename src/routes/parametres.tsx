@@ -246,7 +246,7 @@ function SettingsPage() {
             <button
               onClick={handleSave}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all",
+                "flex h-10 items-center gap-2 rounded-[var(--shape-control)] border-2 border-navy px-5 text-sm font-bold text-white shadow-offset transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-offset-sm",
                 saved
                   ? "bg-success hover:bg-success/90"
                   : "bg-primary hover:bg-primary/90",
@@ -367,7 +367,7 @@ function SettingsPage() {
                       type="button"
                       disabled={!form.siret || form.siret.length !== 14 || isFetchingSiret}
                       onClick={() => handleSiretLookup(form.siret || "")}
-                      className="flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50 transition-colors"
+                      className="flex h-9 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy bg-primary px-3 text-sm font-bold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none disabled:opacity-50"
                       title={lang === "fr" ? "Rechercher via API" : "Search via API"}
                     >
                       {isFetchingSiret ? <Search className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
@@ -944,7 +944,7 @@ function SettingsPage() {
               <button
                 onClick={handleSave}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium text-white transition-all",
+                  "flex h-10 items-center gap-2 rounded-[var(--shape-control)] border-2 border-navy px-6 text-sm font-bold text-white shadow-offset transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-offset-sm",
                   saved ? "bg-success" : "bg-primary hover:bg-primary/90",
                 )}
               >

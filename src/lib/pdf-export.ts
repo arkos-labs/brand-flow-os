@@ -36,7 +36,7 @@ const MT = 18;       // Marge top
 
 // Palette couleurs (Navy InvoicePro) par défaut
 const COLOR_NAVY    = [15, 23, 42]  as [number, number, number];
-const COLOR_PRIMARY = [99, 102, 241] as [number, number, number]; // indigo-500
+const COLOR_PRIMARY = [206, 113, 49] as [number, number, number]; // Devizia copper
 const COLOR_MUTED   = [107, 114, 128] as [number, number, number]; // gray-500
 const COLOR_BORDER  = [229, 231, 235] as [number, number, number]; // gray-200
 const COLOR_BG_LIGHT= [248, 250, 252] as [number, number, number]; // slate-50

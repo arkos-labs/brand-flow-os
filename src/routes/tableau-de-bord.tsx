@@ -43,7 +43,7 @@ export const Route = createFileRoute("/tableau-de-bord")({
 // ── Constantes couleurs Recharts ──────────────────────────────────────────────
 // CSS custom properties (oklch) ne fonctionnant pas dans SVG fill, on utilise
 // des valeurs hex cohérentes avec le design system.
-const COLOR_SENT = "#6366f1"; // primary (indigo)
+const COLOR_SENT = "#1769e0"; // Devizia blue
 const COLOR_SIGNED = "#10b981"; // success (emerald)
 const COLOR_REFUSED = "#f43f5e"; // destructive (rose)
 const COLOR_PROGRESS = "#f59e0b"; // warning (amber)
@@ -530,7 +530,7 @@ function Dashboard() {
                 <p className="text-xs text-muted-foreground">{t("dash.funnel.empty.desc")}</p>
                 <Link
                   to="/devis"
-                  className="mt-2 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+                  className="mt-2 flex h-9 items-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-4 text-xs font-bold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {t("dash.new_quote")}

@@ -235,7 +235,7 @@ function PaymentsPage() {
                   <tr key={row.id} className="transition-colors hover:bg-muted/30">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
-                        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", row.type === "invoice" ? "bg-violet-100 text-violet-700" : "bg-primary/10 text-primary")}>
+                        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", row.type === "invoice" ? "bg-orange-100 text-orange-700" : "bg-primary/10 text-primary")}>
                           {row.type === "invoice" ? <ReceiptEuro className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                         </span>
                         <div>

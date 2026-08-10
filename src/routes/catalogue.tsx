@@ -5,6 +5,7 @@ import {
   Layers, Download, Upload, FileText, AlertTriangle, FileDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import {
@@ -64,7 +65,7 @@ const CATEGORY_COLORS: Record<ProductCategory, string> = {
   "main-oeuvre": "bg-blue-50 text-blue-700",
   materiaux: "bg-amber-50 text-amber-700",
   deplacement: "bg-slate-100 text-slate-600",
-  "sous-traitance": "bg-purple-50 text-purple-700",
+  "sous-traitance": "bg-orange-50 text-orange-700",
   equipement: "bg-emerald-50 text-emerald-700",
   autre: "bg-gray-100 text-gray-600",
 };
@@ -315,7 +316,7 @@ function Catalogue() {
       {/* Barre outils */}
       <div className="mt-4 flex flex-col gap-2 lg:mt-6 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3">
         {/* Ligne 1 : recherche + boutons icônes */}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -328,42 +329,42 @@ function Catalogue() {
           </div>
           <div className="flex items-center gap-1.5">
             {/* Modèle CSV — icône seule sur mobile */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={downloadCsvTemplate}
               title={t("cat.import_template")}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:px-3"
             >
               <FileDown className="h-4 w-4 shrink-0" />
               <span className="hidden lg:inline">{t("cat.import_template")}</span>
-            </button>
+            </Button>
             {/* Import CSV */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
               title={t("cat.import_csv")}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:px-3"
             >
               <Upload className="h-4 w-4 shrink-0" />
               <span className="hidden lg:inline">{t("cat.import_csv")}</span>
-            </button>
+            </Button>
             {/* Export Excel */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleExportExcel}
               disabled={exportLoading || items.length === 0}
               title={t("cat.export_excel")}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed lg:px-3"
             >
               <Download className={cn("h-4 w-4 shrink-0", exportLoading && "animate-bounce")} />
               <span className="hidden lg:inline">{t("cat.export_excel")}</span>
-            </button>
-            {/* Nouvelle prestation */}
-            <button
-              onClick={openNew}
-              className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 lg:px-4"
-            >
-              <Plus className="h-4 w-4 shrink-0" />
-              <span className="hidden lg:inline">{t("cat.new")}</span>
-            </button>
+            </Button>
           </div>
+          {/* Nouvelle prestation — action principale isolée à droite */}
+          <Button onClick={openNew} size="sm" className="ml-auto shrink-0" title={t("cat.new")}>
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="hidden lg:inline">{t("cat.new")}</span>
+          </Button>
         </div>
 
         {/* Ligne 2 : filtres catégories en scroll horizontal */}
@@ -753,19 +754,18 @@ function Catalogue() {
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
-              <button
+              <Button
+                variant="outline"
                 onClick={closeModal}
-                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
               >
                 {t("cat.form.cancel")}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={saveForm}
                 disabled={!form.label.fr.trim()}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {t("cat.form.save")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -962,21 +962,20 @@ function Catalogue() {
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => { setImportDialog(false); setImportResult(null); }}
-                className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-secondary transition-colors"
               >
                 {t("cat.form.cancel")}
-              </button>
+              </Button>
               {importResult && importResult.rows.length > 0 && (
-                <button
+                <Button
                   onClick={handleConfirmImport}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   {lang === "fr"
                     ? `Importer ${importResult.rows.length} prestation(s)`
                     : `Import ${importResult.rows.length} service(s)`}
-                </button>
+                </Button>
               )}
             </div>
           </div>

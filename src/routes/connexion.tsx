@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ShieldCheck, Mail, Lock, Eye, EyeOff, Zap, ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({
@@ -50,7 +51,7 @@ function ConnexionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="devizia-auth min-h-screen bg-background flex">
       {/* Branding panel */}
       <div
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"
@@ -62,16 +63,16 @@ function ConnexionPage() {
           </div>
           <div>
             <p className="font-bold text-white text-lg leading-tight">InvoicePro</p>
-            <p className="text-indigo-300 text-xs">Business OS</p>
+            <p className="text-blue-300 text-xs">Business OS</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-white leading-snug mb-3">
             Vos devis & factures.<br />
-            <span className="text-indigo-300">Propulsés par l'IA.</span>
+            <span className="text-blue-300">Propulsés par l'IA.</span>
           </h2>
-          <p className="text-indigo-200 text-sm leading-relaxed max-w-sm mb-6">
+          <p className="text-blue-100 text-sm leading-relaxed max-w-sm mb-6">
             {t("landing.hero.subtitle")}
           </p>
 
@@ -83,10 +84,10 @@ function ConnexionPage() {
               t("landing.features.cashflow.title"),
             ].map((f) => (
               <div key={f} className="flex items-center gap-3">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-400/30">
-                  <span className="text-indigo-300 text-xs">✓</span>
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-400/30">
+                  <span className="text-blue-300 text-xs">✓</span>
                 </div>
-                <p className="text-indigo-200 text-sm">{f}</p>
+                <p className="text-blue-100 text-sm">{f}</p>
               </div>
             ))}
           </div>
@@ -116,8 +117,8 @@ function ConnexionPage() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-lg bg-indigo-600/20 border border-indigo-500/30 p-3 mb-2">
-                <p className="text-[9px] text-indigo-300 font-semibold mb-1.5">✨ IA — Devis généré</p>
+              <div className="rounded-lg bg-blue-600/20 border border-blue-500/30 p-3 mb-2">
+                <p className="text-[9px] text-blue-300 font-semibold mb-1.5">✨ IA — Devis généré</p>
                 <div className="space-y-1">
                   {[
                     { desc: "Pose carrelage sol", total: "900 €" },
@@ -130,13 +131,13 @@ function ConnexionPage() {
                     </div>
                   ))}
                   <div className="border-t border-white/10 pt-1 mt-1 flex justify-between text-[10px]">
-                    <span className="text-indigo-300 font-semibold">Total HT</span>
-                    <span className="text-indigo-300 font-bold">3 740 €</span>
+                    <span className="text-blue-300 font-semibold">Total HT</span>
+                    <span className="text-blue-300 font-bold">3 740 €</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 rounded-lg bg-indigo-600 py-1.5 text-center text-[9px] font-bold text-white">
+                <div className="flex-1 rounded-lg bg-blue-600 py-1.5 text-center text-[9px] font-bold text-white">
                   Envoyer
                 </div>
                 <div className="flex-1 rounded-lg bg-white/8 border border-white/10 py-1.5 text-center text-[9px] text-white/60">
@@ -211,10 +212,10 @@ function ConnexionPage() {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full"
             >
               {loading ? (
                 <>
@@ -227,7 +228,7 @@ function ConnexionPage() {
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           <div className="flex items-center gap-3 my-6">
