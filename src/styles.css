@@ -268,6 +268,19 @@
   box-shadow: var(--shadow-card);
 }
 
+.devizia-auth-grid {
+  background-color: color-mix(in srgb, var(--background) 94%, var(--primary));
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 32%);
+  background-size: 28px 28px, 28px 28px, 100% 100%;
+}
+
+.devizia-auth input::placeholder {
+  color: color-mix(in srgb, var(--navy) 42%, transparent);
+}
+
 @utility surface-navy {
   background-image: var(--gradient-navy);
   color: var(--color-navy-foreground);
