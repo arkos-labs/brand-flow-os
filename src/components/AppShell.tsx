@@ -307,14 +307,31 @@ export function AppShell({ children }: { children: ReactNode }) {
   ].filter(Boolean) as NotifItem[];
 
   // ── Sidebar content (partagé desktop + mobile drawer) ────────────────────
-  const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
+  const SidebarContent = ({
+    onNavigate,
+    onCloseDrawer,
+  }: {
+    onNavigate?: () => void;
+    onCloseDrawer?: () => void;
+  }) => (
     <>
       {/* ── Brand ── */}
-      <div className="border-b border-sidebar-border/50 px-2 pb-5">
-        <div className="relative flex w-full items-center rounded-[var(--shape-control)] bg-white px-3 py-2">
-          <BrandLogo className="h-7 w-auto" priority />
-          <span className="absolute right-2 top-2 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white" />
+      <div className="flex items-center gap-2 border-b border-sidebar-border/50 px-2 pb-5">
+        <div className="relative flex min-w-0 flex-1 items-center rounded-[var(--shape-control)] bg-white px-3 py-2">
+          <BrandLogo compact={Boolean(onCloseDrawer)} className={onCloseDrawer ? "h-7 w-7" : "h-7 w-auto"} priority />
+          {!onCloseDrawer && (
+            <span className="absolute right-2 top-2 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white" />
+          )}
         </div>
+        {onCloseDrawer && (
+          <button
+            onClick={onCloseDrawer}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--shape-control)] border-2 border-white bg-white text-navy transition-colors hover:bg-primary/10"
+            aria-label="Fermer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <nav className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto">
@@ -424,14 +441,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
         )}
       >
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
-          aria-label="Fermer"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        <SidebarContent onNavigate={() => setMobileOpen(false)} />
+        <SidebarContent onNavigate={() => setMobileOpen(false)} onCloseDrawer={() => setMobileOpen(false)} />
       </aside>
 
       <div className="lg:pl-64">
@@ -444,6 +454,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu className="h-4 w-4" />
           </button>
+          <div className="flex min-w-0 flex-1 items-center lg:hidden">
+            <BrandLogo compact className="h-8 w-8" priority />
+          </div>
           {/* Recherche + contexte */}
           <div className="hidden min-w-0 flex-1 items-center gap-4 lg:flex">
             <div className="flex h-8 items-center border-r border-border pr-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">

@@ -48,6 +48,24 @@ for (const [name, source] of [
   assert.ok(!/>\s*(?:IP|D)\s*</.test(source), `${name} ne doit plus afficher un monogramme textuel`);
 }
 
+const mobileHeaderStart = appShell.indexOf("{/* Hamburger mobile */}");
+const mobileHeaderEnd = appShell.indexOf("{/* Recherche + contexte */}", mobileHeaderStart);
+const mobileHeader = appShell.slice(mobileHeaderStart, mobileHeaderEnd);
+assert.ok(mobileHeader.includes("<BrandLogo compact"), "L'en-tête mobile doit afficher la marque compacte");
+assert.ok(mobileHeader.includes("lg:hidden"), "La marque de l'en-tête doit être réservée au mobile");
+
+const sidebarBrandStart = appShell.indexOf("{/* ── Brand ── */}");
+const sidebarBrandEnd = appShell.indexOf("<nav", sidebarBrandStart);
+const sidebarBrand = appShell.slice(sidebarBrandStart, sidebarBrandEnd);
+const drawerStart = appShell.indexOf("{/* ── Drawer mobile (slide-in) ── */}");
+const drawerEnd = appShell.indexOf('<div className="lg:pl-64">', drawerStart);
+const mobileDrawer = appShell.slice(drawerStart, drawerEnd);
+assert.ok(sidebarBrand.includes("onCloseDrawer &&"), "Le drawer doit intégrer son bouton de fermeture dans la zone de marque");
+assert.ok(sidebarBrand.includes("compact={Boolean(onCloseDrawer)}"), "Le drawer doit réserver sa largeur avec le symbole compact");
+assert.ok(sidebarBrand.includes("text-navy"), "Le bouton de fermeture du drawer doit avoir un contraste suffisant");
+assert.ok(mobileDrawer.includes("onCloseDrawer={() => setMobileOpen(false)}"), "Le drawer doit transmettre sa fermeture à la zone de marque");
+assert.ok(!mobileDrawer.includes("absolute right-2 top-2"), "Le bouton du drawer ne doit pas chevaucher la carte de marque");
+
 function buttonOpeningBefore(source: string, label: string) {
   const labelIndex = source.indexOf(label);
   assert.notEqual(labelIndex, -1, `Libellé introuvable : ${label}`);
