@@ -30,9 +30,11 @@ Les exemples doivent rester assez variés pour que ces trois publics se reconnai
 
 ## Direction visuelle
 
-L'identité est éditoriale, premium et accessible : bleu pétrole profond, fond ivoire et accent cuivre. Une typographie de caractère sert les titres, associée à une sans-serif très lisible pour les contenus et l'interface produit.
+L'identité est directe, énergique et inspirée du terrain : crème utilitaire, noir charbon, jaune signal et rouge-orangé. Une typographie sans-serif forte et condensée porte les titres, associée à une sans-serif très lisible pour les textes et les éléments d'interface. Le rendu doit être professionnel sans ressembler à une agence de luxe ou à un logiciel financier abstrait.
 
-La composition repose sur de grands espaces, quelques formes graphiques inspirées des documents et une démonstration réaliste de l'application. Les cartes standardisées sont limitées au profit de sections plus narratives et asymétriques. Les animations restent légères : apparition progressive, survols précis et mouvement discret dans l'aperçu du produit.
+La composition emprunte aux plannings de chantier, fiches d'intervention et tableaux d'atelier : lignes franches, grands aplats, étiquettes fonctionnelles et informations immédiatement scannables. Les bordures sont nettes, les angles peu arrondis et les ombres rares. Les nombreuses cartes flottantes de la première version sont supprimées. Les animations restent courtes et fonctionnelles : déplacement d'un indicateur, changement d'état ou apparition d'une ligne de suivi.
+
+Le hero porte la formulation directe : « Un devis propre. Une facture prête. La journée est finie. » Il montre un tableau d'activité concret avec un devis prêt, un paiement reçu et une relance à effectuer.
 
 Le résultat doit être lisible sur mobile, respecter `prefers-reduced-motion`, conserver des contrastes accessibles et fournir des états de focus visibles.
 
@@ -46,7 +48,7 @@ L'en-tête contient le logo Devizia, des ancres vers les bénéfices, le fonctio
 
 Le hero présente la promesse principale, un paragraphe expliquant la proposition de valeur et deux actions : démarrer gratuitement et découvrir le fonctionnement. Une micro-réassurance précise l'absence de carte bancaire ou d'installation uniquement si cela correspond au parcours actuel.
 
-Un aperçu produit crédible montre un devis en création et un petit résumé d'activité. Il sert de démonstration visuelle, pas de décoration générique.
+Un aperçu produit crédible prend la forme d'un planning d'activité : devis prêt à envoyer, facture payée et relance du jour. Il sert de démonstration visuelle, pas de décoration générique.
 
 ### 3. Bandeau de confiance
 
