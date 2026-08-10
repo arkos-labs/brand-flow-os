@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/tarifs")({
   head: () => ({
@@ -33,20 +34,6 @@ export const Route = createFileRoute("/tarifs")({
   component: PricingPage,
 });
 
-function Logo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30">
-        IP
-      </div>
-      <div className="leading-tight">
-        <p className="font-display text-sm font-bold tracking-tight text-foreground">InvoicePro</p>
-        <p className="text-[10px] font-medium text-muted-foreground">Business OS</p>
-      </div>
-    </div>
-  );
-}
-
 function PublicHeader() {
   const { t, lang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -59,8 +46,8 @@ function PublicHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
-        <Link to="/">
-          <Logo />
+        <Link to="/" className="flex items-center">
+          <BrandLogo className="h-9 w-auto" priority />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -289,7 +276,7 @@ function Footer() {
   return (
     <footer className="border-t border-border bg-background py-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 lg:flex-row lg:px-6">
-        <Logo />
+        <BrandLogo className="h-9 w-auto" />
         <p className="text-xs text-muted-foreground">
           © 2026 InvoicePro. Factur-X · PAF · RGPD.
         </p>

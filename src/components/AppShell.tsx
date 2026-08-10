@@ -33,6 +33,7 @@ import { useTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { formatNavigationBadge } from "@/lib/navigation-badge";
 import { GlobalSearch } from "./GlobalSearch";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Search as SearchIcon } from "lucide-react";
 
 const groups: {
@@ -309,14 +310,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
       {/* ── Brand ── */}
-      <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/50">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border-2 border-primary bg-navy font-display text-lg font-black text-primary">
-          D
-          <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
-        </div>
-        <div className="leading-tight">
-          <p className="font-display text-sm font-bold tracking-tight">{t("app.name")}</p>
-          <p className="text-[10px] text-sidebar-foreground/50 font-medium">{t("app.tagline")}</p>
+      <div className="border-b border-sidebar-border/50 px-2 pb-5">
+        <div className="relative flex w-full items-center rounded-[var(--shape-control)] bg-white px-3 py-2">
+          <BrandLogo className="h-7 w-auto" priority />
+          <span className="absolute right-2 top-2 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white" />
         </div>
       </div>
 

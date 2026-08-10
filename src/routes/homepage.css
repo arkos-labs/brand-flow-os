@@ -58,41 +58,11 @@
 .devizia-header a {
   text-decoration: none;
 }
-.devizia-logo {
+.clearquote-logo--inverse {
   display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink);
-}
-.devizia-logo__mark {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  background: var(--ink);
-  color: var(--signal);
-  font: 900 22px "Barlow Condensed";
-}
-.devizia-logo strong {
-  display: block;
-  font: 900 23px "Barlow Condensed";
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.devizia-logo small {
-  display: block;
-  font: 500 8px "IBM Plex Mono";
-  text-transform: uppercase;
-}
-.devizia-logo--inverse {
-  color: #fff;
-}
-.devizia-logo--inverse .devizia-logo__mark {
-  background: var(--signal);
-  color: #fff;
-}
-.devizia-logo--inverse small {
-  color: #9a9c96;
+  border: 2px solid var(--signal);
+  background: #fff;
+  padding: 7px 11px;
 }
 .devizia-nav {
   display: flex;
@@ -1035,9 +1005,6 @@
   }
   .devizia-header__inner {
     height: 62px;
-  }
-  .devizia-logo small {
-    display: none;
   }
   .devizia-hero {
     padding-top: 92px;

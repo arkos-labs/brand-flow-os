@@ -8,6 +8,11 @@ const pipeline = readFileSync("src/routes/pipeline.tsx", "utf8");
 const devis = readFileSync("src/routes/devis.tsx", "utf8");
 const factures = readFileSync("src/routes/factures.tsx", "utf8");
 const connexion = readFileSync("src/routes/connexion.tsx", "utf8");
+const inscription = readFileSync("src/routes/inscription.tsx", "utf8");
+const motDePasseOublie = readFileSync("src/routes/mot-de-passe-oublie.tsx", "utf8");
+const accueil = readFileSync("src/routes/index.tsx", "utf8");
+const tarifs = readFileSync("src/routes/tarifs.tsx", "utf8");
+const appShell = readFileSync("src/components/AppShell.tsx", "utf8");
 const brandLogo = existsSync("src/components/BrandLogo.tsx")
   ? readFileSync("src/components/BrandLogo.tsx", "utf8")
   : "";
@@ -19,6 +24,29 @@ assert.ok(brandLogo.includes("/brand/clearquote-logo.png"), "BrandLogo doit util
 assert.ok(brandLogo.includes("/brand/clearquote-mark.png"), "BrandLogo doit utiliser le symbole compact");
 assert.ok(brandLogo.includes("Logo ClearQuote"), "Le logo horizontal doit avoir un texte alternatif ClearQuote");
 assert.ok(brandLogo.includes("Symbole ClearQuote"), "Le symbole compact doit avoir un texte alternatif ClearQuote");
+
+for (const [name, source] of [
+  ["Accueil", accueil],
+  ["Connexion", connexion],
+  ["Inscription", inscription],
+  ["Mot de passe oublié", motDePasseOublie],
+  ["Tarifs", tarifs],
+  ["AppShell", appShell],
+] as const) {
+  assert.ok(source.includes('from "@/components/BrandLogo"'), `${name} doit importer BrandLogo`);
+  assert.ok(source.includes("<BrandLogo"), `${name} doit afficher BrandLogo`);
+}
+
+assert.ok(!accueil.includes("function Logo"), "L'accueil ne doit plus définir son logo textuel");
+assert.ok(!tarifs.includes("function Logo"), "Les tarifs ne doivent plus définir leur logo textuel");
+for (const [name, source] of [
+  ["Connexion", connexion],
+  ["Inscription", inscription],
+  ["Mot de passe oublié", motDePasseOublie],
+  ["AppShell", appShell],
+] as const) {
+  assert.ok(!/>\s*(?:IP|D)\s*</.test(source), `${name} ne doit plus afficher un monogramme textuel`);
+}
 
 function buttonOpeningBefore(source: string, label: string) {
   const labelIndex = source.indexOf(label);

@@ -26,6 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import "./homepage.css";
 
 export const Route = createFileRoute("/")({
@@ -136,18 +137,6 @@ const faqs = [
   ["Puis-je essayer avant de choisir une offre ?", "Oui. Créez votre espace pour découvrir le produit, puis consultez la page Tarifs pour choisir la formule adaptée à votre activité."],
 ] as const;
 
-function Logo({ inverse = false }: { inverse?: boolean }) {
-  return (
-    <span className={`devizia-logo ${inverse ? "devizia-logo--inverse" : ""}`}>
-      <span className="devizia-logo__mark" aria-hidden="true">D</span>
-      <span>
-        <strong>Devizia</strong>
-        <small>Votre activité, plus légère</small>
-      </span>
-    </span>
-  );
-}
-
 function PublicHeader() {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -155,7 +144,9 @@ function PublicHeader() {
   return (
     <header className="devizia-header">
       <div className="devizia-container devizia-header__inner">
-        <Link to="/" aria-label="Devizia, accueil"><Logo /></Link>
+        <Link to="/" className="flex items-center" aria-label="ClearQuote, accueil">
+          <BrandLogo className="h-10 w-auto" priority />
+        </Link>
         <nav className="devizia-nav" aria-label="Navigation principale">
           <a href="#benefices">Bénéfices</a>
           <a href="#fonctionnement">Comment ça marche</a>
@@ -395,7 +386,10 @@ function Footer() {
   return (
     <footer className="devizia-footer">
       <div className="devizia-container devizia-footer__top">
-        <div><Logo inverse /><p>Les devis, factures et paiements qui laissent respirer votre activité.</p></div>
+        <div>
+          <span className="clearquote-logo--inverse"><BrandLogo className="h-9 w-auto" /></span>
+          <p>Les devis, factures et paiements qui laissent respirer votre activité.</p>
+        </div>
         <nav aria-label="Liens produit"><strong>Produit</strong><a href="#fonctionnalites">Fonctionnalités</a><Link to="/tarifs">Tarifs</Link><Link to="/connexion">Connexion</Link></nav>
         <nav aria-label="Liens pour démarrer"><strong>Démarrer</strong><Link to="/inscription">Créer un compte</Link><a href="#fonctionnement">Comment ça marche</a><a href="#faq">Questions fréquentes</a></nav>
       </div>

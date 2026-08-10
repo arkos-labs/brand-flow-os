@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/inscription")({
   head: () => ({
@@ -58,14 +59,8 @@ function InscriptionPage() {
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"
         style={{ background: "var(--gradient-primary)" }}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-sm font-bold text-white shadow-lg backdrop-blur">
-            IP
-          </div>
-          <div>
-            <p className="font-bold text-white text-lg leading-tight">InvoicePro</p>
-            <p className="text-blue-300 text-xs">Business OS</p>
-          </div>
+        <div className="inline-flex w-fit rounded-xl bg-white px-3 py-2">
+          <BrandLogo className="h-9 w-auto" priority />
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
@@ -105,11 +100,8 @@ function InscriptionPage() {
       {/* Form panel */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">
-              IP
-            </div>
-            <span className="font-bold text-lg text-foreground">InvoicePro</span>
+          <div className="mb-8 lg:hidden">
+            <BrandLogo className="h-9 w-auto" priority />
           </div>
 
           <h1 className="text-2xl font-bold text-foreground mb-1">{t("auth.signup.title")}</h1>

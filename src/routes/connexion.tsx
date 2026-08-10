@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({
@@ -48,12 +49,8 @@ function ConnexionPage() {
   return (
     <main className="devizia-auth devizia-auth-grid min-h-screen px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-6xl flex-col">
-        <Link to="/" className="inline-flex w-fit items-center gap-3 text-navy" aria-label="Retour à l'accueil Devizia">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy bg-primary text-lg font-black text-white shadow-offset-sm">D</span>
-          <span>
-            <strong className="block text-xl leading-none">Devizia</strong>
-            <span className="text-xs font-medium text-muted-foreground">Pilotez. Facturez. Respirez.</span>
-          </span>
+        <Link to="/" className="inline-flex w-fit items-center" aria-label="Retour à l'accueil ClearQuote">
+          <BrandLogo className="h-11 w-auto" priority />
         </Link>
 
         <div className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[1fr_460px] lg:gap-16">
