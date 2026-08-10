@@ -85,7 +85,7 @@ La Direction`;
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Envoyer une relance</DialogTitle>
+          <DialogTitle>Préparer une relance</DialogTitle>
           <DialogDescription>
             Facture {invoice.number} — {invoice.client}
           </DialogDescription>
@@ -125,7 +125,7 @@ La Direction`;
           <Button variant="outline" onClick={onClose}>Annuler</Button>
           <Button onClick={handleSend} className={templateType === "J+30" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
             <Send className="w-4 h-4 mr-2" />
-            Envoyer l'e-mail
+            Enregistrer la relance (mode local)
           </Button>
         </DialogFooter>
       </DialogContent>

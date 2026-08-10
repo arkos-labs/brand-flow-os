@@ -133,13 +133,12 @@ function Dashboard() {
   const { quotes, invoices, expenses } = useData();
 
   // ── KPI base ──────────────────────────────────────────────────────────────
-  const paidQuotes = quotes.filter((q) => SIGNED_STATUSES.includes(q.status.fr));
+  const acceptedQuotes = quotes.filter((q) => SIGNED_STATUSES.includes(q.status.fr));
   const paidInvoices = invoices.filter((inv) => inv.status === "paid");
-  const pendingInvoices = invoices.filter((inv) => inv.status !== "paid");
+  const pendingInvoices = invoices.filter((inv) => inv.status === "sent" || inv.status === "late");
   const pendingQuotes = quotes.filter((q) => PROGRESS_STATUSES.includes(q.status.fr));
 
-  const totalRevenue =
-    paidQuotes.reduce((a, q) => a + q.amount, 0) + paidInvoices.reduce((a, i) => a + i.amount, 0);
+  const totalRevenue = paidInvoices.reduce((a, i) => a + i.amount, 0);
   const pendingRevenue = pendingInvoices.reduce((a, i) => a + i.amount, 0);
   const pendingQuotesTotal = pendingQuotes.reduce((a, q) => a + q.amount, 0);
   
@@ -221,14 +220,14 @@ function Dashboard() {
     const sent = mq.filter((q) => !DRAFT_STATUSES.includes(q.status.fr)).length;
     return {
       name: m.label,
-      [t("dash.funnel.sent")]: sent,
-      [t("dash.funnel.signed")]: signed,
-      [t("dash.funnel.refused")]: refused,
+      sent,
+      signed,
+      refused,
     };
   });
 
   const hasMonthlyData = monthlyData.some(
-    (m) => m[t("dash.funnel.sent")] > 0 || m[t("dash.funnel.signed")] > 0,
+    (m) => m.sent > 0 || m.signed > 0,
   );
 
   // ── Données donut ────────────────────────────────────────────────────────
@@ -243,10 +242,10 @@ function Dashboard() {
 
   // ── Activité récente ──────────────────────────────────────────────────────
   const recentActivity = [
-    ...paidQuotes.map((q) => ({
+    ...acceptedQuotes.map((q) => ({
       type: "quote",
-      date: q.date,
-      label: lang === "fr" ? "Devis payé" : "Paid quote",
+      date: q.signedAt ?? q.sentAt ?? q.date,
+      label: lang === "fr" ? "Devis accepté" : "Accepted quote",
       client: q.client,
       amount: q.amount,
       icon: CheckCircle2,
@@ -254,7 +253,7 @@ function Dashboard() {
     })),
     ...paidInvoices.map((inv) => ({
       type: "invoice",
-      date: inv.date,
+      date: inv.paidAt ?? inv.sentAt ?? inv.date,
       label: lang === "fr" ? "Facture payée" : "Paid invoice",
       client: inv.client,
       amount: inv.amount,
@@ -502,18 +501,21 @@ function Dashboard() {
                     iconSize={8}
                   />
                   <Bar
-                    dataKey={t("dash.funnel.sent")}
+                    dataKey="sent"
+                    name={t("dash.funnel.sent")}
                     fill={COLOR_SENT}
                     radius={[3, 3, 0, 0]}
                     opacity={0.7}
                   />
                   <Bar
-                    dataKey={t("dash.funnel.signed")}
+                    dataKey="signed"
+                    name={t("dash.funnel.signed")}
                     fill={COLOR_SIGNED}
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
-                    dataKey={t("dash.funnel.refused")}
+                    dataKey="refused"
+                    name={t("dash.funnel.refused")}
                     fill={COLOR_REFUSED}
                     radius={[3, 3, 0, 0]}
                   />

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Download,
   Bell,
@@ -16,10 +16,18 @@ import {
   Eye,
   Search,
   Send,
+  CalendarDays,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
-import { useData, Invoice } from "@/lib/data-context";
+import { useData, Invoice, type Client, type Quote } from "@/lib/data-context";
+import {
+  calculateInvoiceTotals,
+  isQuoteReadyToInvoice,
+  selectInvoiceLines,
+  type InvoiceLine,
+} from "@/lib/invoice-from-quote";
+import { recordInvoicePayment, type PaymentMethod } from "@/lib/document-workflow";
 import { type InvoiceStatus } from "@/lib/demo-data";
 import { searchCompanyBySiret } from "@/lib/siret";
 import { exportInvoicePdf } from "@/lib/pdf-export";
@@ -83,10 +91,48 @@ function daysSince(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 }
 
+function invoiceLinesFromQuote(quote: Quote): InvoiceLine[] {
+  const vatRate = quote.details?.vatRate ?? 20;
+  const quoteLines = [
+    ...(quote.details?.items ?? []).map((item) => ({
+      id: `${quote.number}-prestation-${item.id}`,
+      label: item.label,
+      qty: Number(item.qty) || 0,
+      priceHT: Number(item.priceHT) || 0,
+      vatRate,
+      kind: "prestation" as const,
+    })),
+    ...(quote.details?.upsells ?? []).map((item) => ({
+      id: `${quote.number}-option-${item.id}`,
+      label: item.label,
+      qty: Number(item.qty) || 0,
+      priceHT: Number(item.priceHT) || 0,
+      vatRate,
+      kind: "option" as const,
+    })),
+  ];
+
+  return quoteLines.length > 0
+    ? quoteLines
+    : [
+        {
+          id: `${quote.number}-total`,
+          label: `Prestations du devis ${quote.number}`,
+          qty: 1,
+          priceHT: quote.amount / (1 + vatRate / 100),
+          vatRate,
+          kind: "prestation",
+        },
+      ];
+}
+
 function Invoices() {
   const { t, money, date, lang } = useI18n();
+  const navigate = useNavigate();
   const { invoices, addInvoice, updateInvoice, company, updateCompany, clients, addClient, quotes, updateQuote } = useData();
   const [filter, setFilter] = useState<InvoiceStatus | "all">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
   
   const [isNewOpen, setIsNewOpen] = useState(false);
@@ -97,6 +143,8 @@ function Invoices() {
   const [newSiret, setNewSiret] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
+  const [quoteToInvoice, setQuoteToInvoice] = useState<Quote | null>(null);
+  const [selectedQuoteLineIds, setSelectedQuoteLineIds] = useState<Set<string>>(new Set());
 
   // Address book search
   const [clientSearch, setClientSearch] = useState("");
@@ -112,7 +160,7 @@ function Invoices() {
     );
   });
 
-  const handleSelectExistingClient = (c: any) => {
+  const handleSelectExistingClient = (c: Client) => {
     setNewClientType(c.type || "pro");
     setNewCompanyName(c.companyName || c.name || "");
     setNewFirstName(c.firstName || "");
@@ -143,7 +191,7 @@ function Invoices() {
   });
 
   const handleExportCSV = () => {
-    const [year, month] = exportMonth.split("-");
+    const [year = "0", month = "0"] = exportMonth.split("-");
     const filteredInvoices = invoices.filter(inv => {
       if (!inv.date) return false;
       const d = new Date(inv.date);
@@ -160,7 +208,39 @@ function Invoices() {
     setIsExportModalOpen(false);
   };
 
-  const handleCreateInvoiceFromQuote = (q: any) => {
+  const quoteInvoiceLines = quoteToInvoice ? invoiceLinesFromQuote(quoteToInvoice) : [];
+  const invoicedQuoteLineIds = new Set(quoteToInvoice?.invoicedLineIds ?? []);
+  const selectedQuoteLines = selectInvoiceLines(quoteInvoiceLines, selectedQuoteLineIds);
+  const selectedQuoteTotals = calculateInvoiceTotals(selectedQuoteLines);
+
+  const openQuoteInvoice = (quote: Quote) => {
+    const lines = invoiceLinesFromQuote(quote);
+    const alreadyInvoiced = new Set(quote.invoicedLineIds ?? []);
+    setQuoteToInvoice(quote);
+    setSelectedQuoteLineIds(new Set(lines.filter((line) => !alreadyInvoiced.has(line.id)).map((line) => line.id)));
+  };
+
+  useEffect(() => {
+    const quoteNumber = new URLSearchParams(window.location.search).get("devis");
+    if (!quoteNumber) return;
+    const quote = quotes.find((item) => item.number === quoteNumber);
+    if (!quote) return;
+    openQuoteInvoice(quote);
+    window.history.replaceState({}, "", "/factures#factures-a-creer");
+  }, [quotes]);
+
+  const toggleQuoteLine = (lineId: string) => {
+    if (invoicedQuoteLineIds.has(lineId)) return;
+    setSelectedQuoteLineIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(lineId)) next.delete(lineId);
+      else next.add(lineId);
+      return next;
+    });
+  };
+
+  const handleCreateInvoiceFromQuote = (status: InvoiceStatus = "draft") => {
+    if (!quoteToInvoice || selectedQuoteLines.length === 0) return;
     const today = new Date();
     const due = new Date(today);
     due.setDate(today.getDate() + (company.paymentTermsDays || 30));
@@ -172,19 +252,38 @@ function Invoices() {
 
     const newInvoice: Invoice = {
       number: invoiceNumber,
-      client: q.client,
+      client: quoteToInvoice.client,
+      ...(quoteToInvoice.clientId ? { clientId: quoteToInvoice.clientId } : {}),
       date: today.toISOString().split("T")[0] ?? "",
       due: due.toISOString().split("T")[0] ?? "",
-      amount: q.details?.totalTTC || q.amount || 0,
-      status: "draft",
+      amount: selectedQuoteTotals.totalTTC,
+      totalHT: selectedQuoteTotals.totalHT,
+      totalVAT: selectedQuoteTotals.totalTVA,
+      status,
+      ...(status === "sent" ? { sentAt: new Date().toISOString() } : {}),
+      sourceQuoteNumber: quoteToInvoice.number,
+      items: selectedQuoteLines,
     };
     
     addInvoice(newInvoice);
     updateCompany({ nextInvoiceNumber: num + 1 });
-    updateQuote(q.number, { ...q, status: { fr: "Facturé", en: "Invoiced" } });
+    const nextInvoicedLineIds = Array.from(
+      new Set([...(quoteToInvoice.invoicedLineIds ?? []), ...selectedQuoteLines.map((line) => line.id)]),
+    );
+    updateQuote(quoteToInvoice.number, {
+      ...quoteToInvoice,
+      invoicedLineIds: nextInvoicedLineIds,
+      status: { fr: "Facturé", en: "Invoiced" },
+    });
+    setQuoteToInvoice(null);
+    setSelectedQuoteLineIds(new Set());
   };
 
-  const pendingQuotes = (quotes || []).filter((q) => q.status.fr === "Signé");
+  const pendingQuotes = (quotes || []).filter((q) => {
+    if (!isQuoteReadyToInvoice(q.status.fr) && q.status.fr !== "Facturé") return false;
+    const billed = new Set(q.invoicedLineIds ?? []);
+    return invoiceLinesFromQuote(q).some((line) => !billed.has(line.id));
+  });
 
   // Reminder modal
   const [reminderInvoice, setReminderInvoice] = useState<Invoice | null>(null);
@@ -192,8 +291,18 @@ function Invoices() {
 
   // Confirm paid modal
   const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("virement");
+  const [paymentAmount, setPaymentAmount] = useState("");
 
-  const rows = invoices.filter((i) => filter === "all" || i.status === filter);
+  const rows = invoices.filter((invoice) => {
+    const matchesStatus = filter === "all" || invoice.status === filter;
+    return matchesStatus && (!dateFrom || invoice.date >= dateFrom) && (!dateTo || invoice.date <= dateTo);
+  });
+
+  const openClientHistory = (clientName: string) => {
+    window.localStorage.setItem("invoicepro_client_focus", clientName);
+    navigate({ to: "/clients" });
+  };
 
   // KPIs — Bug 6 corrigé : on somme les TTC puis on recalcule HT
   // Sans taux TVA stocké par facture, on affiche le CA TTC total (plus fiable)
@@ -243,17 +352,19 @@ function Invoices() {
 
     // Auto-save client if not exists
     const existing = clients?.find((c) => c.name.toLowerCase() === displayName.toLowerCase());
+    const clientId = existing?.id ?? crypto.randomUUID();
     if (!existing && addClient) {
       addClient({
-        id: crypto.randomUUID(),
+        id: clientId,
         type: newClientType,
         name: displayName,
         companyName: newClientType === "pro" ? newCompanyName : "",
         firstName: newClientType === "particulier" ? newFirstName : "",
         lastName: newClientType === "particulier" ? newLastName : "",
         siret: newClientType === "pro" ? newSiret : "",
+        email: "",
         createdAt: new Date().toISOString().split("T")[0] ?? "",
-      } as any);
+      });
     }
 
     const today = new Date();
@@ -267,6 +378,7 @@ function Invoices() {
     const newInvoice: Invoice = {
       number: `${company.invoicePrefix || "FA"}-${year}-${pad}`,
       client: displayName,
+      clientId,
       date: today.toISOString().split("T")[0] ?? "",
       due: due.toISOString().split("T")[0] ?? "",
       amount: parseFloat(newAmount),
@@ -299,6 +411,7 @@ function Invoices() {
     addInvoice({
       number: invoiceNumber,
       client: inv.client,
+      ...(inv.clientId ? { clientId: inv.clientId } : {}),
       date: today.toISOString().split("T")[0] ?? "",
       due: due.toISOString().split("T")[0] ?? "",
       amount: inv.amount,
@@ -309,8 +422,22 @@ function Invoices() {
 
   // Marquer comme payé
   const handleMarkPaid = (inv: Invoice) => {
-    updateInvoice(inv.number, { ...inv, status: "paid" });
+    const remaining = Math.max(0, inv.amount - (inv.paidAmount ?? 0));
+    const amount = Math.min(remaining, Math.max(0, Number(paymentAmount.replace(",", ".")) || remaining));
+    const updatedInvoice = recordInvoicePayment(inv, amount, new Date().toISOString(), paymentMethod);
+    updateInvoice(inv.number, updatedInvoice);
+    if (updatedInvoice.status === "paid" && inv.sourceQuoteNumber) {
+      const sourceQuote = quotes.find((quote) => quote.number === inv.sourceQuoteNumber);
+      if (sourceQuote) updateQuote(sourceQuote.number, { ...sourceQuote, status: { fr: "Payé", en: "Paid" } });
+    }
     setPayingInvoice(null);
+    setPaymentMethod("virement");
+    setPaymentAmount("");
+  };
+
+  const openPaymentDialog = (invoice: Invoice) => {
+    setPayingInvoice(invoice);
+    setPaymentAmount(String(Math.max(0, invoice.amount - (invoice.paidAmount ?? 0))));
   };
 
   // Relance
@@ -418,7 +545,7 @@ function Invoices() {
                   <Label>Type de client</Label>
                   <RadioGroup
                     value={newClientType}
-                    onValueChange={(val: any) => setNewClientType(val)}
+                    onValueChange={(val) => setNewClientType(val as "pro" | "particulier")}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -515,20 +642,118 @@ function Invoices() {
         }
       />
 
+      <Dialog open={quoteToInvoice !== null} onOpenChange={(open) => !open && setQuoteToInvoice(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Créer une facture à partir du devis</DialogTitle>
+          </DialogHeader>
+          {quoteToInvoice && (
+            <div className="mt-2 space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                <p className="text-xs font-semibold text-primary">{quoteToInvoice.number}</p>
+                <p className="mt-0.5 font-semibold text-foreground">{quoteToInvoice.client}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Retirez les options ou prestations non réalisées. Le devis signé reste inchangé.
+                </p>
+              </div>
+
+              <ScrollArea className="max-h-[45vh] rounded-lg border border-border">
+                <div className="divide-y divide-border">
+                  {quoteInvoiceLines.map((line) => {
+                    const isInvoiced = invoicedQuoteLineIds.has(line.id);
+                    const isSelected = selectedQuoteLineIds.has(line.id);
+                    return (
+                      <div
+                        key={line.id}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 transition-colors",
+                          isInvoiced ? "bg-emerald-50/70" : !isSelected ? "bg-muted/30" : "hover:bg-muted/50",
+                        )}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className={cn("block truncate text-sm font-medium", !isSelected && !isInvoiced && "text-muted-foreground line-through")}>{line.label}</span>
+                            {line.kind === "option" && (
+                              <span className="shrink-0 rounded-full bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-warning-foreground">OPTION</span>
+                            )}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {line.qty} × {money(line.priceHT)} HT · TVA {line.vatRate}%
+                          </span>
+                        </span>
+                        <span className="text-sm font-semibold tabular-nums text-foreground">
+                          {money(line.qty * line.priceHT)}
+                        </span>
+                        {isInvoiced ? (
+                          <span className="min-w-20 rounded-md bg-emerald-100 px-2.5 py-1.5 text-center text-xs font-bold text-emerald-700">
+                            Facturé
+                          </span>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant={isSelected ? "outline" : "secondary"}
+                            size="sm"
+                            onClick={() => toggleQuoteLine(line.id)}
+                            className={cn("min-w-20", isSelected && "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive")}
+                          >
+                            {isSelected ? "Retirer" : "Ajouter"}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+
+              <div className="flex items-center justify-between rounded-lg bg-muted/60 px-4 py-3">
+                <div className="text-xs text-muted-foreground">
+                  {selectedQuoteLines.length} ligne{selectedQuoteLines.length > 1 ? "s" : ""} à facturer
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Total TTC</p>
+                  <p className="text-lg font-bold tabular-nums text-foreground">{money(selectedQuoteTotals.totalTTC)}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button variant="outline" disabled={selectedQuoteLines.length === 0} onClick={() => handleCreateInvoiceFromQuote("draft")}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Enregistrer brouillon
+                </Button>
+                <Button disabled={selectedQuoteLines.length === 0} onClick={() => handleCreateInvoiceFromQuote("sent")}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Créer et envoyer ({money(selectedQuoteTotals.totalTTC)} TTC)
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Devis à facturer (Affiché uniquement s'il y a des devis "Signés") */}
       {pendingQuotes.length > 0 && (
-        <div className="mb-6 space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            Devis signés en attente de facturation
-          </h2>
+        <div id="factures-a-creer" className="mb-6 scroll-mt-24 rounded-xl border border-primary/20 bg-card p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <FileText className="h-4 w-4 text-primary" />
+                Factures à créer
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {pendingQuotes.length} devis avec des prestations ou options restant à facturer.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              Action requise
+            </span>
+          </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {pendingQuotes.map((q) => (
-              <div key={q.number} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm hover:border-primary/50 transition-colors">
+              <div key={q.number} className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/50">
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-xs font-medium text-muted-foreground">{q.number}</span>
-                    <span className="text-xs font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">Prêt à facturer</span>
+                    <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning-foreground">Facture non créée</span>
                   </div>
                   <h3 className="font-semibold text-card-foreground line-clamp-1">{q.client}</h3>
                   <div className="text-sm font-medium mt-1">
@@ -538,9 +763,9 @@ function Invoices() {
                 <Button 
                   size="sm" 
                   className="w-full mt-auto" 
-                  onClick={() => handleCreateInvoiceFromQuote(q)}
+                  onClick={() => openQuoteInvoice(q)}
                 >
-                  <Plus className="mr-2 h-4 w-4" /> Générer la facture
+                  <Plus className="mr-2 h-4 w-4" /> Créer en 1 clic
                 </Button>
               </div>
             ))}
@@ -623,6 +848,23 @@ function Invoices() {
         ))}
       </div>
 
+      <div className="mb-5 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          Période d'émission
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="h-8 w-auto text-xs" aria-label="Date de début" />
+          <span className="text-xs text-muted-foreground">au</span>
+          <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="h-8 w-auto text-xs" aria-label="Date de fin" />
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              Effacer
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Table */}
       <div className="card-elevated overflow-hidden">
         <div className="border-b border-border bg-gradient-subtle px-5 py-3">
@@ -659,10 +901,15 @@ function Invoices() {
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary">
                           {inv.client.substring(0, 2).toUpperCase()}
                         </div>
-                        <span className="font-semibold">{inv.client}</span>
+                        <button type="button" onClick={() => openClientHistory(inv.client)} className="text-left font-semibold hover:text-primary hover:underline underline-offset-4">
+                          {inv.client}
+                        </button>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-muted-foreground">{date(inv.date)}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">
+                      <p>{date(inv.date)}</p>
+                      {inv.sentAt && <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyée le {date(inv.sentAt)}</p>}
+                    </td>
                     <td className="px-5 py-3.5">
                       <span
                         className={
@@ -709,7 +956,7 @@ function Invoices() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           title="Télécharger PDF + XML Factur-X"
                           disabled={exporting === inv.number}
@@ -742,19 +989,21 @@ function Invoices() {
                         {inv.status === "draft" && (
                           <button
                             title="Envoyer la facture"
-                            onClick={() => updateInvoice(inv.number, { ...inv, status: "sent" })}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                            onClick={() => updateInvoice(inv.number, { ...inv, status: "sent", sentAt: new Date().toISOString() })}
+                            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
                           >
                             <Send className="h-3.5 w-3.5" />
+                            Envoyer
                           </button>
                         )}
-                        {inv.status !== "paid" && (
+                        {(inv.status === "sent" || inv.status === "late") && (
                           <button
-                            title="Marquer comme payé"
-                            onClick={() => setPayingInvoice(inv)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-success/10 hover:text-success"
+                            title="Valider le paiement"
+                            onClick={() => openPaymentDialog(inv)}
+                            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-success px-2.5 text-xs font-semibold text-white transition-colors hover:bg-success/90"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
+                            Valider
                           </button>
                         )}
                         <button
@@ -808,6 +1057,38 @@ function Invoices() {
                 Marquer cette facture comme payée ? Cette action met à jour le statut et l'inclut
                 dans les encaissements.
               </p>
+              <label className="block text-sm font-medium">
+                Montant reçu
+                <Input
+                  type="number"
+                  min="0.01"
+                  max={Math.max(0, payingInvoice.amount - (payingInvoice.paidAmount ?? 0))}
+                  step="0.01"
+                  value={paymentAmount}
+                  onChange={(event) => setPaymentAmount(event.target.value)}
+                  className="mt-1.5"
+                />
+                {(payingInvoice.paidAmount ?? 0) > 0 && (
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Déjà encaissé : {money(payingInvoice.paidAmount ?? 0)}
+                  </span>
+                )}
+              </label>
+              <label className="block text-sm font-medium">
+                Mode de règlement
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}
+                  className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                >
+                  <option value="virement">Virement bancaire</option>
+                  <option value="carte">Carte bancaire</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="especes">Espèces</option>
+                  <option value="prelevement">Prélèvement</option>
+                  <option value="autre">Autre</option>
+                </select>
+              </label>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setPayingInvoice(null)}>
                   Annuler

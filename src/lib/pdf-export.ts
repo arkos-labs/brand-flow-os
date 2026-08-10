@@ -46,9 +46,9 @@ const COLOR_BLACK   = [0, 0, 0]      as [number, number, number];
 function hexToRgb(hex: string): [number, number, number] {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? [
-    parseInt(result[1], 16),
-    parseInt(result[2], 16),
-    parseInt(result[3], 16)
+    parseInt(result[1] ?? "0", 16),
+    parseInt(result[2] ?? "0", 16),
+    parseInt(result[3] ?? "0", 16)
   ] : COLOR_NAVY;
 }
 
@@ -65,14 +65,14 @@ function fmt(n: number): string {
 
 function fmtDate(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  const [y = "", m = "", d = ""] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
 
 function addDays(iso: string, days: number): string {
   const d = new Date(iso);
   d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+  return d.toISOString().split("T")[0] ?? "";
 }
 
 function setColor(
@@ -138,7 +138,7 @@ function drawHeader(
     if (company.logoBase64) {
       try {
         const match = company.logoBase64.match(/data:image\/(png|jpeg|jpg|webp)/i);
-        const ext = match ? match[1].toUpperCase().replace("JPG", "JPEG") : "PNG";
+        const ext = match?.[1] ? match[1].toUpperCase().replace("JPG", "JPEG") : "PNG";
         const logoW = 40;
         const logoH = 20;
         doc.addImage(company.logoBase64, ext, (PAGE_W - logoW) / 2, 8, logoW, logoH);
@@ -179,7 +179,7 @@ function drawHeader(
     if (company.logoBase64) {
       try {
         const match = company.logoBase64.match(/data:image\/(png|jpeg|jpg|webp)/i);
-        const ext = match ? match[1].toUpperCase().replace("JPG", "JPEG") : "PNG";
+        const ext = match?.[1] ? match[1].toUpperCase().replace("JPG", "JPEG") : "PNG";
         const logoW = template === "bold" ? 34 : 28;
         const logoH = template === "bold" ? 17 : 14;
         doc.addImage(company.logoBase64, ext, ML, template === "modern" ? 14 : 8, logoW, logoH);
@@ -374,7 +374,7 @@ function drawLinesTable(
     tableLineWidth: 0.2,
   });
 
-  const afterTable = (doc as any).lastAutoTable.finalY + 6;
+  const afterTable = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
 
   // ── Bloc totaux (droite) ─────────────────────────────────────────────────
   const TX = MR - 72; // x départ colonne labels
@@ -551,9 +551,9 @@ export async function generateQuotePdfDoc(quote: Quote, company: CompanySettings
 
   // Bloc client
   const clientDetails = {
-    siret: details?.siret,
-    address: details?.address,
-    phone: details?.phone,
+    ...(details?.siret ? { siret: details.siret } : {}),
+    ...(details?.address ? { address: details.address } : {}),
+    ...(details?.phone ? { phone: details.phone } : {}),
   };
   y = drawClientBlock(doc, quote.client, clientDetails, y + 4);
 
@@ -585,7 +585,7 @@ export async function generateQuotePdfDoc(quote: Quote, company: CompanySettings
   y = drawLegalMentions(doc, false, company, y + 6);
 
   // Footer (toutes les pages)
-  const totalPages = (doc as any).internal.getNumberOfPages();
+  const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     drawFooter(doc, company, p, totalPages);
@@ -744,7 +744,7 @@ export async function exportInvoicePdf(invoice: Invoice, company: CompanySetting
   doc.text("ORIGINAL", MR - 75, y + 18);
 
   // Footer (toutes les pages)
-  const totalPages = (doc as any).internal.getNumberOfPages();
+  const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     drawFooter(doc, company, p, totalPages);
@@ -777,11 +777,11 @@ export async function exportInvoicePdf(invoice: Invoice, company: CompanySetting
       country: company.country,
       email: company.email,
       phone: company.phone,
-      capital: company.capital,
-      rcs: company.rcs,
-      iban: company.iban,
-      bic: company.bic,
-      bankName: company.bankName,
+      ...(company.capital ? { capital: company.capital } : {}),
+      ...(company.rcs ? { rcs: company.rcs } : {}),
+      ...(company.iban ? { iban: company.iban } : {}),
+      ...(company.bic ? { bic: company.bic } : {}),
+      ...(company.bankName ? { bankName: company.bankName } : {}),
     },
     buyer: { name: invoice.client },
     lines: fxLines,

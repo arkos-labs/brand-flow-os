@@ -60,12 +60,8 @@ export const Route = createFileRoute("/situations")({
 const VAT_RATES = [20, 10, 5.5, 0];
 const RG_RATES = [5, 3, 2, 0];
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 function today() {
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0] ?? "";
 }
 
 function fmtDate(iso: string) {
@@ -125,11 +121,11 @@ function Situations() {
   const {
     marches, addMarche, updateMarche, deleteMarche,
     situations, addSituation, updateSituation,
-    invoices, addInvoice, company,
+    invoices, addInvoice, company, updateCompany,
   } = useData();
 
   const [selectedId, setSelectedId] = useState<string | null>(
-    marches.length > 0 ? marches[0].id : null,
+    marches[0]?.id ?? null,
   );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sitDialogOpen, setSitDialogOpen] = useState(false);
@@ -157,7 +153,7 @@ function Situations() {
   );
 
   const prevCumule = marcheSituations.length > 0
-    ? marcheSituations[marcheSituations.length - 1].avancementCumule
+    ? marcheSituations[marcheSituations.length - 1]?.avancementCumule ?? 0
     : 0;
 
   const is100 = prevCumule >= 100;
@@ -192,7 +188,6 @@ function Situations() {
     const num = marches.length + 1;
     const number = `MC-${year}-${String(num).padStart(3, "0")}`;
     addMarche({
-      id: uid(),
       number,
       client: mForm.client,
       title: mForm.title,
@@ -200,10 +195,9 @@ function Situations() {
       vatRate: Number(mForm.vatRate),
       retenuGarantie: Number(mForm.retenuGarantie),
       startDate: mForm.startDate,
-      endDate: mForm.endDate || undefined,
+      ...(mForm.endDate ? { endDate: mForm.endDate } : {}),
       status: "actif",
-      notes: mForm.notes || undefined,
-      createdAt: today(),
+      ...(mForm.notes ? { notes: mForm.notes } : {}),
     });
     setMForm({ client: "", title: "", totalHT: "", vatRate: "10", retenuGarantie: "5", startDate: today(), endDate: "", notes: "" });
     setSheetOpen(false);
@@ -216,7 +210,6 @@ function Situations() {
     if (cumul <= prevCumule || cumul > 100) return;
 
     addSituation({
-      id: uid(),
       marcheId: selectedMarche.id,
       number: nextSitNumber,
       label: nextSitLabel,
@@ -248,10 +241,14 @@ function Situations() {
       number: invoiceNumber,
       client: selectedMarche.client,
       date: today(),
-      due: due.toISOString().split("T")[0],
+      due: due.toISOString().split("T")[0] ?? "",
       amount: sit.netAPayer,
+      totalHT: sit.montantHT,
+      totalVAT: sit.vatAmount,
       status: "sent",
+      sentAt: new Date().toISOString(),
     });
+    updateCompany({ nextInvoiceNumber: num + 1 });
 
     updateSituation(sit.id, { ...sit, status: "envoyee", invoiceNumber });
     setSuccessMsg(invoiceNumber);

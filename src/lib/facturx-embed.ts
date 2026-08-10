@@ -32,7 +32,7 @@ const FX_CONFORMANCE = "EN 16931";
 
 function buildXmpMetadata(docNumber: string, issueDate: string): string {
   const now = new Date().toISOString();
-  return `<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+  return `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 

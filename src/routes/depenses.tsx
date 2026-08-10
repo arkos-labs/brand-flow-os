@@ -12,7 +12,13 @@ import {
   MoreHorizontal,
   Trash2,
   Pencil,
+  Paperclip,
+  Sparkles,
+  Upload,
+  FileCheck2,
+  Loader2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useData, type Expense, type ExpenseCategory } from "@/lib/data-context";
@@ -53,7 +59,7 @@ export const Route = createFileRoute("/depenses")({
   component: ExpensesPage,
 });
 
-const CATEGORIES: { id: ExpenseCategory; icon: any; color: string; label: { fr: string; en: string } }[] = [
+const CATEGORIES: { id: ExpenseCategory; icon: LucideIcon; color: string; label: { fr: string; en: string } }[] = [
   { id: "software", icon: Monitor, color: "text-blue-500", label: { fr: "Logiciels & Abonnements", en: "Software & Subs" } },
   { id: "hardware", icon: ShoppingCart, color: "text-amber-500", label: { fr: "Matériel", en: "Hardware" } },
   { id: "travel", icon: Plane, color: "text-emerald-500", label: { fr: "Déplacements", en: "Travel" } },
@@ -66,6 +72,7 @@ const EMPTY_EXPENSE: Omit<Expense, "id" | "createdAt"> = {
   date: new Date().toISOString().split("T")[0] ?? "",
   description: "",
   vendor: "",
+  quantity: 1,
   amountHT: 0,
   vatAmount: 0,
   amountTTC: 0,
@@ -82,6 +89,8 @@ function ExpensesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_EXPENSE);
+  const [expensePrompt, setExpensePrompt] = useState("");
+  const [isAnalysing, setIsAnalysing] = useState(false);
 
   const filtered = useMemo(() => {
     return expenses.filter((e) => {
@@ -107,10 +116,13 @@ function ExpensesPage() {
       date: e.date,
       description: e.description,
       vendor: e.vendor,
+      quantity: e.quantity ?? 1,
       amountHT: e.amountHT,
       vatAmount: e.vatAmount,
       amountTTC: e.amountTTC,
       category: e.category,
+      ...(e.receiptName ? { receiptName: e.receiptName } : {}),
+      ...(e.receiptData ? { receiptData: e.receiptData } : {}),
     });
     setIsFormOpen(true);
   };
@@ -129,6 +141,70 @@ function ExpensesPage() {
     const ht = parseFloat(val) || 0;
     const tva = ht * 0.2; // default 20%
     setForm({ ...form, amountHT: ht, vatAmount: tva, amountTTC: ht + tva });
+  };
+
+  const handleAmountTTCChange = (val: string) => {
+    const ttc = parseFloat(val.replace(",", ".")) || 0;
+    const ht = Math.round((ttc / 1.2) * 100) / 100;
+    setForm({ ...form, amountTTC: ttc, amountHT: ht, vatAmount: Math.round((ttc - ht) * 100) / 100 });
+  };
+
+  const clearReceipt = () => {
+    setForm((current) => {
+      const next = { ...current };
+      delete next.receiptName;
+      delete next.receiptData;
+      return next;
+    });
+  };
+
+  const analyseExpensePrompt = () => {
+    const prompt = expensePrompt.trim();
+    if (!prompt) return;
+    setIsAnalysing(true);
+    window.setTimeout(() => {
+      const normalized = prompt.toLowerCase();
+      const amountMatch = prompt.match(/(\d+(?:[,.]\d{1,2})?)\s*€?\s*(ttc|ht)?/i);
+      const amount = amountMatch ? Number((amountMatch[1] ?? "0").replace(",", ".")) : 0;
+      const isHT = amountMatch?.[2]?.toLowerCase() === "ht";
+      const vendorMatch = prompt.match(/(?:chez|à|auprès de)\s+([^,.;\d]+?)(?=\s+(?:pour|le|en|de|à)|[,.;]|$)/i);
+      const category: ExpenseCategory = /carburant|péage|parking|train|essence|déplacement/.test(normalized)
+        ? "travel"
+        : /outil|perceuse|vis|matériel|fourniture|leroy|castorama|brico|câble|plomberie/.test(normalized)
+          ? "hardware"
+          : /sous.trait|intérim|artisan/.test(normalized)
+            ? "subcontractor"
+            : /logiciel|abonnement|application|saas/.test(normalized)
+              ? "software"
+              : /bureau|téléphone|internet|impression/.test(normalized)
+                ? "office"
+                : "other";
+      const amountHT = isHT ? amount : Math.round((amount / 1.2) * 100) / 100;
+      const amountTTC = isHT ? Math.round((amount * 1.2) * 100) / 100 : amount;
+      const quantityMatch = normalized.match(/(?:^|\s)(\d+)\s+(?:sac|sacs|pièce|pièces|unité|unités|lot|lots|mètre|mètres|carton|cartons)/);
+      setForm((current) => ({
+        ...current,
+        description: prompt,
+        vendor: vendorMatch?.[1]?.trim() || current.vendor,
+        category,
+        quantity: quantityMatch ? Number(quantityMatch[1] ?? "1") : current.quantity,
+        amountHT,
+        vatAmount: Math.round((amountTTC - amountHT) * 100) / 100,
+        amountTTC,
+      }));
+      setIsAnalysing(false);
+    }, 550);
+  };
+
+  const handleReceiptChange = (file?: File) => {
+    if (!file) return;
+    if (file.size > 1_500_000) {
+      alert("En mode local, le justificatif doit faire moins de 1,5 Mo. Le stockage de fichiers volumineux sera activé avec le backend.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setForm((current) => ({ ...current, receiptName: file.name, receiptData: String(reader.result) }));
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -163,7 +239,7 @@ function ExpensesPage() {
         </div>
         <select
           value={filterCat}
-          onChange={(e) => setFilterCat(e.target.value as any)}
+          onChange={(e) => setFilterCat(e.target.value as ExpenseCategory | "all")}
           className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 sm:w-[200px]"
         >
           <option value="all">{lang === "fr" ? "Toutes les catégories" : "All categories"}</option>
@@ -180,15 +256,17 @@ function ExpensesPage() {
               <TableHead>{lang === "fr" ? "Date" : "Date"}</TableHead>
               <TableHead>{lang === "fr" ? "Fournisseur" : "Vendor"}</TableHead>
               <TableHead>{lang === "fr" ? "Catégorie" : "Category"}</TableHead>
+              <TableHead className="text-right">{lang === "fr" ? "Qté" : "Qty"}</TableHead>
               <TableHead className="text-right">{lang === "fr" ? "Montant HT" : "Amount excl. VAT"}</TableHead>
               <TableHead className="text-right">{lang === "fr" ? "Montant TTC" : "Amount incl. VAT"}</TableHead>
+              <TableHead>{lang === "fr" ? "Justificatif" : "Receipt"}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                   {lang === "fr" ? "Aucune dépense trouvée." : "No expenses found."}
                 </TableCell>
               </TableRow>
@@ -211,8 +289,24 @@ function ExpensesPage() {
                         {catInfo.label[lang]}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">{exp.quantity ?? 1}</TableCell>
                     <TableCell className="text-right">{money(exp.amountHT)}</TableCell>
                     <TableCell className="text-right font-semibold">{money(exp.amountTTC)}</TableCell>
+                    <TableCell>
+                      {exp.receiptName ? (
+                        <a
+                          href={exp.receiptData}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex max-w-32 items-center gap-1.5 truncate rounded-md bg-success/10 px-2 py-1 text-xs font-semibold text-success hover:bg-success/20"
+                        >
+                          <FileCheck2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{exp.receiptName}</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Sans justificatif</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -247,6 +341,28 @@ function ExpensesPage() {
           </SheetHeader>
           <ScrollArea className="flex-1">
             <form id="expense-form" onSubmit={handleSave} className="space-y-6 p-6">
+              {!editingId && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white"><Sparkles className="h-4 w-4" /></span>
+                    <div>
+                      <p className="text-sm font-bold">Assistant de saisie — mode local</p>
+                      <p className="text-xs text-muted-foreground">Décrivez votre achat, je pré-remplis la dépense.</p>
+                    </div>
+                  </div>
+                  <textarea
+                    value={expensePrompt}
+                    onChange={(event) => setExpensePrompt(event.target.value)}
+                    placeholder="Ex. J'ai acheté du matériel de plomberie chez Leroy Merlin pour 142,80 € TTC."
+                    className="mt-3 min-h-20 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <Button type="button" size="sm" onClick={analyseExpensePrompt} disabled={!expensePrompt.trim() || isAnalysing} className="mt-2 w-full gap-2">
+                    {isAnalysing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {isAnalysing ? "Analyse en cours…" : "Pré-remplir automatiquement"}
+                  </Button>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>{lang === "fr" ? "Date" : "Date"}</Label>
                 <Input
@@ -289,6 +405,18 @@ function ExpensesPage() {
                 </select>
               </div>
 
+              <div className="space-y-2">
+                <Label>{lang === "fr" ? "Quantité" : "Quantity"}</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  required
+                  value={form.quantity || ""}
+                  onChange={(e) => setForm({ ...form, quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{lang === "fr" ? "Montant HT" : "Amount HT"}</Label>
@@ -309,10 +437,32 @@ function ExpensesPage() {
                     min="0"
                     required
                     value={form.amountTTC || ""}
-                    onChange={(e) => setForm({ ...form, amountTTC: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => handleAmountTTCChange(e.target.value)}
                   />
                 </div>
               </div>
+
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background text-primary ring-1 ring-border"><Paperclip className="h-4 w-4" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold">Facture ou ticket d’achat</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">PDF, photo ou scan du justificatif.</p>
+                    {form.receiptName ? (
+                      <div className="mt-2 flex items-center justify-between gap-2 rounded-md bg-success/10 px-2.5 py-2 text-xs font-semibold text-success">
+                        <span className="truncate">{form.receiptName}</span>
+                        <button type="button" onClick={clearReceipt} className="text-muted-foreground hover:text-destructive">Retirer</button>
+                      </div>
+                    ) : (
+                      <label className="mt-3 flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-semibold transition hover:border-primary hover:text-primary">
+                        <Upload className="h-3.5 w-3.5" /> Ajouter un document
+                        <input type="file" accept="application/pdf,image/*" onChange={(event) => handleReceiptChange(event.target.files?.[0])} className="hidden" />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+
             </form>
           </ScrollArea>
           <div className="flex justify-end gap-3 border-t p-6">

@@ -140,12 +140,20 @@ export const quotes: {
 
 export type InvoiceStatus = "paid" | "sent" | "late" | "draft";
 
-export const initialInvoices: any[] = [
+export const initialInvoices: Array<{
+  number: string;
+  client: string;
+  date: string;
+  due: string;
+  amount: number;
+  status: InvoiceStatus;
+  reminders?: { date: string; type: "J+7" | "J+15" | "J+30" }[];
+}> = [
   {
     number: "FA-2026-008",
     client: "Groupe Vela",
     date: "2026-06-15",
-    due: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 10 days late
+    due: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "", // 10 days late
     amount: 6300,
     status: "late",
     reminders: [],
@@ -154,7 +162,7 @@ export const initialInvoices: any[] = [
     number: "FA-2026-005",
     client: "Loop Studio",
     date: "2026-05-10",
-    due: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 20 days late
+    due: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "", // 20 days late
     amount: 3840,
     status: "late",
     reminders: [{ date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), type: "J+7" }],
@@ -163,7 +171,7 @@ export const initialInvoices: any[] = [
     number: "FA-2026-002",
     client: "Maison Ober",
     date: "2026-03-20",
-    due: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 40 days late
+    due: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "", // 40 days late
     amount: 5400,
     status: "late",
     reminders: [
@@ -234,7 +242,7 @@ export const riskyReceivables = [
   { client: "Maison Ober", amount: 5400, days: 4, probability: 94 },
 ];
 
-export const projects: any[] = [];
+export const projects: never[] = [];
 
 // ─── Catalogue de prestations ───────────────────────────────────────────────
 

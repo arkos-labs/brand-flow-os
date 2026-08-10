@@ -51,6 +51,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import {
+  calculateInvoiceTotals,
+  selectInvoiceLines,
+  type InvoiceLine,
+} from "@/lib/invoice-from-quote";
 import { AIQuoteWidget, AIQuoteResultItem } from "@/components/AIQuoteWidget";
 import { Sparkles, Bot, FileText, Clock } from "lucide-react";
 
@@ -130,6 +135,43 @@ function AutocompleteInput({
   );
 }
 
+function invoiceLinesFromQuote(quote: Quote): InvoiceLine[] {
+  const vatRate = quote.details?.vatRate ?? 20;
+  const lines: InvoiceLine[] = [
+    ...(quote.details?.items ?? [])
+      .filter((item) => item.label)
+      .map((item) => ({
+        id: `${quote.number}-prestation-${item.id}`,
+        label: item.label,
+        qty: Number(item.qty) || 0,
+        priceHT: Number(item.priceHT) || 0,
+        vatRate,
+        kind: "prestation" as const,
+      })),
+    ...(quote.details?.upsells ?? [])
+      .filter((item) => item.label)
+      .map((item) => ({
+        id: `${quote.number}-option-${item.id}`,
+        label: item.label,
+        qty: Number(item.qty) || 0,
+        priceHT: Number(item.priceHT) || 0,
+        vatRate,
+        kind: "option" as const,
+      })),
+  ];
+
+  return lines.length > 0
+    ? lines
+    : [{
+        id: `${quote.number}-total`,
+        label: `Prestations du devis ${quote.number}`,
+        qty: 1,
+        priceHT: quote.amount / (1 + vatRate / 100),
+        vatRate,
+        kind: "prestation",
+      }];
+}
+
 export const Route = createFileRoute("/devis")({
   head: () => ({
     meta: [
@@ -153,6 +195,7 @@ const BASE = 12000;
 const PER_PAGE = 450;
 
 import { ErrorBoundary } from "@/lib/ErrorBoundary";
+import { canEditQuote } from "@/lib/document-workflow";
 
 function Quotes() {
   return (
@@ -186,24 +229,51 @@ function QuotesInner() {
 
   // Convert to Invoice State
   const [convertingQuote, setConvertingQuote] = useState<Quote | null>(null);
+  const [selectedInvoiceLineIds, setSelectedInvoiceLineIds] = useState<Set<string>>(new Set());
   const [convertSuccess, setConvertSuccess] = useState<string | null>(null);
 
   // Email Quote State
   const [emailQuote, setEmailQuote] = useState<Quote | null>(null);
   const [emailTemplateId, setEmailTemplateId] = useState<string>("modele-1");
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0] ?? "";
   const dueDateStr = (() => {
     const d = new Date();
     d.setDate(d.getDate() + (company.paymentTermsDays || 30));
-    return d.toISOString().split("T")[0];
+    return d.toISOString().split("T")[0] ?? "";
   })();
   const [invoiceDate, setInvoiceDate] = useState(todayStr);
   const [invoiceDueDate, setInvoiceDueDate] = useState(dueDateStr);
   const [invoiceNote, setInvoiceNote] = useState("");
 
-  const handleConvertToInvoice = () => {
-    if (!convertingQuote) return;
+  const conversionLines = convertingQuote ? invoiceLinesFromQuote(convertingQuote) : [];
+  const invoicedConversionLineIds = new Set(convertingQuote?.invoicedLineIds ?? []);
+  const selectedConversionLines = selectInvoiceLines(conversionLines, selectedInvoiceLineIds);
+  const conversionTotals = calculateInvoiceTotals(selectedConversionLines);
+
+  useEffect(() => {
+    if (!convertingQuote) {
+      setSelectedInvoiceLineIds(new Set());
+      return;
+    }
+    const alreadyInvoiced = new Set(convertingQuote.invoicedLineIds ?? []);
+    setSelectedInvoiceLineIds(
+      new Set(invoiceLinesFromQuote(convertingQuote).filter((line) => !alreadyInvoiced.has(line.id)).map((line) => line.id)),
+    );
+  }, [convertingQuote]);
+
+  const toggleInvoiceLine = (lineId: string) => {
+    if (invoicedConversionLineIds.has(lineId)) return;
+    setSelectedInvoiceLineIds((current) => {
+      const next = new Set(current);
+      if (next.has(lineId)) next.delete(lineId);
+      else next.add(lineId);
+      return next;
+    });
+  };
+
+  const handleConvertToInvoice = (status: InvoiceStatus = "draft") => {
+    if (!convertingQuote || selectedConversionLines.length === 0) return;
     const num = company.nextInvoiceNumber || 1;
     const year = new Date().getFullYear();
     const pad = String(num).padStart(4, "0");
@@ -212,16 +282,26 @@ function QuotesInner() {
     const newInvoice: Invoice = {
       number: invoiceNumber,
       client: convertingQuote.client,
+      ...(convertingQuote.clientId ? { clientId: convertingQuote.clientId } : {}),
       date: invoiceDate,
       due: invoiceDueDate,
-      amount: convertingQuote.amount,
-      status: "sent" as InvoiceStatus,
+      amount: conversionTotals.totalTTC,
+      totalHT: conversionTotals.totalHT,
+      totalVAT: conversionTotals.totalTVA,
+      status,
+      ...(status === "sent" ? { sentAt: new Date().toISOString() } : {}),
+      sourceQuoteNumber: convertingQuote.number,
+      items: selectedConversionLines,
     };
 
     addInvoice(newInvoice);
     updateCompany({ nextInvoiceNumber: num + 1 });
+    const nextInvoicedLineIds = Array.from(
+      new Set([...(convertingQuote.invoicedLineIds ?? []), ...selectedConversionLines.map((line) => line.id)]),
+    );
     updateQuote(convertingQuote.number, {
       ...convertingQuote,
+      invoicedLineIds: nextInvoicedLineIds,
       status: { fr: "Facturé", en: "Invoiced" },
     });
 
@@ -274,7 +354,6 @@ function QuotesInner() {
       const data = await searchCompanyBySiret(clean);
       if (data) {
         if (data.name) setCompanyName(data.name);
-        if (data.vatNumber && !vatRate) {} // could set vat
         const addr = [data.address, data.postalCode, data.city].filter(Boolean).join(", ");
         if (addr) setAddress(addr);
       }
@@ -309,6 +388,34 @@ function QuotesInner() {
     { id: "1", label: "", qty: 1, priceHT: "" },
   ]);
   const [quoteUpsells, setQuoteUpsells] = useState<QuoteItem[]>([]);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+
+  // Ouverture depuis le Pipeline : le devis est chargé dans le même formulaire.
+  useEffect(() => {
+    const quoteNumber = new URLSearchParams(window.location.search).get("modifier");
+    if (!quoteNumber) return;
+    const quote = quotes.find((item) => item.number === quoteNumber);
+    if (!quote || !canEditQuote(quote.status.fr)) return;
+    const saved = quote.details;
+    const knownClient = clients.find((client) => client.name.toLowerCase() === quote.client.toLowerCase());
+    const type = saved?.clientType ?? knownClient?.type ?? "pro";
+    const nameParts = quote.client.trim().split(/\s+/);
+
+    setEditingQuote(quote);
+    setClientType(type);
+    setFirstName(saved?.firstName || knownClient?.firstName || nameParts[0] || "Client");
+    setLastName(saved?.lastName || knownClient?.lastName || nameParts.slice(1).join(" ") || quote.client);
+    setCompanyName(saved?.companyName || knownClient?.companyName || (type === "pro" ? quote.client : ""));
+    setSiret(saved?.siret || knownClient?.siret || "");
+    setAddress(saved?.address || knownClient?.address || "");
+    setPhone(saved?.phone || knownClient?.phone || "");
+    setServiceAddress(saved?.serviceAddress || saved?.address || knownClient?.address || "");
+    setVatRate(saved?.vatRate ?? 20);
+    setQuoteItems(saved?.items?.length ? saved.items : [{ id: "1", label: `Prestation du devis ${quote.number}`, qty: 1, priceHT: quote.amount / 1.2 }]);
+    setQuoteUpsells(saved?.upsells ?? []);
+    setIsQuoteOpen(true);
+    window.history.replaceState({}, "", "/devis");
+  }, [quotes, clients]);
 
   const addQuoteUpsell = () => {
     setQuoteUpsells([
@@ -341,7 +448,7 @@ function QuotesInner() {
               updated.priceHT = matchedProduct.priceHT;
               updated.productId = matchedProduct.id;
             } else {
-              updated.productId = undefined; // Saisie libre
+              delete updated.productId; // Saisie libre
             }
           }
           return updated;
@@ -371,7 +478,7 @@ function QuotesInner() {
 
   const handleApplyAIQuote = (items: AIQuoteResultItem[], upsells: AIQuoteResultItem[]) => {
     // Replace current items if they are just the default empty item
-    if (quoteItems.length === 1 && !quoteItems[0].label) {
+    if (quoteItems.length === 1 && !quoteItems[0]?.label) {
       setQuoteItems(items);
     } else {
       setQuoteItems([...quoteItems, ...items]);
@@ -412,18 +519,22 @@ function QuotesInner() {
     if (clientType === "pro" && !companyName) return;
 
     const displayName = clientType === "pro" ? companyName : `${firstName} ${lastName}`;
+    const existingClient = clients.find((client) => client.name.toLowerCase() === displayName.toLowerCase());
+    const clientId = existingClient?.id ?? crypto.randomUUID();
 
     const qNum = company.nextQuoteNumber || 1;
     const qYear = new Date().getFullYear();
     const qPad = String(qNum).padStart(4, "0");
-    const quoteNumber = `${company.quotePrefix || "DV"}-${qYear}-${qPad}`;
+    const quoteNumber = editingQuote?.number ?? `${company.quotePrefix || "DV"}-${qYear}-${qPad}`;
 
     const newQuote: Quote = {
       number: quoteNumber,
       client: displayName,
+      clientId,
       amount: formTotalTTC,
-      status: { fr: "En attente", en: "Pending" },
-      date: new Date().toISOString().split("T")[0],
+      status: { fr: "Brouillon", en: "Draft" },
+      date: editingQuote?.date ?? new Date().toISOString().split("T")[0] ?? "",
+      ...(editingQuote?.invoicedLineIds ? { invoicedLineIds: editingQuote.invoicedLineIds } : {}),
       details: {
         clientType,
         lastName,
@@ -443,10 +554,9 @@ function QuotesInner() {
 
     // Auto-save client if not already in address book
     if (displayName) {
-      const existing = clients.find((c) => c.name.toLowerCase() === displayName.toLowerCase());
-      if (!existing) {
+      if (!existingClient) {
         addClient({
-          id: crypto.randomUUID(),
+          id: clientId,
           type: clientType,
           name: displayName,
           companyName: clientType === "pro" ? companyName : "",
@@ -455,13 +565,17 @@ function QuotesInner() {
           siret,
           address,
           phone,
+          email: "",
           createdAt: new Date().toISOString().split("T")[0] ?? "",
-        } as any);
+        });
       }
     }
 
-    addQuote(newQuote);
-    updateCompany({ nextQuoteNumber: qNum + 1 });
+    if (editingQuote) updateQuote(editingQuote.number, newQuote);
+    else {
+      addQuote(newQuote);
+      updateCompany({ nextQuoteNumber: qNum + 1 });
+    }
     setPreviewQuote(newQuote);
 
     // Reset Form
@@ -478,6 +592,7 @@ function QuotesInner() {
     setVatRate(20);
     setQuoteItems([{ id: "1", label: "Prestation principale", qty: 1, priceHT: 1500 }]);
     setQuoteUpsells([]);
+    setEditingQuote(null);
     setIsQuoteOpen(false);
   };
 
@@ -493,7 +608,7 @@ function QuotesInner() {
             </SheetTrigger>
             <SheetContent className="sm:max-w-2xl w-[90vw] p-0 flex flex-col">
               <SheetHeader className="p-6 pb-2 border-b">
-                <SheetTitle>Créer un devis détaillé</SheetTitle>
+                <SheetTitle>{editingQuote ? `Modifier le devis ${editingQuote.number}` : "Créer un devis détaillé"}</SheetTitle>
               </SheetHeader>
               <ScrollArea className="flex-1 p-6">
                 <form id="quote-form" onSubmit={handleCreateQuote} className="space-y-8">
@@ -684,7 +799,12 @@ function QuotesInner() {
                                 setQuoteItems((prev) =>
                                   prev.map((qi) =>
                                     qi.id === item.id
-                                      ? { ...qi, label: val, priceHT, productId }
+                                      ? {
+                                          ...qi,
+                                          label: val,
+                                          priceHT,
+                                          ...(productId ? { productId } : {}),
+                                        }
                                       : qi,
                                   ),
                                 );
@@ -871,7 +991,7 @@ function QuotesInner() {
                   Annuler
                 </Button>
                 <Button type="submit" form="quote-form">
-                  Enregistrer le devis
+                  {editingQuote ? "Enregistrer les modifications" : "Enregistrer le devis"}
                 </Button>
               </SheetFooter>
             </SheetContent>
@@ -1099,6 +1219,7 @@ function QuotesInner() {
                   <p className="font-mono text-[11px] text-muted-foreground">
                     {q.number} · {date(q.date)}
                   </p>
+                  {q.sentAt && <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyé le {date(q.sentAt)}</p>}
                 </div>
               </div>
 
@@ -1187,18 +1308,10 @@ function QuotesInner() {
                     >
                       <Send className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      title="Marquer comme signé"
-                      onClick={() =>
-                        updateQuote(q.number, { ...q, status: { fr: "Signé", en: "Signed" } })
-                      }
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-emerald-50 hover:text-emerald-700"
-                    >
-                      <PenLine className="h-3.5 w-3.5" />
-                    </button>
                   </>
                 )}
-                {q.status.fr === "Signé" && (
+                {(q.status.fr === "Signé" || q.status.fr === "Facturé") &&
+                  invoiceLinesFromQuote(q).some((line) => !(q.invoicedLineIds ?? []).includes(line.id)) && (
                   <button
                     title="Convertir en facture"
                     onClick={() => {
@@ -1243,7 +1356,7 @@ function QuotesInner() {
 
       {/* Dialog Convertir en Facture */}
       <Dialog open={!!convertingQuote} onOpenChange={(open) => !open && setConvertingQuote(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ReceiptEuro className="h-5 w-5 text-primary" />
@@ -1254,37 +1367,77 @@ function QuotesInner() {
           {convertingQuote && (
             <div className="space-y-5 py-1">
               {/* Résumé du devis source */}
-              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
                 <p className="font-medium">{convertingQuote.client}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {lang === "fr" ? "Source :" : "Source:"} {convertingQuote.number} ·{" "}
                   {money(convertingQuote.amount)} TTC
                 </p>
-                {convertingQuote.details && (
-                  <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                    {convertingQuote.details.items
-                      .filter((i) => i.label)
-                      .map((item) => (
-                        <li key={item.id} className="flex justify-between">
-                          <span>
-                            {item.label} × {item.qty}
-                          </span>
-                          <span>{money(Number(item.priceHT) * Number(item.qty))}</span>
-                        </li>
-                      ))}
-                    {convertingQuote.details.upsells
-                      ?.filter((u) => u.label)
-                      .map((item) => (
-                        <li key={item.id} className="flex justify-between opacity-70">
-                          <span>
-                            {item.label} × {item.qty}
-                          </span>
-                          <span>{money(Number(item.priceHT) * Number(item.qty))}</span>
-                        </li>
-                      ))}
-                  </ul>
-                )}
+                <p className="mt-2 text-xs font-medium text-primary">
+                  Retirez les prestations ou options qui n'ont pas été réalisées. Le devis signé restera inchangé.
+                </p>
               </div>
+
+              <ScrollArea className="max-h-[38vh] rounded-lg border border-border">
+                <div>
+                  {(["prestation", "option"] as const).map((kind) => {
+                    const sectionLines = conversionLines.filter((line) => line.kind === kind);
+                    if (sectionLines.length === 0) return null;
+                    return (
+                      <div key={kind} className="border-b border-border last:border-b-0">
+                        <div className="bg-muted/60 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          {kind === "prestation" ? "Prestations" : "Options"}
+                        </div>
+                        <div className="divide-y divide-border">
+                          {sectionLines.map((line) => {
+                            const isInvoiced = invoicedConversionLineIds.has(line.id);
+                            const isSelected = selectedInvoiceLineIds.has(line.id);
+                            return (
+                              <div
+                                key={line.id}
+                                className={cn(
+                                  "flex items-center gap-3 px-4 py-3 transition-colors",
+                                  isInvoiced ? "bg-emerald-50/70" : isSelected ? "bg-card" : "bg-muted/40",
+                                )}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className={cn("truncate text-sm font-medium", !isSelected && !isInvoiced && "text-muted-foreground line-through")}>
+                                    {line.label}
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {line.qty} × {money(line.priceHT)} HT · TVA {line.vatRate}%
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-sm font-semibold tabular-nums">
+                                  {money(line.qty * line.priceHT)}
+                                </span>
+                                {isInvoiced ? (
+                                  <span className="min-w-20 rounded-md bg-emerald-100 px-2.5 py-1.5 text-center text-xs font-bold text-emerald-700">
+                                    Facturé
+                                  </span>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={isSelected ? "outline" : "secondary"}
+                                    onClick={() => toggleInvoiceLine(line.id)}
+                                    className={cn(
+                                      "min-w-20",
+                                      isSelected && "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                                    )}
+                                  >
+                                    {isSelected ? "Retirer" : "Ajouter"}
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
 
               {/* N° facture auto-généré */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
@@ -1326,22 +1479,45 @@ function QuotesInner() {
 
               {/* Total recap */}
               <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-                <span className="text-sm text-muted-foreground">
-                  {lang === "fr" ? "Montant TTC" : "Total incl. tax"}
-                </span>
-                <span className="font-display text-lg font-bold text-primary">
-                  {money(convertingQuote.amount)}
-                </span>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedConversionLines.length} ligne{selectedConversionLines.length > 1 ? "s" : ""} à facturer
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    HT {money(conversionTotals.totalHT)} · TVA {money(conversionTotals.totalTVA)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Montant TTC</p>
+                  <span className="font-display text-lg font-bold text-primary">
+                    {money(conversionTotals.totalTTC)}
+                  </span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-1">
                 <Button variant="outline" onClick={() => setConvertingQuote(null)}>
                   {lang === "fr" ? "Annuler" : "Cancel"}
                 </Button>
-                <Button onClick={handleConvertToInvoice} className="gap-2">
-                  <ReceiptEuro className="h-4 w-4" />
-                  {lang === "fr" ? "Créer la facture" : "Create invoice"}
-                </Button>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleConvertToInvoice("draft")}
+                    disabled={selectedConversionLines.length === 0}
+                    className="gap-2"
+                  >
+                    <ReceiptEuro className="h-4 w-4" />
+                    {lang === "fr" ? "Enregistrer en brouillon" : "Save as draft"}
+                  </Button>
+                  <Button
+                    onClick={() => handleConvertToInvoice("sent")}
+                    disabled={selectedConversionLines.length === 0}
+                    className="gap-2"
+                  >
+                    <Send className="h-4 w-4" />
+                    {lang === "fr" ? `Créer et envoyer (${money(conversionTotals.totalTTC)})` : "Create and send"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -1469,23 +1645,8 @@ function QuotesInner() {
               Fermer
             </Button>
             {previewQuote &&
-              previewQuote.status.fr !== "Signé" &&
-              previewQuote.status.fr !== "Facturé" &&
-              previewQuote.status.fr !== "Payé" && (
-                <Button
-                  variant="outline"
-                  className="text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white"
-                  onClick={() => {
-                    const updated = { ...previewQuote, status: { fr: "Signé", en: "Signed" } };
-                    updateQuote(previewQuote.number, updated);
-                    setPreviewQuote(updated);
-                  }}
-                >
-                  <PenLine className="h-4 w-4 mr-2" />
-                  Marquer comme signé
-                </Button>
-              )}
-            {previewQuote && previewQuote.status.fr === "Signé" && (
+              (previewQuote.status.fr === "Signé" || previewQuote.status.fr === "Facturé") &&
+              invoiceLinesFromQuote(previewQuote).some((line) => !(previewQuote.invoicedLineIds ?? []).includes(line.id)) && (
               <Button
                 className="bg-primary hover:bg-primary/90 text-white"
                 onClick={() => {
@@ -1589,14 +1750,15 @@ function QuotesInner() {
                   updateQuote(emailQuote.number, {
                     ...emailQuote,
                     status: { fr: "Envoyé", en: "Sent" },
+                    sentAt: new Date().toISOString(),
                   });
-                  alert("E-mail envoyé avec succès !");
+                  alert("Mode local : le devis est marqué comme envoyé. Le véritable envoi sera activé avec le backend e-mail.");
                   setEmailQuote(null);
                 }
               }}
             >
               <Send className="w-4 h-4 mr-2" />
-              Confirmer l'envoi
+              Marquer comme envoyé
             </Button>
           </div>
         </DialogContent>

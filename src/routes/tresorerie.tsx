@@ -64,16 +64,18 @@ function CustomTooltip({
 
 function Cashflow() {
   const { money, date } = useI18n();
-  const { invoices } = useData();
+  const { invoices, expenses } = useData();
 
   const paidInvoices = invoices.filter((i) => i.status === "paid");
   const pendingInvoices = invoices.filter((i) => i.status === "sent" || i.status === "late");
   const lateInvoices = invoices.filter((i) => i.status === "late");
 
   const totalInflows = paidInvoices.reduce((s, i) => s + i.amount, 0);
+  const totalOutflows = expenses.reduce((sum, expense) => sum + expense.amountTTC, 0);
+  const actualBalance = totalInflows - totalOutflows;
   const pendingInflows = pendingInvoices.reduce((s, i) => s + i.amount, 0);
   const lateAmount = lateInvoices.reduce((s, i) => s + i.amount, 0);
-  const projected = totalInflows + pendingInflows;
+  const projected = actualBalance + pendingInflows;
 
   // Build 6-month chart data
   const now = new Date();
@@ -89,7 +91,7 @@ function Cashflow() {
   const chartData = months6.map((m) => {
     const paid = paidInvoices
       .filter((i) => {
-        const d = new Date(i.date);
+        const d = new Date(i.paidAt ?? i.sentAt ?? i.date);
         return d.getFullYear() === m.year && d.getMonth() === m.month;
       })
       .reduce((s, i) => s + i.amount, 0);
@@ -117,12 +119,11 @@ function Cashflow() {
             <Wallet className="h-28 w-28" />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
-            Encaissé (réel)
+            Solde réel
           </p>
-          <p className="mt-2 font-display text-2xl font-bold text-white">{money(totalInflows)}</p>
+          <p className="mt-2 font-display text-2xl font-bold text-white">{money(actualBalance)}</p>
           <p className="mt-1 text-[11px] text-white/40">
-            {paidInvoices.length} facture{paidInvoices.length > 1 ? "s" : ""} payée
-            {paidInvoices.length > 1 ? "s" : ""}
+            {money(totalInflows)} encaissés · {money(totalOutflows)} dépensés
           </p>
         </div>
 
@@ -170,7 +171,7 @@ function Cashflow() {
             </div>
           </div>
           <p className="mt-2 font-display text-2xl font-bold text-primary">{money(projected)}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Réel + à venir</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Solde réel + créances à venir</p>
         </div>
       </div>
 

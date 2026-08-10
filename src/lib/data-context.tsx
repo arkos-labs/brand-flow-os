@@ -5,8 +5,12 @@ import {
   products as initialProducts,
   Bi,
   InvoiceStatus,
-  Product,
+  type Product as DemoProduct,
 } from "./demo-data";
+import { getDocumentActivityDate, type PaymentMethod } from "./document-workflow";
+import { createShowcaseData, SHOWCASE_DATA_VERSION } from "./showcase-data";
+
+export type Product = DemoProduct;
 
 export type CompanySettings = {
   // Identité
@@ -59,7 +63,6 @@ const defaultCompanySettings: CompanySettings = {
   phone: "",
   email: "",
   website: "",
-  logoBase64: undefined,
   quotePrefix: "DV",
   invoicePrefix: "FA",
   nextQuoteNumber: 1,
@@ -73,7 +76,7 @@ const defaultCompanySettings: CompanySettings = {
   bic: "",
   defaultQuoteTemplate: "classic",
   defaultInvoiceTemplate: "classic",
-  defaultEmailTemplate: "template1",
+  defaultEmailTemplate: "modele-1",
   primaryColor: "#0f172a",
 };
 
@@ -131,21 +134,56 @@ export type QuoteDetails = {
 export type Quote = {
   number: string;
   client: string;
+  clientId?: string;
   amount: number;
   status: Bi;
   date: string;
+  /** Date/heure à laquelle le devis a été transmis au client. */
+  sentAt?: string;
+  signedAt?: string;
+  refusedAt?: string;
+  closedAt?: string;
+  signatureData?: {
+    signerName: string;
+    signedAt: string;
+    consent: boolean;
+  };
   details?: QuoteDetails;
+  invoicedLineIds?: string[];
 };
 
 export type Invoice = {
   number: string;
   client: string;
+  clientId?: string;
   date: string;
+  /** Date/heure à laquelle la facture a été envoyée au client. */
+  sentAt?: string;
+  paidAt?: string;
+  lastPaymentAt?: string;
+  paidAmount?: number;
+  paymentMethod?: PaymentMethod;
   due: string;
   amount: number;
+  totalHT?: number;
+  totalVAT?: number;
   status: InvoiceStatus;
+  sourceQuoteNumber?: string;
+  sourceSubscriptionId?: string;
+  items?: import("./invoice-from-quote").InvoiceLine[];
   reminders?: { date: string; type: "J+7" | "J+15" | "J+30" }[];
 };
+
+/** Les listes de documents sont toujours rangées par dernière activité :
+ * création tant qu'il n'est pas envoyé, puis date d'envoi. */
+function sortDocumentsByActivity<T extends { date: string; sentAt?: string; paidAt?: string }>(documents: T[]): T[] {
+  return [...documents].sort((a, b) => {
+    const aActivity = new Date(getDocumentActivityDate(a)).getTime();
+    const bActivity = new Date(getDocumentActivityDate(b)).getTime();
+    if (bActivity !== aActivity) return bActivity - aActivity;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+}
 
 export type Upsell = {
   id: string;
@@ -165,10 +203,13 @@ export type Expense = {
   date: string;       // YYYY-MM-DD
   description: string;
   vendor: string;
+  quantity: number;
   amountHT: number;
   vatAmount: number;
   amountTTC: number;
   category: ExpenseCategory;
+  receiptName?: string;
+  receiptData?: string;
   createdAt: string;
 };
 
@@ -283,12 +324,12 @@ function calcSituation(
   return { avancementSituation, montantHT, retenueGarantie, vatAmount, montantTTC, netAPayer };
 }
 
-const sit1mc1 = calcSituation(initialMarches[0], 30, 0);
-const sit2mc1 = calcSituation(initialMarches[0], 70, 30);
-const sit1mc2 = calcSituation(initialMarches[1], 30, 0);
-const sit1mc3 = calcSituation(initialMarches[2], 40, 0);
-const sit2mc3 = calcSituation(initialMarches[2], 75, 40);
-const sit3mc3 = calcSituation(initialMarches[2], 100, 75);
+const sit1mc1 = calcSituation(initialMarches[0]!, 30, 0);
+const sit2mc1 = calcSituation(initialMarches[0]!, 70, 30);
+const sit1mc2 = calcSituation(initialMarches[1]!, 30, 0);
+const sit1mc3 = calcSituation(initialMarches[2]!, 40, 0);
+const sit2mc3 = calcSituation(initialMarches[2]!, 75, 40);
+const sit3mc3 = calcSituation(initialMarches[2]!, 100, 75);
 
 const initialSituations: Situation[] = [
   // MC-2026-001 — Maison Dupont
@@ -330,6 +371,7 @@ export type DataContextType = {
   quotes: Quote[];
   addQuote: (quote: Quote) => void;
   updateQuote: (number: string, updated: Quote) => void;
+  deleteQuote: (number: string) => void;
   invoices: Invoice[];
   addInvoice: (invoice: Invoice) => void;
   updateInvoice: (number: string, invoice: Invoice) => void;
@@ -369,6 +411,74 @@ export type DataContextType = {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+const repairServiceProduct: Product = {
+  id: "p-depannage-reparation",
+  ref: "REP-001",
+  label: { fr: "Dépannage & réparation — intervention standard", en: "Repair service — standard callout" },
+  description: {
+    fr: "Diagnostic sur place, recherche de panne et première heure de main-d'œuvre incluse.",
+    en: "On-site diagnosis, fault finding and first labour hour included.",
+  },
+  category: "main-oeuvre",
+  unit: "forfait",
+  priceHT: 89,
+  vatRate: 20,
+  active: true,
+  upsells: [
+    { id: "rep-up-urgence", label: "Intervention urgente sous 2 heures", priceHT: 75 },
+    { id: "rep-up-deplacement", label: "Déplacement hors zone (jusqu'à 30 km)", priceHT: 35 },
+    { id: "rep-up-diagnostic", label: "Diagnostic approfondi avec compte rendu", priceHT: 45 },
+    { id: "rep-up-heure", label: "Heure de main-d'œuvre supplémentaire", priceHT: 55 },
+    { id: "rep-up-petites-pieces", label: "Forfait petites fournitures et consommables", priceHT: 29 },
+    { id: "rep-up-pieces", label: "Fourniture de pièces de remplacement", priceHT: 90 },
+    { id: "rep-up-soir", label: "Majoration intervention soir ou nuit", priceHT: 85 },
+    { id: "rep-up-weekend", label: "Majoration week-end ou jour férié", priceHT: 110 },
+    { id: "rep-up-remise-etat", label: "Remise en état et finitions après réparation", priceHT: 65 },
+    { id: "rep-up-nettoyage", label: "Nettoyage complet de la zone d'intervention", priceHT: 25 },
+    { id: "rep-up-photos", label: "Rapport photo avant / après", priceHT: 20 },
+    { id: "rep-up-garantie", label: "Extension de garantie intervention 12 mois", priceHT: 49 },
+    { id: "rep-up-entretien", label: "Visite préventive et contrôle général", priceHT: 79 },
+    { id: "rep-up-enlevement", label: "Enlèvement et évacuation du matériel défectueux", priceHT: 40 },
+  ],
+};
+
+// Jeu de démonstration réaliste : il montre le parcours complet sur plusieurs mois.
+// Les données restent modifiables depuis l'application comme de vraies données.
+const functionalDemoClients: Client[] = [
+  { id: "cli-martin", type: "particulier", name: "Sophie Martin", firstName: "Sophie", lastName: "Martin", email: "sophie.martin@email.fr", phone: "06 12 45 78 90", address: "18 rue des Tilleuls", postalCode: "69003", city: "Lyon", country: "France", createdAt: "2026-03-04" },
+  { id: "cli-durand", type: "particulier", name: "Julien Durand", firstName: "Julien", lastName: "Durand", email: "julien.durand@email.fr", phone: "06 28 31 42 58", address: "6 avenue du Parc", postalCode: "69007", city: "Lyon", country: "France", createdAt: "2026-04-08" },
+  { id: "cli-cafe", type: "pro", name: "Café des Canuts", companyName: "Café des Canuts", siret: "90123456700018", email: "contact@cafedescanuts.fr", phone: "04 72 10 22 30", address: "3 place des Terreaux", postalCode: "69001", city: "Lyon", country: "France", createdAt: "2026-05-13" },
+  { id: "cli-bertrand", type: "particulier", name: "Claire Bertrand", firstName: "Claire", lastName: "Bertrand", email: "claire.bertrand@email.fr", phone: "06 42 18 76 35", address: "40 rue de la République", postalCode: "69100", city: "Villeurbanne", country: "France", createdAt: "2026-06-02" },
+  { id: "cli-leroy", type: "particulier", name: "Marc Leroy", firstName: "Marc", lastName: "Leroy", email: "marc.leroy@email.fr", phone: "06 71 08 33 44", address: "12 chemin des Vignes", postalCode: "69300", city: "Caluire-et-Cuire", country: "France", createdAt: "2026-07-16" },
+];
+
+const functionalDemoQuotes: Quote[] = [
+  { number: "DV-2026-001", client: "Sophie Martin", amount: 2860, date: "2026-03-05", sentAt: "2026-03-07", status: { fr: "Payé", en: "Paid" } },
+  { number: "DV-2026-002", client: "Julien Durand", amount: 5180, date: "2026-04-10", sentAt: "2026-04-12", status: { fr: "Facturé", en: "Invoiced" } },
+  { number: "DV-2026-003", client: "Café des Canuts", amount: 3940, date: "2026-05-16", sentAt: "2026-05-18", status: { fr: "Facturé", en: "Invoiced" } },
+  { number: "DV-2026-004", client: "Claire Bertrand", amount: 1760, date: "2026-06-05", status: { fr: "Facturé", en: "Invoiced" } },
+  { number: "DV-2026-005", client: "Marc Leroy", amount: 2490, date: "2026-07-21", status: { fr: "Signé", en: "Signed" } },
+  { number: "DV-2026-006", client: "Sophie Martin", amount: 1320, date: "2026-08-02", sentAt: "2026-08-03", status: { fr: "Envoyé", en: "Sent" } },
+  { number: "DV-2026-007", client: "Café des Canuts", amount: 840, date: "2026-08-08", status: { fr: "Brouillon", en: "Draft" } },
+  { number: "DV-2026-008", client: "Julien Durand", amount: 615, date: "2026-06-18", status: { fr: "Refusé", en: "Refused" } },
+];
+
+const functionalDemoInvoices: Invoice[] = [
+  { number: "FA-2026-001", client: "Sophie Martin", date: "2026-03-21", sentAt: "2026-03-21", paidAt: "2026-04-14", paymentMethod: "virement", due: "2026-04-20", amount: 2860, status: "paid", sourceQuoteNumber: "DV-2026-001" },
+  { number: "FA-2026-002", client: "Julien Durand", date: "2026-04-25", sentAt: "2026-04-26", due: "2026-05-25", amount: 5180, status: "late", sourceQuoteNumber: "DV-2026-002", reminders: [{ date: "2026-06-01T09:00:00.000Z", type: "J+7" }, { date: "2026-06-10T09:00:00.000Z", type: "J+15" }] },
+  { number: "FA-2026-003", client: "Café des Canuts", date: "2026-05-30", sentAt: "2026-05-31", due: "2026-08-30", amount: 3940, status: "sent", sourceQuoteNumber: "DV-2026-003" },
+  { number: "FA-2026-004", client: "Claire Bertrand", date: "2026-07-14", due: "2026-08-13", amount: 1760, status: "draft", sourceQuoteNumber: "DV-2026-004" },
+];
+
+const functionalDemoExpenses: Expense[] = [
+  { id: "exp-001", date: "2026-03-12", vendor: "Point.P", description: "Carrelage et colle — chantier Martin", quantity: 1, amountHT: 640, vatAmount: 128, amountTTC: 768, category: "hardware", receiptName: "facture-pointp-mars.pdf", createdAt: "2026-03-12T10:30:00.000Z" },
+  { id: "exp-002", date: "2026-04-18", vendor: "CEDEO", description: "Robinetterie thermostatique", quantity: 2, amountHT: 460, vatAmount: 92, amountTTC: 552, category: "hardware", receiptName: "facture-cedeo-avril.pdf", createdAt: "2026-04-18T14:00:00.000Z" },
+  { id: "exp-003", date: "2026-05-28", vendor: "Kiloutou", description: "Location perforateur et aspirateur", quantity: 3, amountHT: 156, vatAmount: 31.2, amountTTC: 187.2, category: "hardware", receiptName: "location-kiloutou-mai.pdf", createdAt: "2026-05-28T16:20:00.000Z" },
+  { id: "exp-004", date: "2026-06-22", vendor: "TotalEnergies", description: "Déplacements chantiers Lyon", quantity: 1, amountHT: 118, vatAmount: 23.6, amountTTC: 141.6, category: "travel", createdAt: "2026-06-22T18:10:00.000Z" },
+  { id: "exp-005", date: "2026-07-09", vendor: "ManoMano Pro", description: "Outillage électroportatif", quantity: 1, amountHT: 329, vatAmount: 65.8, amountTTC: 394.8, category: "hardware", receiptName: "outillage-juillet.pdf", createdAt: "2026-07-09T11:15:00.000Z" },
+  { id: "exp-006", date: "2026-08-04", vendor: "Sonepar", description: "Câbles et consommables électriques", quantity: 1, amountHT: 212, vatAmount: 42.4, amountTTC: 254.4, category: "hardware", receiptName: "sonepar-aout.pdf", createdAt: "2026-08-04T09:40:00.000Z" },
+];
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -385,9 +495,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Charger depuis le localStorage au montage
   useEffect(() => {
+    const showcaseResetKey = `invoicepro_showcase_reset_${SHOWCASE_DATA_VERSION}`;
+    if (!localStorage.getItem(showcaseResetKey)) {
+      const showcase = createShowcaseData();
+      localStorage.setItem("invoicepro_clients", JSON.stringify(showcase.clients));
+      localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(showcase.quotes));
+      localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(showcase.invoices));
+      localStorage.setItem("invoicepro_expenses", JSON.stringify(showcase.expenses));
+      localStorage.setItem("invoicepro_subscriptions", JSON.stringify(showcase.subscriptions));
+      localStorage.setItem("invoicepro_marches", JSON.stringify(showcase.marches));
+      localStorage.setItem("invoicepro_situations", JSON.stringify(showcase.situations));
+
+      const savedCompany = localStorage.getItem("invoicepro_company_v1");
+      const companySettings = savedCompany
+        ? JSON.parse(savedCompany) as CompanySettings
+        : defaultCompanySettings;
+      localStorage.setItem("invoicepro_company_v1", JSON.stringify({
+        ...companySettings,
+        nextQuoteNumber: showcase.nextQuoteNumber,
+        nextInvoiceNumber: showcase.nextInvoiceNumber,
+      }));
+      localStorage.setItem(showcaseResetKey, new Date().toISOString());
+    }
+
     const storedQuotes = localStorage.getItem("invoicepro_quotes_v4");
     const storedInvoices = localStorage.getItem("invoicepro_invoices_v4");
-    const storedProducts = localStorage.getItem("invoicepro_products");
+    const storedProducts = localStorage.getItem("invoicepro_products") ?? localStorage.getItem("demo-products-v2");
     const storedSettings = localStorage.getItem("invoicepro_company_v1");
     const storedClients = localStorage.getItem("invoicepro_clients");
     const storedUpsells = localStorage.getItem("invoicepro_upsells");
@@ -396,15 +529,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const storedExpenses = localStorage.getItem("invoicepro_expenses");
     const storedSubscriptions = localStorage.getItem("invoicepro_subscriptions");
     
-    if (storedQuotes) setQuotes(JSON.parse(storedQuotes));
-    if (storedInvoices) setInvoices(JSON.parse(storedInvoices));
-    if (storedProducts) setProducts(JSON.parse(storedProducts));
+    {
+      const parsedQuotes = storedQuotes ? JSON.parse(storedQuotes) as Quote[] : functionalDemoQuotes;
+      setQuotes(sortDocumentsByActivity(parsedQuotes));
+    }
+    {
+      const parsedInvoices = storedInvoices ? JSON.parse(storedInvoices) as Invoice[] : functionalDemoInvoices;
+      setInvoices(sortDocumentsByActivity(parsedInvoices));
+    }
+    const existingProducts: Product[] = storedProducts ? JSON.parse(storedProducts) : [];
+    const productsWithRepair = existingProducts.some((product) => product.id === repairServiceProduct.id)
+      ? existingProducts
+      : [...existingProducts, repairServiceProduct];
+    setProducts(productsWithRepair);
+    localStorage.setItem("invoicepro_products", JSON.stringify(productsWithRepair));
     if (storedSettings) setCompany(JSON.parse(storedSettings));
-    if (storedClients) setClients(JSON.parse(storedClients));
+    setClients(storedClients ? JSON.parse(storedClients) : functionalDemoClients);
     if (storedUpsells) setUpsells(JSON.parse(storedUpsells));
     if (storedMarches) setMarches(JSON.parse(storedMarches));
     if (storedSituations) setSituations(JSON.parse(storedSituations));
-    if (storedExpenses) setExpenses(JSON.parse(storedExpenses));
+    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : functionalDemoExpenses);
     if (storedSubscriptions) setSubscriptions(JSON.parse(storedSubscriptions));
     setLoaded(true);
   }, []);
@@ -422,7 +566,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [upsells, loaded]);
 
   useEffect(() => {
-    if (loaded) localStorage.setItem("demo-products-v2", JSON.stringify(products));
+    if (loaded) localStorage.setItem("invoicepro_products", JSON.stringify(products));
   }, [products, loaded]);
 
   useEffect(() => {
@@ -457,35 +601,48 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     setSubscriptions(prev => {
       let updatedSubs = [...prev];
-      let newInvoices = [...invoices];
-      let num = company.nextInvoiceNumber || 1;
+      const newInvoices = [...invoices];
+      const num = company.nextInvoiceNumber || 1;
       let nextNumber = num;
       
       updatedSubs = updatedSubs.map(sub => {
-        if (sub.status === "active" && sub.nextBillingDate <= today) {
-          const tva = sub.amountHT * (sub.vatRate / 100);
-          const amountTTC = sub.amountHT + tva;
-          
-          const newInv: Invoice = {
-            number: `${company.invoicePrefix || "FA"}-${new Date().getFullYear()}-${String(nextNumber).padStart(4, "0")}`,
-            client: sub.client,
-            date: today,
-            due: today,
-            amount: amountTTC,
-            status: "draft",
-          };
-          newInvoices.unshift(newInv);
-          nextNumber++;
-          
-          const d = new Date(sub.nextBillingDate);
-          if (sub.interval === "monthly") d.setMonth(d.getMonth() + 1);
-          else if (sub.interval === "quarterly") d.setMonth(d.getMonth() + 3);
-          else if (sub.interval === "yearly") d.setFullYear(d.getFullYear() + 1);
-          
-          hasChanges = true;
-          return { ...sub, nextBillingDate: d.toISOString().split("T")[0] ?? "" };
+        if (sub.status !== "active" || sub.nextBillingDate > today) return sub;
+
+        let billingDate = sub.nextBillingDate;
+        let generated = 0;
+        while (billingDate <= today && generated < 60) {
+          const alreadyGenerated = newInvoices.some(
+            (invoice) => invoice.sourceSubscriptionId === sub.id && invoice.date === billingDate,
+          );
+          if (!alreadyGenerated) {
+            const totalVAT = sub.amountHT * (sub.vatRate / 100);
+            const due = new Date(`${billingDate}T12:00:00`);
+            due.setDate(due.getDate() + (company.paymentTermsDays || 30));
+            const billingYear = new Date(`${billingDate}T12:00:00`).getFullYear();
+            newInvoices.unshift({
+              number: `${company.invoicePrefix || "FA"}-${billingYear}-${String(nextNumber).padStart(4, "0")}`,
+              client: sub.client,
+              date: billingDate,
+              due: due.toISOString().split("T")[0] ?? billingDate,
+              amount: sub.amountHT + totalVAT,
+              totalHT: sub.amountHT,
+              totalVAT,
+              status: "draft",
+              sourceSubscriptionId: sub.id,
+            });
+            nextNumber++;
+          }
+
+          const nextDate = new Date(`${billingDate}T12:00:00`);
+          if (sub.interval === "monthly") nextDate.setMonth(nextDate.getMonth() + 1);
+          else if (sub.interval === "quarterly") nextDate.setMonth(nextDate.getMonth() + 3);
+          else nextDate.setFullYear(nextDate.getFullYear() + 1);
+          billingDate = nextDate.toISOString().split("T")[0] ?? today;
+          generated++;
         }
-        return sub;
+
+        hasChanges = true;
+        return { ...sub, nextBillingDate: billingDate };
       });
       
       if (hasChanges) {
@@ -495,15 +652,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       return prev;
     });
-  }, [loaded]); // Run once when loaded
+  }, [company.invoicePrefix, company.nextInvoiceNumber, company.paymentTermsDays, invoices, loaded]);
 
-  const addQuote = (quote: Quote) => setQuotes((prev) => [quote, ...prev]);
+  const addQuote = (quote: Quote) => setQuotes((prev) => sortDocumentsByActivity([...prev, quote]));
   const updateQuote = (number: string, updated: Quote) => {
-    setQuotes((prev) => prev.map((q) => (q.number === number ? updated : q)));
+    setQuotes((prev) => sortDocumentsByActivity(prev.map((q) => (q.number === number ? updated : q))));
   };
-  const addInvoice = (invoice: Invoice) => setInvoices((prev) => [invoice, ...prev]);
+  const deleteQuote = (number: string) => setQuotes((prev) => prev.filter((quote) => quote.number !== number));
+  const addInvoice = (invoice: Invoice) => setInvoices((prev) => sortDocumentsByActivity([...prev, invoice]));
   const updateInvoice = (number: string, updated: Invoice) => {
-    setInvoices((prev) => prev.map((inv) => (inv.number === number ? updated : inv)));
+    setInvoices((prev) => sortDocumentsByActivity(prev.map((inv) => (inv.number === number ? updated : inv))));
   };
   const addUpsell = (upsell: Upsell) => {
     setUpsells((prev) => [...prev, upsell]);
@@ -598,6 +756,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         quotes,
         addQuote,
         updateQuote,
+        deleteQuote,
         invoices,
         addInvoice,
         updateInvoice,

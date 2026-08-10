@@ -4,16 +4,24 @@ import {
   GripVertical,
   KanbanSquare,
   Send,
-  PenLine,
-  Clock,
+  ReceiptEuro,
   CheckCircle,
+  Clock3,
   RefreshCw,
   X,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
+import { QuoteEditorDialog } from "@/components/QuoteEditorDialog";
 import { useI18n } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { type Quote } from "@/lib/data-context";
+import {
+  canMoveQuoteManually,
+  getInvoicePaymentState,
+  getQuotePipelineStage,
+  markInvoiceAsPaid,
+  type QuotePipelineStage,
+} from "@/lib/document-workflow";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/pipeline")({
@@ -29,7 +37,7 @@ export const Route = createFileRoute("/pipeline")({
   component: Pipeline,
 });
 
-type ColumnId = "Brouillon" | "Envoyé" | "Signé" | "EnAttente" | "Refusé";
+type ColumnId = QuotePipelineStage;
 
 const columns: {
   id: ColumnId;
@@ -42,8 +50,8 @@ const columns: {
 }[] = [
   {
     id: "Brouillon",
-    label: "Brouillon",
-    sublabel: "À envoyer",
+    label: "En attente d’envoi",
+    sublabel: "Devis à envoyer",
     dotColor: "bg-muted-foreground/50",
     accentBg: "bg-secondary",
     accentText: "text-muted-foreground",
@@ -61,19 +69,28 @@ const columns: {
   {
     id: "Signé",
     label: "Signé",
-    sublabel: "Validé",
+    sublabel: "À facturer",
     dotColor: "bg-primary",
     accentBg: "bg-primary/10",
     accentText: "text-primary",
     headerBg: "bg-primary/5",
   },
   {
-    id: "EnAttente",
-    label: "En attente",
-    sublabel: "De paiement",
-    dotColor: "bg-orange-400",
+    id: "Facturé",
+    label: "Facturé",
+    sublabel: "Facture brouillon",
+    dotColor: "bg-violet-500",
+    accentBg: "bg-violet-100",
+    accentText: "text-violet-700",
+    headerBg: "bg-violet-50",
+  },
+  {
+    id: "APayer",
+    label: "À payer",
+    sublabel: "En attente client",
+    dotColor: "bg-orange-500",
     accentBg: "bg-orange-100",
-    accentText: "text-orange-600",
+    accentText: "text-orange-700",
     headerBg: "bg-orange-50",
   },
   {
@@ -87,63 +104,36 @@ const columns: {
   },
 ];
 
-const statusMap: Record<ColumnId, { fr: string; en: string }> = {
+const statusMap: Partial<Record<ColumnId, { fr: string; en: string }>> = {
   Brouillon: { fr: "Brouillon", en: "Draft" },
   Envoyé: { fr: "Envoyé", en: "Sent" },
-  Signé: { fr: "Signé", en: "Signed" },
-  EnAttente: { fr: "En attente", en: "Awaiting payment" },
-  Refusé: { fr: "Refusé", en: "Refused" },
 };
-
-/** Détermine la colonne Kanban à partir du statut d'un devis */
-function getColumnId(statusFr: string): ColumnId {
-  if (statusFr === "Brouillon") return "Brouillon";
-  if (statusFr === "Envoyé" || statusFr.includes("Vue")) return "Envoyé";
-  if (statusFr === "Signé") return "Signé";
-  if (statusFr === "En attente" || statusFr === "En attente de paiement") return "EnAttente";
-  if (statusFr === "Refusé" || statusFr === "Expiré") return "Refusé";
-  return "Brouillon";
-}
 
 function Pipeline() {
   const { money, date } = useI18n();
-  const { quotes, updateQuote, addQuote, company, updateCompany } = useData();
+  const { quotes, invoices, clients, products, updateQuote, updateInvoice } = useData();
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overCol, setOverCol] = useState<ColumnId | null>(null);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [saveNotice, setSaveNotice] = useState("");
 
-  // Les devis "Payé" disparaissent du pipeline
-  const pipelineQuotes = quotes.filter(
-    (q) => q.status.fr !== "Payé" && q.status.en !== "Paid",
-  );
+  const pipelineQuotes = quotes.filter((quote) => {
+    const linkedInvoices = invoices.filter((invoice) => invoice.sourceQuoteNumber === quote.number);
+    return !["Payé", "Expiré"].includes(quote.status.fr) &&
+      !(linkedInvoices.length > 0 && linkedInvoices.every((invoice) => invoice.status === "paid"));
+  });
 
   /* ── Actions ─────────────────────────────────────────────── */
 
   const moveQuote = (quote: Quote, target: ColumnId) => {
-    updateQuote(quote.number, { ...quote, status: statusMap[target] });
-  };
-
-  const markPaid = (quote: Quote) => {
-    // Passer en "Payé" → le devis disparaît du pipeline
+    const targetStatus = statusMap[target];
+    if (!targetStatus) return;
     updateQuote(quote.number, {
       ...quote,
-      status: { fr: "Payé", en: "Paid" },
+      status: targetStatus,
+      ...(target === "Envoyé" ? { sentAt: new Date().toISOString() } : {}),
     });
-  };
-
-  const duplicateAsDraft = (quote: Quote) => {
-    const year = new Date().getFullYear();
-    const prefix = company.quotePrefix || "DV";
-    const nextNum = company.nextQuoteNumber ?? 1;
-    const newNumber = `${prefix}-${year}-${String(nextNum).padStart(3, "0")}`;
-    const newQuote: Quote = {
-      ...quote,
-      number: newNumber,
-      date: new Date().toISOString().split("T")[0]!,
-      status: { fr: "Brouillon", en: "Draft" },
-    };
-    addQuote(newQuote);
-    updateCompany({ nextQuoteNumber: nextNum + 1 });
   };
 
   /* ── Drag & drop ─────────────────────────────────────────── */
@@ -152,9 +142,9 @@ function Pipeline() {
     if (dragId) {
       const quote = quotes.find((q) => q.number === dragId);
       if (quote) {
-        const currentCol = getColumnId(quote.status.fr);
-        if (currentCol !== targetCol) {
-          updateQuote(dragId, { ...quote, status: statusMap[targetCol] });
+        const currentCol = getQuotePipelineStage(quote, invoices);
+        if (currentCol !== targetCol && canMoveQuoteManually(currentCol, targetCol)) {
+          moveQuote(quote, targetCol);
         }
       }
     }
@@ -172,6 +162,12 @@ function Pipeline() {
         title="Pipeline des devis"
         subtitle="Suivez l'avancement de vos propositions commerciales par simple glisser-déposer."
       />
+
+      {saveNotice && (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          {saveNotice}
+        </div>
+      )}
 
       {/* Métriques */}
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -207,7 +203,7 @@ function Pipeline() {
           <p className="mt-1.5 font-display text-xl font-bold text-success">
             {
               pipelineQuotes.filter(
-                (q) => q.status.fr === "Signé" || q.status.fr === "En attente",
+                (q) => q.status.fr === "Signé",
               ).length
             }
           </p>
@@ -228,10 +224,10 @@ function Pipeline() {
       </div>
 
       {/* Kanban */}
-      <div className="grid grid-cols-3 gap-3 xl:grid-cols-5 min-h-[60vh]">
+      <div className="grid min-h-[60vh] grid-flow-col auto-cols-[minmax(160px,1fr)] gap-3 overflow-x-auto pb-2">
         {columns.map((col) => {
           const items = pipelineQuotes.filter(
-            (q) => getColumnId(q.status.fr) === col.id,
+            (q) => getQuotePipelineStage(q, invoices) === col.id,
           );
           const colTotal = items.reduce((s, d) => s + d.amount, 0);
 
@@ -298,10 +294,23 @@ function Pipeline() {
 
               {/* Cartes */}
               <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
-                {items.map((quote) => (
-                  <article
+                {items.map((quote) => {
+                  const linkedInvoices = invoices.filter((invoice) => invoice.sourceQuoteNumber === quote.number);
+                  const paymentStates = linkedInvoices.map((invoice) => getInvoicePaymentState(invoice));
+                  const paymentState = paymentStates.includes("late")
+                    ? "late"
+                    : paymentStates.includes("pending")
+                      ? "waiting"
+                      : paymentStates.includes("draft")
+                        ? "draft"
+                        : paymentStates.length > 0 && paymentStates.every((state) => state === "paid")
+                          ? "paid"
+                          : null;
+
+                  return (
+                    <article
                     key={quote.number}
-                    draggable
+                    draggable={col.id === "Brouillon" || col.id === "Refusé"}
                     onDragStart={() => setDragId(quote.number)}
                     onDragEnd={() => setDragId(null)}
                     className={cn(
@@ -328,7 +337,7 @@ function Pipeline() {
                     </div>
 
                     {/* Montant */}
-                    <div className="mt-3 border-t border-border pt-2.5 pl-6">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2.5 pl-6">
                       <span
                         className={cn(
                           "font-display text-sm font-bold",
@@ -337,10 +346,40 @@ function Pipeline() {
                       >
                         {money(quote.amount)}
                       </span>
+                      {col.id === "Facturé" && paymentState && (
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-1 text-[10px] font-bold",
+                            paymentState === "draft" && "bg-secondary text-muted-foreground",
+                            paymentState === "waiting" && "bg-orange-100 text-orange-700",
+                            paymentState === "late" && "bg-destructive/10 text-destructive",
+                            paymentState === "paid" && "bg-success/15 text-success",
+                          )}
+                        >
+                          {paymentState === "draft" && "Facture brouillon"}
+                          {paymentState === "waiting" && "En attente de paiement"}
+                          {paymentState === "late" && "Paiement en retard"}
+                          {paymentState === "paid" && "Paiement reçu"}
+                        </span>
+                      )}
                     </div>
 
                     {/* ── Boutons d'action selon la colonne ── */}
                     <div className="mt-2 pl-6 flex flex-col gap-1.5">
+
+                      {/* Ouvre le devis concerné avec les informations client déjà renseignées. */}
+                      {col.id === "Brouillon" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingQuote(quote);
+                          }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Modifier le devis
+                        </button>
+                      )}
 
                       {/* BROUILLON → Envoyer */}
                       {col.id === "Brouillon" && (
@@ -356,76 +395,99 @@ function Pipeline() {
                         </button>
                       )}
 
-                      {/* ENVOYÉ → Signé / Refusé (client) */}
+                      {/* ENVOYÉ : la signature ou le refus vient automatiquement du portail client. */}
                       {col.id === "Envoyé" && (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveQuote(quote, "Signé");
-                            }}
-                            className="flex items-center justify-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors w-full"
-                          >
-                            <PenLine className="h-3 w-3" />
-                            Signé par le client
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveQuote(quote, "Refusé");
-                            }}
-                            className="flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/20 transition-colors w-full"
-                          >
-                            <X className="h-3 w-3" />
-                            Refusé par le client
-                          </button>
-                        </>
+                        <p className="rounded-md bg-warning/10 px-2.5 py-2 text-center text-[10px] font-medium text-warning-foreground">
+                          En attente de la réponse du client
+                        </p>
                       )}
 
-                      {/* SIGNÉ → En attente de paiement */}
+                      {/* SIGNÉ → Créer la facture */}
                       {col.id === "Signé" && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            moveQuote(quote, "EnAttente");
+                            window.location.href = `/factures?devis=${encodeURIComponent(quote.number)}#factures-a-creer`;
                           }}
-                          className="flex items-center justify-center gap-1.5 rounded-md bg-orange-100 px-2.5 py-1.5 text-[11px] font-semibold text-orange-600 hover:bg-orange-200 transition-colors w-full"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-2.5 py-2 text-[11px] font-bold text-white shadow-sm transition-colors hover:bg-primary/90"
                         >
-                          <Clock className="h-3 w-3" />
-                          En attente de paiement
+                          <ReceiptEuro className="h-3.5 w-3.5" />
+                          Créer la facture
                         </button>
                       )}
 
-                      {/* EN ATTENTE → Marquer payé (disparaît) */}
-                      {col.id === "EnAttente" && (
+                      {/* FACTURÉ → Envoyer la facture brouillon */}
+                      {col.id === "Facturé" && linkedInvoices.some((invoice) => invoice.status === "draft") && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            markPaid(quote);
+                            linkedInvoices
+                              .filter((invoice) => invoice.status === "draft")
+                              .forEach((invoice) => updateInvoice(invoice.number, { ...invoice, status: "sent", sentAt: new Date().toISOString() }));
                           }}
-                          className="flex items-center justify-center gap-1.5 rounded-md bg-success/10 px-2.5 py-1.5 text-[11px] font-semibold text-success hover:bg-success/20 transition-colors w-full"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-violet-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-violet-700"
                         >
-                          <CheckCircle className="h-3 w-3" />
-                          Payé ✓
+                          <Send className="h-3.5 w-3.5" />
+                          Envoyer la facture
                         </button>
                       )}
 
-                      {/* REFUSÉ → Modifier le devis (nouveau brouillon) */}
+                      {/* À PAYER → Confirmer l'encaissement */}
+                      {col.id === "APayer" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            linkedInvoices
+                              .filter((invoice) => invoice.status === "sent" || invoice.status === "late")
+                              .forEach((invoice) => updateInvoice(invoice.number, markInvoiceAsPaid(invoice)));
+                            updateQuote(quote.number, { ...quote, status: { fr: "Payé", en: "Paid" } });
+                          }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-emerald-700"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Paiement reçu
+                        </button>
+                      )}
+
+                      {col.id === "APayer" && paymentState === "late" && (
+                        <span className="flex items-center justify-center gap-1 text-[10px] font-semibold text-destructive">
+                          <Clock3 className="h-3 w-3" /> Paiement en retard
+                        </span>
+                      )}
+
+                      {/* REFUSÉ → Corriger le devis avec les données existantes */}
                       {col.id === "Refusé" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            duplicateAsDraft(quote);
-                          }}
-                          className="flex items-center justify-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors w-full"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          Modifier le devis
-                        </button>
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingQuote(quote);
+                            }}
+                            className="flex items-center justify-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors w-full"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            Modifier le devis
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateQuote(quote.number, {
+                                ...quote,
+                                status: { fr: "Expiré", en: "Expired" },
+                                closedAt: new Date().toISOString(),
+                              });
+                            }}
+                            className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive w-full"
+                          >
+                            <X className="h-3 w-3" />
+                            Clôturer
+                          </button>
+                        </>
                       )}
                     </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
 
                 {items.length === 0 && (
                   <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/40 py-8 text-center">
@@ -439,6 +501,20 @@ function Pipeline() {
           );
         })}
       </div>
+      <QuoteEditorDialog
+        quote={editingQuote}
+        clients={clients}
+        products={products}
+        onOpenChange={(open) => {
+          if (!open) setEditingQuote(null);
+        }}
+        onSave={(updated) => {
+          updateQuote(updated.number, updated);
+          setEditingQuote(null);
+          setSaveNotice(`Le devis ${updated.number} a été mis à jour.`);
+          window.setTimeout(() => setSaveNotice(""), 3500);
+        }}
+      />
     </>
   );
 }

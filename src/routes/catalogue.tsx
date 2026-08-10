@@ -463,7 +463,7 @@ function Catalogue() {
                     {tv(UNIT_LABELS[p.unit])}
                   </td>
                   <td className="px-4 py-3 text-right font-display font-semibold whitespace-nowrap">
-                    {money(p.priceHT)}
+                    {money(Number(p.priceHT))}
                   </td>
                   <td className="hidden px-4 py-3 text-center lg:table-cell">
                     <span className="inline-flex flex-col items-center gap-0.5">

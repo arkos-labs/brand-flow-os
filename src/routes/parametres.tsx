@@ -599,7 +599,7 @@ function SettingsPage() {
                   <FieldRow label={lang === "fr" ? "Modèle Devis par défaut" : "Default Quote Template"}>
                     <select
                       value={form.defaultQuoteTemplate || "classic"}
-                      onChange={(e) => set("defaultQuoteTemplate", e.target.value)}
+                      onChange={(e) => set("defaultQuoteTemplate", e.target.value as typeof form.defaultQuoteTemplate)}
                       className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="classic">{lang === "fr" ? "Classique (A4 Standard)" : "Classic (Standard A4)"}</option>
@@ -613,7 +613,7 @@ function SettingsPage() {
                   <FieldRow label={lang === "fr" ? "Modèle Facture par défaut" : "Default Invoice Template"}>
                     <select
                       value={form.defaultInvoiceTemplate || "classic"}
-                      onChange={(e) => set("defaultInvoiceTemplate", e.target.value)}
+                      onChange={(e) => set("defaultInvoiceTemplate", e.target.value as typeof form.defaultInvoiceTemplate)}
                       className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       <option value="classic">{lang === "fr" ? "Classique (A4 Standard)" : "Classic (Standard A4)"}</option>
@@ -864,30 +864,6 @@ function SettingsPage() {
                               <div className="h-1.5 w-10 rounded bg-slate-600" />
                               <div className="h-1.5 w-7 rounded bg-slate-700" />
                               <div className="h-1.5 w-8 rounded bg-blue-700" />
-                            </div>
-                          </div>
-                        ),
-                      },
-                      {
-                        value: "system" as Theme,
-                        icon: Monitor,
-                        labelKey: "pref.theme.system" as Key,
-                        descKey: "pref.theme.system.desc" as Key,
-                        preview: (
-                          <div className="h-16 rounded-lg border border-border overflow-hidden flex">
-                            <div className="w-1/2 bg-white flex flex-col">
-                              <div className="h-3 bg-slate-100 border-b border-slate-200" />
-                              <div className="p-1 space-y-0.5 flex-1">
-                                <div className="h-1 w-6 rounded bg-slate-200" />
-                                <div className="h-1 w-4 rounded bg-slate-100" />
-                              </div>
-                            </div>
-                            <div className="w-1/2 bg-slate-900 flex flex-col">
-                              <div className="h-3 bg-slate-800 border-b border-slate-700" />
-                              <div className="p-1 space-y-0.5 flex-1">
-                                <div className="h-1 w-6 rounded bg-slate-600" />
-                                <div className="h-1 w-4 rounded bg-slate-700" />
-                              </div>
                             </div>
                           </div>
                         ),

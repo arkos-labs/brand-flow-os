@@ -9,17 +9,19 @@ export function generateAccountingExportCSV(invoices: Invoice[]): string {
   const headers = ["Date", "Numéro", "Client", "Montant HT", "Montant TVA", "Montant TTC"];
   
   const rows = invoices.map(inv => {
-    // Calcul TVA (si details est présent, on utilise totalHT et totalVAT, sinon on estime à 20%)
-    let ht = inv.amount;
-    let tva = 0;
-    
-    if (inv.details) {
-      ht = inv.details.totalHT || (inv.amount / 1.2);
-      tva = inv.details.totalVAT || (inv.amount - ht);
-    } else {
-      ht = inv.amount / 1.2;
-      tva = inv.amount - ht;
-    }
+    const itemTotals = inv.items?.reduce(
+      (totals, item) => {
+        const lineHT = item.qty * item.priceHT;
+        return {
+          ht: totals.ht + lineHT,
+          tva: totals.tva + lineHT * (item.vatRate / 100),
+        };
+      },
+      { ht: 0, tva: 0 },
+    );
+    const fallbackHT = inv.amount / 1.2;
+    const ht = inv.totalHT ?? itemTotals?.ht ?? fallbackHT;
+    const tva = inv.totalVAT ?? itemTotals?.tva ?? inv.amount - ht;
 
     return [
       new Date(inv.date).toLocaleDateString("fr-FR"),

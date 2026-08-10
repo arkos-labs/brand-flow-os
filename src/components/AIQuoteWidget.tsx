@@ -269,7 +269,7 @@ function extractQuantity(text: string, unit: string): number {
 
   for (const p of patterns) {
     const m = text.match(p);
-    if (m) return Math.min(parseInt(m[1]), 99);
+    if (m) return Math.min(parseInt(m[1] ?? "1"), 99);
   }
   return 1;
 }
@@ -349,13 +349,13 @@ function runSmartAnalysis(
         lower.match(/(\d+)\s*(jours?|journées?)/i) ||
         lower.match(/(\d+)\s*(semaines?)/i);
       if (qMatch && item.unit === "h") {
-        qty = parseInt(qMatch[1]);
+        qty = parseInt(qMatch[1] ?? "1");
         if (qMatch[0].includes("jour")) qty *= 7;
         if (qMatch[0].includes("semaine")) qty *= 35;
       }
       const nMatch = lower.match(/(\d+)\s*(personnes?|participants?|collaborateurs?)/i);
       if (nMatch && item.label.toLowerCase().includes("formation")) {
-        qty = parseInt(nMatch[1]);
+        qty = parseInt(nMatch[1] ?? "1");
       }
       const m2Match = lower.match(/(\d+)\s*(m²|m2)/i);
       if (
@@ -363,7 +363,7 @@ function runSmartAnalysis(
         (item.label.toLowerCase().includes("peinture") ||
           item.label.toLowerCase().includes("rénovation"))
       ) {
-        qty = Math.ceil(parseInt(m2Match[1]) / 10);
+        qty = Math.ceil(parseInt(m2Match[1] ?? "1") / 10);
       }
       return {
         id: Math.random().toString(36).slice(2),
@@ -493,11 +493,11 @@ export function AIQuoteWidget({ products, isOpen, onClose, onApply }: AIQuoteWid
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              Générer avec l'IA
+              Assistant devis — mode local
             </DialogTitle>
             <p className="mt-1 text-[13px] text-white/60">
               {step === "prompt" &&
-                "Décrivez le besoin de votre client — l'IA structure le devis automatiquement."}
+                "Décrivez le besoin : le moteur local propose des lignes depuis votre catalogue."}
               {step === "loading" && "Analyse en cours…"}
               {step === "results" && "Voici la proposition — modifiez avant d'appliquer."}
             </p>
@@ -570,7 +570,7 @@ export function AIQuoteWidget({ products, isOpen, onClose, onApply }: AIQuoteWid
               onClick={() => setStep("loading")}
             >
               <Wand2 className="h-4 w-4" />
-              Analyser et générer le devis
+              Analyser et préparer le devis
             </Button>
           </div>
         )}

@@ -153,7 +153,7 @@ export function parseCatalogueCSV(text: string): ParseResult {
   let skipped = 0;
 
   // Nettoyer BOM UTF-8
-  const clean = text.replace(/^﻿/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const clean = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const lines = clean.split("\n").filter((l) => l.trim() !== "");
 
   if (lines.length < 2) {
@@ -161,10 +161,11 @@ export function parseCatalogueCSV(text: string): ParseResult {
   }
 
   // Détecter le séparateur
-  const sep = lines[0].includes(";") ? ";" : ",";
+  const firstLine = lines[0] ?? "";
+  const sep = firstLine.includes(";") ? ";" : ",";
 
   // Parser l'en-tête
-  const headerLine = lines[0].toLowerCase();
+  const headerLine = firstLine.toLowerCase();
   const headers = headerLine.split(sep).map((h) => h.trim().replace(/^"|"$/g, ""));
 
   // Mapping flexible des colonnes
@@ -197,13 +198,13 @@ export function parseCatalogueCSV(text: string): ParseResult {
 
   for (let i = 1; i < lines.length; i++) {
     const lineNum = i + 1;
-    const raw = lines[i];
+    const raw = lines[i] ?? "";
     if (!raw.trim()) continue;
 
     const cells = raw.split(sep).map((c) => c.trim().replace(/^"|"$/g, ""));
 
     const get = (idx: number, fallback = "") =>
-      idx !== -1 && idx < cells.length ? cells[idx].trim() : fallback;
+      idx !== -1 && idx < cells.length ? (cells[idx] ?? fallback).trim() : fallback;
 
     const labelFr = get(idxLabelFr);
     if (!labelFr) {

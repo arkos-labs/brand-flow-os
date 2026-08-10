@@ -120,6 +120,7 @@ function PublicHeader() {
 const plans = [
   {
     key: "starter",
+    popular: false,
     features: [
       "quotes",
       "invoices",
@@ -151,6 +152,7 @@ const plans = [
   },
   {
     key: "enterprise",
+    popular: false,
     features: [
       "quotes",
       "invoices",
@@ -169,7 +171,7 @@ const plans = [
     cta: "pricing.cta.enterprise",
     trial: 0,
   },
-];
+] as const;
 
 const planUsers = {
   starter: "1",

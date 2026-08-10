@@ -79,13 +79,13 @@ const features = [
 
 function Logo() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30">
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#092b34] text-sm font-extrabold text-white shadow-lg shadow-[#092b34]/20">
         IP
       </div>
       <div className="leading-tight">
-        <p className="font-display text-sm font-bold tracking-tight text-foreground">InvoicePro</p>
-        <p className="text-[10px] font-medium text-muted-foreground">Business OS</p>
+        <p className="font-display text-base font-bold tracking-tight text-[#092b34]">InvoicePro</p>
+        <p className="text-[9px] font-bold uppercase tracking-[.14em] text-[#ce7131]">Pour artisans</p>
       </div>
     </div>
   );
@@ -95,41 +95,54 @@ function PublicHeader() {
   const { t, lang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const links = [
-    { to: "/tarifs", label: "nav.pricing" },
-    { to: "/connexion", label: "nav.login" },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
+    <header className="sticky top-0 z-50 border-b border-[#dce6e5] bg-[#fffdf8]/95 backdrop-blur-md">
+      <div className="mx-auto grid h-[72px] max-w-6xl grid-cols-[1fr_auto] items-center px-4 lg:grid-cols-[1fr_auto_1fr] lg:px-6">
         <Link to="/">
           <Logo />
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              {t(link.label as never)}
-            </Link>
-          ))}
+        <nav className="hidden items-center justify-center gap-1 rounded-full border border-[#dce6e5] bg-white p-1 lg:flex">
+          <a
+            href="#fonctionnalites"
+            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
+          >
+            Fonctionnalités
+          </a>
+          <Link
+            to="/tarifs"
+            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
+          >
+            {t("nav.pricing" as never)}
+          </Link>
+          <a
+            href="#demo"
+            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
+          >
+            Voir la démo
+          </a>
+        </nav>
+
+        <div className="hidden items-center justify-end gap-3 lg:flex">
+          <Link
+            to="/connexion"
+            className="px-2 py-2 text-xs font-bold text-slate-600 transition-colors hover:text-[#ce7131]"
+          >
+            {t("nav.login" as never)}
+          </Link>
           <Link
             to="/inscription"
-            className="ml-2 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#ce7131] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#ce7131]/20 transition-all hover:-translate-y-0.5 hover:bg-[#b85220]"
           >
-            {t("auth.signup")}
+            Tester gratuitement <ArrowRight className="h-3.5 w-3.5" />
           </Link>
-        </nav>
+        </div>
 
         {/* Mobile menu */}
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dce6e5] text-[#092b34] md:hidden"
           aria-label={lang === "fr" ? "Menu" : "Menu"}
         >
           {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -137,22 +150,15 @@ function PublicHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-border bg-background px-4 py-3 md:hidden">
+        <div className="border-t border-[#dce6e5] bg-[#fffdf8] px-4 py-3 md:hidden">
           <nav className="flex flex-col gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
-              >
-                {t(link.label as never)}
-              </Link>
-            ))}
+            <a href="#fonctionnalites" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">Fonctionnalités</a>
+            <Link to="/tarifs" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">{t("nav.pricing" as never)}</Link>
+            <Link to="/connexion" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">{t("nav.login" as never)}</Link>
             <Link
               to="/inscription"
               onClick={() => setMobileOpen(false)}
-              className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#ce7131] px-4 py-3 text-sm font-bold text-white"
             >
               {t("auth.signup")}
             </Link>
@@ -166,38 +172,39 @@ function PublicHeader() {
 function Hero() {
   const { t } = useI18n();
   return (
-    <section className="relative overflow-hidden bg-background">
+    <section className="relative overflow-hidden bg-[#092b34]">
       {/* Gradient background decoration */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute top-1/2 -left-24 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute inset-0 opacity-[.12] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute -top-24 -right-24 h-[32rem] w-[32rem] rounded-full bg-orange-400/20 blur-3xl" />
+        <div className="absolute bottom-0 -left-24 h-72 w-72 rounded-full bg-teal-300/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-4 py-16 lg:px-6 lg:py-24">
+      <div className="relative mx-auto max-w-6xl px-4 py-20 lg:px-6 lg:py-28">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-success" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[.14em] text-slate-200">
+            <ShieldCheck className="h-3.5 w-3.5 text-orange-300" />
             {t("landing.trust")}
           </div>
 
-          <h1 className="mx-auto mt-6 max-w-3xl font-display text-3xl font-bold tracking-tight text-foreground lg:text-5xl">
+          <h1 className="mx-auto mt-7 max-w-4xl font-display text-5xl font-bold tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">
             {t("landing.hero.title")}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground lg:text-base">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 lg:text-lg">
             {t("landing.hero.subtitle")}
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/inscription"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-primary/40"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#ce7131] px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:bg-[#b85220]"
             >
               {t("landing.hero.cta_primary")}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/tarifs"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
             >
               {t("landing.hero.cta_secondary")}
             </Link>
@@ -206,15 +213,15 @@ function Hero() {
 
         {/* Dashboard preview */}
         <div className="mt-12 lg:mt-16">
-          <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-card p-2 shadow-2xl shadow-primary/10">
-            <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2">
+          <div className="mx-auto max-w-4xl rounded-[22px] border border-white/15 bg-[#fffdf8] p-2 shadow-2xl shadow-black/30">
+            <div className="rounded-2xl border border-[#dce6e5] bg-[#edf3f2] px-3 py-2">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
                   <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
                   <div className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
                 </div>
-                <div className="flex-1 rounded bg-background px-2 py-0.5 text-[10px] text-center text-muted-foreground">
+                <div className="flex-1 rounded bg-white px-2 py-0.5 text-[10px] text-center text-slate-400">
                   app.invoicepro.fr/tableau-de-bord
                 </div>
               </div>
@@ -225,14 +232,14 @@ function Hero() {
                 { label: "Devis en attente", value: "7", color: "text-amber-500" },
                 { label: "Factures dues", value: "3", color: "text-rose-500" },
               ].map((k) => (
-                <div key={k.label} className="rounded-lg border border-border bg-background p-3">
-                  <p className="text-[10px] text-muted-foreground">{k.label}</p>
+                <div key={k.label} className="rounded-xl border border-[#dce6e5] bg-white p-3">
+                  <p className="text-[10px] font-semibold text-slate-400">{k.label}</p>
                   <p className={cn("text-sm font-bold lg:text-lg", k.color)}>{k.value}</p>
                 </div>
               ))}
             </div>
-            <div className="mx-4 mb-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
-              <p className="text-xs font-semibold text-primary">✨ {t("landing.features.ai_quotes.title")}</p>
+            <div className="mx-4 mb-4 rounded-xl border border-[#ce7131]/25 bg-orange-50 p-4">
+              <p className="text-xs font-bold text-[#a94f1d]">✦ {t("landing.features.ai_quotes.title")}</p>
               <div className="mt-2 space-y-1">
                 {[
                   { desc: "Pose carrelage sol", total: "900 €" },
@@ -256,7 +263,7 @@ function Hero() {
 function Features() {
   const { t } = useI18n();
   return (
-    <section className="border-t border-border bg-surface py-16 lg:py-24">
+    <section id="fonctionnalites" className="border-t border-border bg-surface py-16 lg:py-24">
       <div className="mx-auto max-w-6xl px-4 lg:px-6">
         <div className="text-center">
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">

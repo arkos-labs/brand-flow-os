@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 export type UserPreferences = {
   theme: Theme;
@@ -22,7 +22,7 @@ export type UserPreferences = {
 const PREFS_KEY = "invoicepro_prefs_v1";
 
 const DEFAULT_PREFS: UserPreferences = {
-  theme: "system",
+  theme: "light",
   compactMode: false,
   showTTCByDefault: false,
   notificationsEnabled: true,
@@ -32,7 +32,8 @@ export function loadPrefs(): UserPreferences {
   try {
     const stored = window.localStorage.getItem(PREFS_KEY);
     if (!stored) return { ...DEFAULT_PREFS };
-    return { ...DEFAULT_PREFS, ...(JSON.parse(stored) as Partial<UserPreferences>) };
+    const parsed = JSON.parse(stored) as Partial<UserPreferences> & { theme?: string };
+    return { ...DEFAULT_PREFS, ...parsed, theme: parsed.theme === "dark" ? "dark" : "light" };
   } catch {
     return { ...DEFAULT_PREFS };
   }
@@ -44,13 +45,9 @@ export function savePrefs(prefs: UserPreferences): void {
 
 // ── Theme helpers ─────────────────────────────────────────────────────────────
 
-function getSystemTheme(): "light" | "dark" {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 /** Apply the correct CSS class to <html> and return the resolved theme. */
 function applyThemeClass(theme: Theme): "light" | "dark" {
-  const resolved: "light" | "dark" = theme === "system" ? getSystemTheme() : theme;
+  const resolved = theme;
   const root = document.documentElement;
   if (resolved === "dark") {
     root.classList.add("dark");
@@ -89,18 +86,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const resolved = applyThemeClass(loaded.theme);
     setResolvedTheme(resolved);
   }, []);
-
-  // ── Watch system preference when theme === "system" ──────────────────────
-  useEffect(() => {
-    if (prefs.theme !== "system") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      const resolved = applyThemeClass("system");
-      setResolvedTheme(resolved);
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [prefs.theme]);
 
   // ── Updater ──────────────────────────────────────────────────────────────
   const setPrefs = (update: Partial<UserPreferences>) => {

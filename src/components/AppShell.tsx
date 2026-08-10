@@ -5,7 +5,6 @@ import {
   FileText,
   ReceiptEuro,
   TrendingUp,
-  Timer,
   ShieldCheck,
   Package,
   CheckSquare,
@@ -19,6 +18,9 @@ import {
   Sun,
   Moon,
   Monitor,
+  Check,
+  ChevronDown,
+  Globe2,
   CreditCard,
   Repeat,
   Menu,
@@ -28,7 +30,6 @@ import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { useTheme, type Theme } from "@/lib/theme";
-import { projects } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { GlobalSearch } from "./GlobalSearch";
 import { Search as SearchIcon } from "lucide-react";
@@ -70,10 +71,11 @@ function daysSince(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 }
 
-function isQuoteExpired(q: { status: { fr: string }; date: string }): boolean {
+function isQuoteExpired(q: { status: { fr: string }; date: string; sentAt?: string }): boolean {
   const finalStatuses = ["Signé", "Facturé", "Payé", "Refusé", "Expiré"];
   if (finalStatuses.includes(q.status.fr)) return q.status.fr === "Expiré";
-  return daysSince(q.date) > QUOTE_VALIDITY_DAYS;
+  if (!["Envoyé", "Vu"].includes(q.status.fr)) return false;
+  return q.sentAt ? daysSince(q.sentAt) > QUOTE_VALIDITY_DAYS : false;
 }
 
 // ── NotificationBadge ─────────────────────────────────────────────────────────
@@ -190,36 +192,61 @@ function NotificationPanel({ items, onClose }: { items: NotifItem[]; onClose: ()
 
 // ── ThemeToggle ───────────────────────────────────────────────────────────────
 
-const THEME_CYCLE: Theme[] = ["light", "dark", "system"];
+const THEME_CYCLE: Theme[] = ["light", "dark"];
 
 const THEME_META: Record<Theme, { icon: typeof Sun; labelFr: string; labelEn: string }> = {
   light: { icon: Sun, labelFr: "Thème clair", labelEn: "Light theme" },
   dark: { icon: Moon, labelFr: "Thème sombre", labelEn: "Dark theme" },
-  system: { icon: Monitor, labelFr: "Thème système", labelEn: "System theme" },
 };
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const { lang } = useI18n();
-
-  const cycleNext = () => {
-    const idx = THEME_CYCLE.indexOf(theme);
-    setTheme(THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]);
-  };
-
-  const meta = THEME_META[theme];
+  const [open, setOpen] = useState(false);
+  const activeTheme = theme;
+  const meta = THEME_META[activeTheme];
   const Icon = meta.icon;
   const label = lang === "fr" ? meta.labelFr : meta.labelEn;
 
   return (
-    <button
-      onClick={cycleNext}
-      title={label}
-      aria-label={label}
-      className="flex h-full w-full items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-    >
-      <Icon className="h-4 w-4" />
-    </button>
+    <div className="relative">
+      <button
+        onClick={() => setOpen((value) => !value)}
+        title={label}
+        aria-label={label}
+        aria-expanded={open}
+        className="flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-2.5 text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+      >
+        <Icon className="h-4 w-4" />
+        <span className="hidden text-xs font-medium xl:inline">{activeTheme === "light" ? "Clair" : "Sombre"}</span>
+        <ChevronDown className={cn("hidden h-3.5 w-3.5 transition-transform xl:block", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
+          <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Apparence</p>
+          {THEME_CYCLE.map((value) => {
+            const item = THEME_META[value];
+            const ItemIcon = item.icon;
+            const itemLabel = lang === "fr" ? item.labelFr : item.labelEn;
+            return (
+              <button
+                key={value}
+                onClick={() => { setTheme(value); setOpen(false); }}
+                className={cn(
+                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted",
+                  activeTheme === value && "bg-primary/10 text-primary",
+                )}
+              >
+                <ItemIcon className="h-3.5 w-3.5" />
+                <span className="flex-1">{itemLabel}</span>
+                {activeTheme === value && <Check className="h-3.5 w-3.5" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -227,17 +254,21 @@ function ThemeToggle() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useI18n();
-  const { invoices, quotes } = useData();
+  const { invoices, quotes, company } = useData();
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const locationPath = location.pathname;
+
+  useEffect(() => { setMobileOpen(false); }, [locationPath]);
 
   // Public routes don't show the admin shell (login, landing, pricing, etc.)
   if (PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith("/portail")) {
     return <>{children}</>;
   }
 
-  const { company } = useData();
   const filteredGroups = groups.map(g => ({
     ...g,
     items: g.items.filter(item => {
@@ -249,19 +280,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   // ── Compute notification counts ──────────────────────────────────────────
   const lateInvoiceCount = invoices.filter((i) => i.status === "late").length;
   const expiredQuoteCount = quotes.filter(isQuoteExpired).length;
-  const unbilledHoursCount = projects.reduce(
-    (s: number, p: { unbilled: number }) => s + p.unbilled,
-    0,
-  );
 
   // Badge per route
   const badges: Record<string, number> = {
     "/factures": lateInvoiceCount,
     "/devis": expiredQuoteCount,
-    "/temps": unbilledHoursCount,
   };
 
-  const totalNotifs = lateInvoiceCount + expiredQuoteCount + (unbilledHoursCount > 0 ? 1 : 0);
+  const totalNotifs = lateInvoiceCount + expiredQuoteCount;
 
   // Notification items for panel
   const notifItems: NotifItem[] = [
@@ -287,31 +313,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       color: "text-warning",
       bg: "bg-warning/10",
     },
-    unbilledHoursCount > 0 && {
-      id: "unbilled-hours",
-      count: unbilledHoursCount,
-      title: "notif.unbilled_hours" as Key,
-      desc: "notif.unbilled_hours.desc" as Key,
-      link: "/temps",
-      linkLabel: "notif.view_time" as Key,
-      icon: Timer,
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
   ].filter(Boolean) as NotifItem[];
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Ferme le drawer au changement de page
-  const locationPath = location.pathname;
-  useEffect(() => { setMobileOpen(false); }, [locationPath]);
 
   // ── Sidebar content (partagé desktop + mobile drawer) ────────────────────
   const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
       {/* ── Brand ── */}
-      <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/30">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/40 text-sm font-bold text-primary-foreground">
+      <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/50">
+        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground">
           IP
           <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
         </div>
@@ -336,10 +345,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={item.to}
                     onClick={onNavigate}
                     activeOptions={{ exact: item.to === "/tableau-de-bord" }}
-                    className="group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+                    className="group flex items-center gap-3 rounded-md px-3 py-2 text-[12px] text-sidebar-foreground/60 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                     activeProps={{
                       className:
-                        "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[9px]",
+                        "bg-primary text-primary-foreground font-semibold shadow-sm",
                     }}
                   >
                     <span className="relative">
@@ -374,10 +383,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link
           to="/parametres"
           onClick={onNavigate}
-          className="group flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+          className="group flex items-center gap-3 rounded-md px-3 py-2 text-[12px] text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
           activeProps={{
             className:
-              "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm border-l-[3px] border-primary pl-[5px]",
+              "bg-primary text-primary-foreground font-semibold shadow-sm",
           }}
         >
           <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
@@ -397,7 +406,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
         </div>
         <button
-          onClick={() => { window.location.href = "/index.html"; }}
+          onClick={() => { window.location.href = "/"; }}
           title="Se déconnecter"
           aria-label="Se déconnecter"
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/40 transition-colors hover:bg-destructive/15 hover:text-destructive"
@@ -441,7 +450,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/90 px-3 backdrop-blur-md lg:px-5">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/90 px-3 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl lg:px-7">
           {/* Hamburger mobile */}
           <button
             onClick={() => setMobileOpen(true)}
@@ -450,21 +459,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu className="h-4 w-4" />
           </button>
-          {/* Spacer desktop */}
-          <div className="hidden lg:flex" />
-
-          <div className="flex items-center gap-2">
-            {/* Search */}
+          {/* Recherche + contexte */}
+          <div className="hidden min-w-0 flex-1 items-center gap-4 lg:flex">
+            <div className="flex h-8 items-center border-r border-border pr-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Espace de travail
+            </div>
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden lg:flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted/40 px-4 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-muted hover:border-border hover:shadow-sm"
+              className="flex w-full max-w-xl items-center gap-2.5 rounded-xl border border-border bg-muted/25 px-3.5 py-2.5 text-xs text-muted-foreground transition-all duration-150 hover:border-primary/30 hover:bg-background hover:shadow-sm"
             >
               <SearchIcon className="h-3.5 w-3.5 shrink-0" />
-              <span className="w-36 text-left">Rechercher...</span>
+              <span className="flex-1 text-left">Rechercher un client, un devis, une facture…</span>
               <kbd className="pointer-events-none ml-2 inline-flex h-5 select-none items-center rounded border border-border bg-background px-1.5 font-mono text-[10px] text-muted-foreground/70">
                 ⌘K
               </kbd>
             </button>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Recherche mobile */}
             <button
               onClick={() => setSearchOpen(true)}
               className="lg:hidden flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-secondary transition-colors"
@@ -498,35 +511,46 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             {/* Theme toggle */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-secondary transition-colors">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
 
             {/* Lang switcher */}
-            <div className="flex rounded-xl border border-border bg-secondary/40 p-0.5">
-              {(["fr", "en"] as const).map((code) => (
-                <button
-                  key={code}
-                  onClick={() => setLang(code)}
-                  className={cn(
-                    "rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition-all duration-150",
-                    lang === code
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {code}
-                </button>
-              ))}
+            <div className="relative">
+              <button
+                onClick={() => setLanguageOpen((value) => !value)}
+                aria-label="Changer la langue"
+                aria-expanded={languageOpen}
+                className="flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-2.5 text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+              >
+                <Globe2 className="h-4 w-4" />
+                <span className="hidden text-xs font-semibold sm:inline">{lang === "fr" ? "Français" : "English"}</span>
+                <span className="text-xs font-bold sm:hidden">{lang.toUpperCase()}</span>
+                <ChevronDown className={cn("hidden h-3.5 w-3.5 transition-transform sm:block", languageOpen && "rotate-180")} />
+              </button>
+
+              {languageOpen && (
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
+                  <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Langue de l'application</p>
+                  {(["fr", "en"] as const).map((code) => (
+                    <button
+                      key={code}
+                      onClick={() => { setLang(code); setLanguageOpen(false); }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted",
+                        lang === code && "bg-primary/10 text-primary",
+                      )}
+                    >
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-muted text-[10px] font-bold">{code.toUpperCase()}</span>
+                      <span className="flex-1">{code === "fr" ? "Français" : "English"}</span>
+                      {lang === code && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* User avatar */}
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-navy text-xs font-bold text-navy-foreground ring-2 ring-navy/20">
-              CM
-            </div>
           </div>
         </header>
-        <main className="px-5 py-7 lg:px-9">{children}</main>
+        <main className="px-4 py-5 lg:px-5 lg:py-6">{children}</main>
       </div>
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
@@ -544,12 +568,13 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-2 text-center lg:mb-7 lg:flex-row lg:items-start lg:justify-between lg:text-left">
+    <div className="mb-5 flex flex-col gap-2 text-center lg:flex-row lg:items-start lg:justify-between lg:text-left">
       <div>
-        <h1 className="text-xl font-semibold text-foreground lg:text-3xl">{title}</h1>
-        <p className="mt-1 max-w-2xl text-xs text-muted-foreground lg:mt-1.5 lg:text-sm">{subtitle}</p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground lg:text-[22px]">{title}</h1>
+        <p className="mt-1 max-w-2xl text-xs text-muted-foreground lg:text-[11px]">{subtitle}</p>
       </div>
       {action && <div className="flex justify-center lg:justify-start">{action}</div>}
     </div>
   );
 }
+

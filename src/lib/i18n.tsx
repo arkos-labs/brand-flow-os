@@ -542,6 +542,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = window.localStorage.getItem("ip-lang");
     if (stored === "fr" || stored === "en") setLang(stored);
+    else setLang(window.navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en");
   }, []);
 
   useEffect(() => {

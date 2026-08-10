@@ -182,14 +182,28 @@ function ClientPortalPremium() {
   };
 
   const handleSign = () => {
-    updateQuote(quote.number, { ...quote, status: { fr: "Signé", en: "Signed" } });
+    const signedAt = new Date().toISOString();
+    updateQuote(quote.number, {
+      ...quote,
+      status: { fr: "Signé", en: "Signed" },
+      signedAt,
+      signatureData: {
+        signerName: typedName.trim() || quote.client,
+        signedAt,
+        consent: agreed,
+      },
+    });
     setIsSignOpen(false);
     sessionStorage.setItem(`seen_${quote.number}`, "true");
     setStep("signed");
   };
 
   const handleRefuse = () => {
-    updateQuote(quote.number, { ...quote, status: { fr: "Refusé", en: "Refused" } });
+    updateQuote(quote.number, {
+      ...quote,
+      status: { fr: "Refusé", en: "Refused" },
+      refusedAt: new Date().toISOString(),
+    });
     setIsRefuseOpen(false);
     setStep("refused");
   };
@@ -205,7 +219,7 @@ function ClientPortalPremium() {
           <h1 className="text-2xl font-bold text-slate-900 mb-3">Devis accepté !</h1>
           <p className="text-slate-500 text-sm mb-8 leading-relaxed">
             Merci {quote.client}. Votre signature a bien été enregistrée.<br />
-            Un exemplaire vous sera transmis par email.
+            Votre acceptation est enregistrée dans cette version locale. Vous pouvez conserver le PDF ci-dessous.
           </p>
           <div className="flex flex-col gap-3">
             <Button
@@ -214,7 +228,7 @@ function ClientPortalPremium() {
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-xl font-semibold gap-2"
             >
               <Download className="h-4 w-4" />
-              {exporting ? "Téléchargement..." : "Télécharger le PDF signé"}
+              {exporting ? "Téléchargement..." : "Télécharger le devis accepté"}
             </Button>
             <Button
               variant="outline"
@@ -227,7 +241,7 @@ function ClientPortalPremium() {
           <div className="mt-8 p-4 rounded-xl bg-white border border-slate-100 shadow-sm text-left text-xs text-slate-500">
             <p className="font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              Certificat de signature
+              Trace d'acceptation locale
             </p>
             <p>Signé par : <span className="text-slate-800 font-medium">{quote.client}</span></p>
             <p>Date : <span className="text-slate-800">{timestamp}</span></p>
@@ -445,7 +459,7 @@ function ClientPortalPremium() {
         {/* ── Badge sécurité ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-5">
           <ShieldCheck className="h-4 w-4" />
-          <span>Document sécurisé · Signature électronique à valeur légale</span>
+          <span>Portail de démonstration · Acceptation conservée dans ce navigateur</span>
         </div>
 
         {/* ── CTA (si pas encore signé) ──────────────────────────────────────── */}
@@ -504,7 +518,7 @@ function ClientPortalPremium() {
                 </Label>
                 <p className="text-xs text-slate-400 flex items-center gap-1">
                   <Lock className="h-3 w-3" />
-                  Signature électronique sécurisée
+                  Acceptation enregistrée en mode local
                 </p>
               </div>
             </div>

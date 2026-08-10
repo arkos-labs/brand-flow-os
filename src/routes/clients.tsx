@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type ReactNode } from "react";
 import {
   Users,
   Plus,
@@ -41,9 +41,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/lib/data-context";
-import { Download, CheckCircle2, Send, Eye } from "lucide-react";
+import { Download, CheckCircle2, Send, Eye, Link, LoaderCircle } from "lucide-react";
 import { ErrorBoundary } from "@/lib/ErrorBoundary";
 import { searchCompanyBySiret } from "@/lib/siret";
+import { ReminderModal } from "@/components/ReminderModal";
+import { QuoteEditorDialog } from "@/components/QuoteEditorDialog";
+import { exportQuotePdf } from "@/lib/pdf-export";
+import { getClientQuoteActions } from "@/lib/quote-actions";
 
 export const Route = createFileRoute("/clients")({
   head: () => ({
@@ -69,7 +73,7 @@ function initials(name: string) {
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
+    .map((w) => (w[0] ?? "").toUpperCase())
     .join("");
 }
 
@@ -86,7 +90,7 @@ function avatarColor(name: string): string {
   ];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
-  return colors[h % colors.length];
+  return colors[h % colors.length] ?? colors[0]!;
 }
 
 const EMPTY_CLIENT: Omit<Client, "id" | "createdAt"> = {
@@ -113,16 +117,23 @@ type Tab = "info" | "quotes" | "invoices";
 
 function ClientsPage() {
   const { t, tv, money, date, lang } = useI18n();
-  const { clients, addClient, updateClient, deleteClient, quotes, invoices } = useData();
+  const { clients, addClient, updateClient, deleteClient, quotes, invoices, products, company, updateQuote, updateInvoice } = useData();
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [externalClientName, setExternalClientName] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("info");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [form, setForm] = useState<Omit<Client, "id" | "createdAt">>(EMPTY_CLIENT);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [emailQuote, setEmailQuote] = useState<Quote | null>(null);
+  const [exportingQuote, setExportingQuote] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState("");
+  const [reminderInvoice, setReminderInvoice] = useState<import("@/lib/data-context").Invoice | null>(null);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
   
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
 
@@ -135,11 +146,11 @@ function ClientsPage() {
       if (data) {
         setForm((prev) => ({
           ...prev,
-          companyName: data.name || prev.companyName,
-          address: data.address || prev.address,
-          postalCode: data.postalCode || prev.postalCode,
-          city: data.city || prev.city,
-          vatNumber: data.vatNumber || prev.vatNumber,
+          companyName: data.name || prev.companyName || "",
+          address: data.address || prev.address || "",
+          postalCode: data.postalCode || prev.postalCode || "",
+          city: data.city || prev.city || "",
+          vatNumber: data.vatNumber || prev.vatNumber || "",
         }));
       }
     } finally {
@@ -159,14 +170,39 @@ function ClientsPage() {
     );
   }, [clients, search]);
 
-  const selectedClient = clients.find((c) => c.id === selectedId) ?? null;
+  useEffect(() => {
+    const focusName = window.localStorage.getItem("invoicepro_client_focus");
+    if (!focusName) return;
+    const registeredClient = clients.find((client) => client.name.toLowerCase() === focusName.toLowerCase());
+    setSelectedId(registeredClient?.id ?? null);
+    setExternalClientName(registeredClient ? null : focusName);
+    setTab("info");
+    window.localStorage.removeItem("invoicepro_client_focus");
+  }, [clients]);
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === selectedId)
+      ?? (externalClientName
+        ? {
+            id: `document-history-${externalClientName}`,
+            type: "particulier" as const,
+            name: externalClientName,
+            email: "",
+            country: "France",
+            createdAt: "2026-01-01",
+          }
+        : null),
+    [clients, externalClientName, selectedId],
+  );
+  const isExternalClient = selectedClient !== null && selectedId === null;
 
   // Historique: match par nom client (string)
   const clientQuotes = useMemo(
     () =>
       selectedClient
         ? quotes.filter(
-            (q) => q.client.toLowerCase() === selectedClient.name.toLowerCase(),
+            (quote) => quote.clientId === selectedClient.id
+              || (!quote.clientId && quote.client.toLowerCase() === selectedClient.name.toLowerCase()),
           )
         : [],
     [quotes, selectedClient],
@@ -175,11 +211,21 @@ function ClientsPage() {
     () =>
       selectedClient
         ? invoices.filter(
-            (inv) => inv.client.toLowerCase() === selectedClient.name.toLowerCase(),
+            (invoice) => invoice.clientId === selectedClient.id
+              || (!invoice.clientId && invoice.client.toLowerCase() === selectedClient.name.toLowerCase()),
           )
         : [],
     [invoices, selectedClient],
   );
+
+  const handleSendReminder = (invoiceNumber: string, type: "J+7" | "J+15" | "J+30") => {
+    const invoice = invoices.find((item) => item.number === invoiceNumber);
+    if (!invoice) return;
+    updateInvoice(invoiceNumber, {
+      ...invoice,
+      reminders: [...(invoice.reminders ?? []), { date: new Date().toISOString(), type }],
+    });
+  };
 
   const openNew = () => {
     setEditingClient(null);
@@ -222,7 +268,7 @@ function ClientsPage() {
       ...form,
       id: editingClient?.id ?? crypto.randomUUID(),
       name: displayName || form.name,
-      createdAt: editingClient?.createdAt ?? new Date().toISOString().split("T")[0],
+      createdAt: editingClient?.createdAt ?? new Date().toISOString().split("T")[0] ?? "",
     };
 
     if (editingClient) {
@@ -308,7 +354,7 @@ function ClientsPage() {
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => { setSelectedId(c.id); setTab("info"); }}
+                  onClick={() => { setSelectedId(c.id); setExternalClientName(null); setTab("info"); }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors",
                     isSelected
@@ -355,7 +401,7 @@ function ClientsPage() {
                 <button
                   type="button"
                   className="lg:hidden text-muted-foreground hover:text-foreground"
-                  onClick={() => setSelectedId(null)}
+                  onClick={() => { setSelectedId(null); setExternalClientName(null); }}
                 >
                   ←
                 </button>
@@ -405,7 +451,7 @@ function ClientsPage() {
                   </p>
                 </div>
 
-                <div className="flex gap-2">
+                {!isExternalClient && <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => openEdit(selectedClient)} className="gap-1.5">
                     <Pencil className="h-3.5 w-3.5" />
                     {t("cli.edit")}
@@ -418,7 +464,7 @@ function ClientsPage() {
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                </div>
+                </div>}
               </div>
 
               {/* KPI rapides */}
@@ -553,7 +599,7 @@ function ClientsPage() {
                       <li key={q.number} className="flex items-center justify-between gap-4 py-3 text-sm">
                         <div>
                           <p className="font-medium font-mono">{q.number}</p>
-                          <p className="text-xs text-muted-foreground">{date(q.date)}</p>
+                          <p className="text-xs text-muted-foreground">Créé le {date(q.date)}{q.sentAt && ` · Envoyé le ${date(q.sentAt)}`}</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={cn(
@@ -567,13 +613,54 @@ function ClientsPage() {
                             {tv(q.status)}
                           </span>
                           <span className="font-semibold">{money(q.amount)}</span>
-                          <button
-                            title="Voir le devis"
-                            onClick={() => setPreviewQuote(q)}
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors ml-2"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
+                          <div className="ml-2 flex items-center gap-1 rounded-lg border border-border bg-background p-1">
+                            {getClientQuoteActions(q.status.fr).includes("edit") && (
+                              <ActionIcon title="Modifier le devis" onClick={() => setEditingQuote(q)}>
+                                <Pencil className="h-4 w-4" />
+                              </ActionIcon>
+                            )}
+                            <ActionIcon title="Voir le devis" onClick={() => setPreviewQuote(q)}>
+                              <Eye className="h-4 w-4" />
+                            </ActionIcon>
+                            <ActionIcon
+                              title="Télécharger le PDF"
+                              disabled={exportingQuote === q.number}
+                              onClick={async () => {
+                                setExportingQuote(q.number);
+                                try {
+                                  await exportQuotePdf(q, company);
+                                  setActionNotice(`PDF ${q.number} téléchargé.`);
+                                } catch {
+                                  setActionNotice("Impossible de générer le PDF pour le moment.");
+                                } finally {
+                                  setExportingQuote(null);
+                                }
+                              }}
+                            >
+                              {exportingQuote === q.number
+                                ? <LoaderCircle className="h-4 w-4 animate-spin" />
+                                : <Download className="h-4 w-4" />}
+                            </ActionIcon>
+                            <ActionIcon
+                              title="Copier le lien client"
+                              onClick={async () => {
+                                const url = `${window.location.origin}/portail/${q.number}`;
+                                try {
+                                  await navigator.clipboard.writeText(url);
+                                  setActionNotice(`Lien client de ${q.number} copié.`);
+                                } catch {
+                                  setActionNotice("Impossible de copier le lien automatiquement.");
+                                }
+                              }}
+                            >
+                              <Link className="h-4 w-4" />
+                            </ActionIcon>
+                            {getClientQuoteActions(q.status.fr).includes("send") && (
+                              <ActionIcon title="Envoyer le devis" onClick={() => setEmailQuote(q)}>
+                                <Send className="h-4 w-4" />
+                              </ActionIcon>
+                            )}
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -598,6 +685,7 @@ function ClientsPage() {
                           <p className="font-medium font-mono">{inv.number}</p>
                           <p className="text-xs text-muted-foreground">
                             {lang === "fr" ? "Émise le" : "Issued"} {date(inv.date)}
+                            {inv.sentAt && ` · ${lang === "fr" ? "Envoyée le" : "Sent on"} ${date(inv.sentAt)}`}
                             {inv.due && ` · ${lang === "fr" ? "Échéance" : "Due"} ${date(inv.due)}`}
                           </p>
                         </div>
@@ -615,6 +703,28 @@ function ClientsPage() {
                             {inv.status === "draft" && (lang === "fr" ? "Brouillon" : "Draft")}
                           </span>
                           <span className="font-semibold">{money(inv.amount)}</span>
+                          {inv.status === "late" && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setReminderInvoice(inv); setIsReminderOpen(true); }}
+                              className="h-8 gap-1.5 border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Send className="h-3.5 w-3.5" /> Relancer
+                            </Button>
+                          )}
+                          {(inv.status === "sent" || inv.status === "late") && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => updateInvoice(inv.number, { ...inv, status: "paid" })}
+                              className="h-8 gap-1.5 bg-success px-3 text-xs text-white hover:bg-success/90"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              {lang === "fr" ? "Paiement reçu" : "Payment received"}
+                            </Button>
+                          )}
                         </div>
                       </li>
                     ))}
@@ -871,6 +981,67 @@ function ClientsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ReminderModal
+        invoice={reminderInvoice}
+        isOpen={isReminderOpen}
+        onClose={() => setIsReminderOpen(false)}
+        onSend={handleSendReminder}
+      />
+      <QuoteEditorDialog
+        quote={editingQuote}
+        clients={clients}
+        products={products}
+        onOpenChange={(open) => !open && setEditingQuote(null)}
+        onSave={(updated) => {
+          updateQuote(updated.number, updated);
+          setEditingQuote(null);
+          setActionNotice(`Le devis ${updated.number} a été mis à jour.`);
+        }}
+      />
+
+      <Dialog open={!!emailQuote} onOpenChange={(open) => !open && setEmailQuote(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-primary" />
+              Envoyer le devis
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+              <p><span className="text-muted-foreground">Destinataire :</span> {selectedClient?.email || "Adresse e-mail à renseigner"}</p>
+              <p className="mt-2"><span className="text-muted-foreground">Objet :</span> Votre devis {emailQuote?.number}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              En mode démonstration, cette action enregistre l’envoi et sa date. L’envoi réel sera activé avec la connexion Gmail.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setEmailQuote(null)}>Annuler</Button>
+            <Button onClick={() => {
+              if (!emailQuote) return;
+              updateQuote(emailQuote.number, {
+                ...emailQuote,
+                status: { fr: "Envoyé", en: "Sent" },
+                sentAt: new Date().toISOString(),
+              });
+              setActionNotice(`Le devis ${emailQuote.number} est marqué comme envoyé.`);
+              setEmailQuote(null);
+            }}>
+              <Send className="mr-2 h-4 w-4" />
+              Envoyer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {actionNotice && (
+        <div className="fixed bottom-5 right-5 z-[70] max-w-sm rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-lg">
+          {actionNotice}
+          <button className="ml-3 text-emerald-900/60 hover:text-emerald-900" onClick={() => setActionNotice("")}>×</button>
+        </div>
+      )}
       {/* Preview Modal for Quotes */}
       <Dialog open={!!previewQuote} onOpenChange={(open) => !open && setPreviewQuote(null)}>
         <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
@@ -953,22 +1124,18 @@ function ClientsPage() {
             <Button variant="outline" onClick={() => setPreviewQuote(null)}>
               Fermer
             </Button>
-            {previewQuote && previewQuote.status.fr !== "Payé" && (
-              <Button
-                variant="outline"
-                className="text-success border-success hover:bg-success hover:text-white"
-                onClick={() => {
-                  const updated = { ...previewQuote, status: { fr: "Payé", en: "Paid" } };
-                  // updateQuote(previewQuote.number, updated);
-                  setPreviewQuote(updated);
-                  alert("Fonctionnalité disponible depuis la page Devis.");
-                }}
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Marquer comme payé
-              </Button>
-            )}
-            <Button onClick={() => window.print()}>
+            <Button
+              disabled={!previewQuote || exportingQuote === previewQuote.number}
+              onClick={async () => {
+                if (!previewQuote) return;
+                setExportingQuote(previewQuote.number);
+                try {
+                  await exportQuotePdf(previewQuote, company);
+                } finally {
+                  setExportingQuote(null);
+                }
+              }}
+            >
               <Download className="h-4 w-4 mr-2" />
               Télécharger PDF
             </Button>
@@ -976,5 +1143,25 @@ function ClientsPage() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function ActionIcon({ title, onClick, disabled = false, children }: {
+  title: string;
+  onClick: () => void | Promise<void>;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-wait disabled:opacity-50"
+    >
+      {children}
+    </button>
   );
 }
