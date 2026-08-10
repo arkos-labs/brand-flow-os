@@ -1051,7 +1051,7 @@ function QuotesInner() {
           {/* CTA */}
           <button
             type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 backdrop-blur-sm transition-all hover:bg-white/30 lg:w-auto lg:shrink-0"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-[var(--shape-control)] border-2 border-white bg-white/15 px-5 text-sm font-bold text-white shadow-[4px_4px_0_rgba(255,255,255,0.35)] backdrop-blur-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-white/25 hover:shadow-[2px_2px_0_rgba(255,255,255,0.35)] lg:w-auto lg:shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               setIsAIWidgetOpen(true);

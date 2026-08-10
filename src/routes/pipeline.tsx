@@ -241,7 +241,7 @@ function Pipeline() {
               onDragLeave={() => setOverCol((c) => (c === col.id ? null : c))}
               onDrop={() => drop(col.id)}
               className={cn(
-                "flex flex-col rounded-xl border border-border bg-muted/20 transition-all duration-150",
+                "flex flex-col rounded-[var(--shape-control)] border-2 border-navy/15 bg-card/75 shadow-card transition-all duration-150",
                 overCol === col.id &&
                   "ring-2 ring-primary ring-offset-2 bg-primary/3 scale-[1.01]",
               )}
@@ -374,7 +374,7 @@ function Pipeline() {
                             e.stopPropagation();
                             setEditingQuote(quote);
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                          className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy/25 bg-card px-2.5 text-[11px] font-bold text-muted-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:text-primary hover:shadow-none"
                         >
                           <RefreshCw className="h-3 w-3" />
                           Modifier le devis
@@ -388,7 +388,7 @@ function Pipeline() {
                             e.stopPropagation();
                             moveQuote(quote, "Envoyé");
                           }}
-                          className="flex items-center justify-center gap-1.5 rounded-md bg-warning/10 px-2.5 py-1.5 text-[11px] font-semibold text-warning-foreground hover:bg-warning/25 transition-colors w-full"
+                          className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-warning/50 bg-warning/10 px-2.5 text-[11px] font-bold text-warning-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-warning/25 hover:shadow-none"
                         >
                           <Send className="h-3 w-3" />
                           Envoyer
@@ -409,7 +409,7 @@ function Pipeline() {
                             e.stopPropagation();
                             window.location.href = `/factures?devis=${encodeURIComponent(quote.number)}#factures-a-creer`;
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-2.5 py-2 text-[11px] font-bold text-white shadow-sm transition-colors hover:bg-primary/90"
+                          className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-2.5 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
                         >
                           <ReceiptEuro className="h-3.5 w-3.5" />
                           Créer la facture
@@ -425,7 +425,7 @@ function Pipeline() {
                               .filter((invoice) => invoice.status === "draft")
                               .forEach((invoice) => updateInvoice(invoice.number, { ...invoice, status: "sent", sentAt: new Date().toISOString() }));
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-2.5 py-2 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
+                          className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-2.5 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
                         >
                           <Send className="h-3.5 w-3.5" />
                           Envoyer la facture
@@ -442,7 +442,7 @@ function Pipeline() {
                               .forEach((invoice) => updateInvoice(invoice.number, markInvoiceAsPaid(invoice)));
                             updateQuote(quote.number, { ...quote, status: { fr: "Payé", en: "Paid" } });
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-emerald-700"
+                          className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-emerald-600 px-2.5 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-emerald-700 hover:shadow-none"
                         >
                           <CheckCircle className="h-3.5 w-3.5" />
                           Paiement reçu
@@ -463,7 +463,7 @@ function Pipeline() {
                               e.stopPropagation();
                               setEditingQuote(quote);
                             }}
-                            className="flex items-center justify-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors w-full"
+                            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-primary/30 bg-primary/10 px-2.5 text-[11px] font-bold text-primary shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/20 hover:shadow-none"
                           >
                             <RefreshCw className="h-3 w-3" />
                             Modifier le devis
@@ -477,7 +477,7 @@ function Pipeline() {
                                 closedAt: new Date().toISOString(),
                               });
                             }}
-                            className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive w-full"
+                            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-destructive/30 bg-card px-2.5 text-[11px] font-bold text-muted-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-destructive/5 hover:text-destructive hover:shadow-none"
                           >
                             <X className="h-3 w-3" />
                             Clôturer

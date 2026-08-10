@@ -263,9 +263,9 @@
 
 @utility card-elevated {
   background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 1px 2px oklch(0.28 0.06 278 / 0.04);
+  border: 2px solid color-mix(in oklab, var(--navy) 16%, transparent);
+  border-radius: var(--shape-control);
+  box-shadow: var(--shadow-card);
 }
 
 @utility surface-navy {
