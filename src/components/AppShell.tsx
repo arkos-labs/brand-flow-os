@@ -111,7 +111,7 @@ function NotificationPanel({ items, onClose }: { items: NotifItem[]; onClose: ()
   return (
     <div
       ref={ref}
-      className="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-border bg-background shadow-xl lg:absolute lg:right-0 lg:top-full lg:mt-2 lg:w-80"
+      className="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-80 rounded-[var(--shape-control)] border-2 border-navy bg-background shadow-offset lg:absolute lg:right-0 lg:top-full lg:mt-2 lg:w-80"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -205,7 +205,7 @@ function ThemeToggle() {
         title={label}
         aria-label={label}
         aria-expanded={open}
-        className="flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-2.5 text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+        className="flex h-9 items-center gap-2 rounded-[var(--shape-control)] border-2 border-navy/25 bg-background px-2.5 text-muted-foreground shadow-offset-sm transition-all hover:border-primary hover:bg-muted/60 hover:text-foreground"
       >
         <Icon className="h-4 w-4" />
         <span className="hidden text-xs font-medium xl:inline">{activeTheme === "light" ? "Clair" : "Sombre"}</span>
@@ -213,7 +213,7 @@ function ThemeToggle() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
+        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-[var(--shape-control)] border-2 border-navy bg-popover p-1.5 shadow-offset">
           <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Apparence</p>
           {THEME_CYCLE.map((value) => {
             const item = THEME_META[value];
@@ -310,8 +310,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       {/* ── Brand ── */}
       <div className="flex items-center gap-3 px-2 pb-5 border-b border-sidebar-border/50">
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground">
-          IP
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border-2 border-primary bg-navy font-display text-lg font-black text-primary">
+          D
           <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
         </div>
         <div className="leading-tight">
@@ -336,10 +336,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={item.to}
                     onClick={onNavigate}
                     activeOptions={{ exact: item.to === "/tableau-de-bord" }}
-                    className="group flex items-center gap-3 rounded-md px-3 py-2 text-[12px] text-sidebar-foreground/60 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+                    className="group flex items-center gap-3 rounded-[2px] border border-transparent px-3 py-2 text-[12px] text-sidebar-foreground/60 transition-all duration-150 hover:border-sidebar-border hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                     activeProps={{
                       className:
-                        "bg-primary text-primary-foreground font-semibold shadow-sm",
+                        "border-primary bg-primary text-primary-foreground font-semibold shadow-[3px_3px_0_rgba(255,255,255,0.22)]",
                     }}
                   >
                     <item.icon className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
@@ -358,7 +358,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {/* ── Compliance badge ── */}
-      <div className="mt-4 rounded-xl border border-sidebar-border/40 bg-sidebar-accent/30 p-3 backdrop-blur">
+      <div className="mt-4 rounded-[var(--shape-control)] border-2 border-sidebar-border/50 bg-sidebar-accent/30 p-3 backdrop-blur">
         <div className="flex items-center gap-2 text-[11px] text-sidebar-foreground/70">
           <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
           <span className="font-medium">Factur-X · PAF · RGPD</span>
@@ -371,10 +371,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link
           to="/parametres"
           onClick={onNavigate}
-          className="group flex items-center gap-3 rounded-md px-3 py-2 text-[12px] text-sidebar-foreground/65 transition-all duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+          className="group flex items-center gap-3 rounded-[2px] border border-transparent px-3 py-2 text-[12px] text-sidebar-foreground/65 transition-all duration-150 hover:border-sidebar-border hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
           activeProps={{
             className:
-              "bg-primary text-primary-foreground font-semibold shadow-sm",
+              "border-primary bg-primary text-primary-foreground font-semibold shadow-[3px_3px_0_rgba(255,255,255,0.22)]",
           }}
         >
           <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
@@ -383,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* ── User area + Logout ── */}
-      <div className="mt-3 flex items-center gap-3 rounded-xl border border-sidebar-border/30 bg-sidebar-accent/20 px-3 py-2.5">
+      <div className="mt-3 flex items-center gap-3 rounded-[var(--shape-control)] border-2 border-sidebar-border/40 bg-sidebar-accent/20 px-3 py-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary-foreground">
           CM
         </div>
@@ -406,9 +406,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-workspace min-h-screen bg-background">
       {/* ── Sidebar desktop ── */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col surface-navy px-3 py-3 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r-2 border-primary/60 surface-navy px-3 py-3 lg:flex">
         <SidebarContent />
       </aside>
 
@@ -438,7 +438,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/90 px-3 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl lg:px-7">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b-2 border-navy/20 bg-background/95 px-3 shadow-sm backdrop-blur-xl lg:px-7">
           {/* Hamburger mobile */}
           <button
             onClick={() => setMobileOpen(true)}
@@ -454,7 +454,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex w-full max-w-xl items-center gap-2.5 rounded-xl border border-border bg-muted/25 px-3.5 py-2.5 text-xs text-muted-foreground transition-all duration-150 hover:border-primary/30 hover:bg-background hover:shadow-sm"
+              className="flex w-full max-w-xl items-center gap-2.5 rounded-[var(--shape-control)] border-2 border-navy/20 bg-card px-3.5 py-2.5 text-xs text-muted-foreground shadow-offset-sm transition-all duration-150 hover:border-primary hover:text-foreground"
             >
               <SearchIcon className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1 text-left">Rechercher un client, un devis, une facture…</span>
@@ -478,7 +478,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 onClick={() => setNotifOpen((v) => !v)}
                 className={cn(
-                  "relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-150",
+                  "relative flex h-8 w-8 items-center justify-center rounded-[var(--shape-control)] border-2 transition-all duration-150",
                   notifOpen
                     ? "border-primary/30 bg-primary/10 text-primary"
                     : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -507,7 +507,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setLanguageOpen((value) => !value)}
                 aria-label="Changer la langue"
                 aria-expanded={languageOpen}
-                className="flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-2.5 text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+                className="flex h-9 items-center gap-2 rounded-[var(--shape-control)] border-2 border-navy/25 bg-background px-2.5 text-muted-foreground shadow-offset-sm transition-all hover:border-primary hover:bg-muted/60 hover:text-foreground"
               >
                 <Globe2 className="h-4 w-4" />
                 <span className="hidden text-xs font-semibold sm:inline">{lang === "fr" ? "Français" : "English"}</span>
@@ -516,7 +516,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
 
               {languageOpen && (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-xl border border-border bg-popover p-1.5 shadow-xl">
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 rounded-[var(--shape-control)] border-2 border-navy bg-popover p-1.5 shadow-offset">
                   <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Langue de l'application</p>
                   {(["fr", "en"] as const).map((code) => (
                     <button
@@ -538,7 +538,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           </div>
         </header>
-        <main className="px-4 py-5 lg:px-5 lg:py-6">{children}</main>
+        <main className="px-4 py-5 lg:px-6 lg:py-7">{children}</main>
       </div>
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
@@ -556,10 +556,11 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-2 text-center lg:flex-row lg:items-start lg:justify-between lg:text-left">
+    <div className="mb-6 flex flex-col gap-3 border-b-2 border-navy/15 pb-4 text-center lg:flex-row lg:items-start lg:justify-between lg:text-left">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground lg:text-[22px]">{title}</h1>
-        <p className="mt-1 max-w-2xl text-xs text-muted-foreground lg:text-[11px]">{subtitle}</p>
+        <span className="mb-1.5 inline-flex bg-navy px-2 py-1 font-mono text-[8px] font-semibold uppercase tracking-[0.14em] text-white">Espace de travail</span>
+        <h1 className="font-display text-3xl font-black uppercase leading-none tracking-tight text-foreground lg:text-[36px]">{title}</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground lg:text-xs">{subtitle}</p>
       </div>
       {action && <div className="flex justify-center lg:justify-start">{action}</div>}
     </div>
