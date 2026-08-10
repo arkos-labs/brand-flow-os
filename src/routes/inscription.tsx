@@ -63,16 +63,16 @@ function InscriptionPage() {
           </div>
           <div>
             <p className="font-bold text-white text-lg leading-tight">InvoicePro</p>
-            <p className="text-orange-300 text-xs">Business OS</p>
+            <p className="text-blue-300 text-xs">Business OS</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
           <h2 className="text-3xl font-bold text-white leading-snug mb-3">
             Lancez votre activité.<br />
-            <span className="text-orange-300">Conformité dès le premier jour.</span>
+            <span className="text-blue-300">Conformité dès le premier jour.</span>
           </h2>
-          <p className="text-orange-100 text-sm leading-relaxed max-w-sm mb-6">
+          <p className="text-blue-100 text-sm leading-relaxed max-w-sm mb-6">
             {t("landing.hero.subtitle")}
           </p>
 
@@ -84,10 +84,10 @@ function InscriptionPage() {
               t("landing.features.cashflow.title"),
             ].map((f) => (
               <div key={f} className="flex items-center gap-3">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-400/30">
-                  <span className="text-orange-300 text-xs">✓</span>
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-400/30">
+                  <span className="text-blue-300 text-xs">✓</span>
                 </div>
-                <p className="text-orange-100 text-sm">{f}</p>
+                <p className="text-blue-100 text-sm">{f}</p>
               </div>
             ))}
           </div>

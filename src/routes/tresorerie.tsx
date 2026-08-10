@@ -186,8 +186,8 @@ function Cashflow() {
             <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradPaid" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ce7131" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#ce7131" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#1769e0" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#1769e0" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradPending" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -211,7 +211,7 @@ function Cashflow() {
               <Area
                 type="monotone"
                 dataKey="Encaissé"
-                stroke="#ce7131"
+                stroke="#1769e0"
                 strokeWidth={2}
                 fill="url(#gradPaid)"
                 dot={false}

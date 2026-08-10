@@ -43,7 +43,7 @@ export const Route = createFileRoute("/tableau-de-bord")({
 // ── Constantes couleurs Recharts ──────────────────────────────────────────────
 // CSS custom properties (oklch) ne fonctionnant pas dans SVG fill, on utilise
 // des valeurs hex cohérentes avec le design system.
-const COLOR_SENT = "#ce7131"; // Devizia copper
+const COLOR_SENT = "#1769e0"; // Devizia blue
 const COLOR_SIGNED = "#10b981"; // success (emerald)
 const COLOR_REFUSED = "#f43f5e"; // destructive (rose)
 const COLOR_PROGRESS = "#f59e0b"; // warning (amber)
