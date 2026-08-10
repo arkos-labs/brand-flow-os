@@ -1,35 +1,50 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useI18n } from "@/lib/i18n";
 import {
-  Sparkles,
-  FileText,
-  KanbanSquare,
-  TrendingUp,
-  PenTool,
-  ScanLine,
   ArrowRight,
-  ShieldCheck,
+  BadgeCheck,
+  Banknote,
+  BarChart3,
+  BriefcaseBusiness,
+  Building2,
+  Check,
   CheckCircle2,
+  ChevronRight,
+  Clock3,
+  FileCheck2,
+  FileText,
+  Hammer,
   Menu,
+  MousePointerClick,
+  ReceiptText,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Users,
+  WalletCards,
   X,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import "./homepage.css";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "InvoicePro — Business OS devis & facturation" },
+      { title: "Devizia — Devis, factures et paiements sans perdre vos soirées" },
       {
         name: "description",
         content:
-          "Devis interactifs, facturation Factur-X, CRM Kanban et trésorerie prédictive pour freelances, agences et TPE.",
+          "Devizia simplifie les devis, factures, relances et paiements des artisans, indépendants et petites entreprises. Pilotez votre activité avec sérénité.",
       },
-      { property: "og:title", content: "InvoicePro — Business OS devis & facturation" },
+      {
+        property: "og:title",
+        content: "Devizia — L'administratif qui ne déborde plus sur vos soirées",
+      },
       {
         property: "og:description",
         content:
-          "Devis interactifs, facturation Factur-X, CRM Kanban et trésorerie prédictive pour freelances, agences et TPE.",
+          "Créez, envoyez et suivez vos devis et factures depuis un seul outil pensé pour les petites entreprises.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -38,222 +53,251 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
-const features = [
+const problems = [
   {
-    key: "ai_quotes",
-    icon: Sparkles,
-    color: "text-primary",
-    bg: "bg-primary/10",
+    number: "01",
+    title: "Les devis attendent le soir",
+    text: "Préparez un document propre pendant que les détails du besoin sont encore frais.",
+    result: "Créer sans repartir de zéro",
+    icon: Clock3,
   },
   {
-    key: "facturx",
-    icon: FileText,
-    color: "text-success",
-    bg: "bg-success/10",
+    number: "02",
+    title: "Les relances passent à la trappe",
+    text: "Retrouvez ce qui est envoyé, accepté ou à encaisser au même endroit.",
+    result: "Savoir quoi relancer, au bon moment",
+    icon: Send,
   },
   {
-    key: "crm",
-    icon: KanbanSquare,
-    color: "text-warning",
-    bg: "bg-warning/10",
-  },
-  {
-    key: "cashflow",
-    icon: TrendingUp,
-    color: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    key: "signature",
-    icon: PenTool,
-    color: "text-success",
-    bg: "bg-success/10",
-  },
-  {
-    key: "expenses",
-    icon: ScanLine,
-    color: "text-warning",
-    bg: "bg-warning/10",
+    number: "03",
+    title: "La trésorerie reste floue",
+    text: "Visualisez les montants attendus et les échéances sans multiplier les tableaux.",
+    result: "Décider avec une vue claire",
+    icon: BarChart3,
   },
 ];
 
-function Logo() {
+const workflow = [
+  {
+    step: "01",
+    title: "Créez",
+    text: "Décrivez la mission, ajoutez vos prestations et laissez Devizia structurer un devis professionnel.",
+    icon: Sparkles,
+  },
+  {
+    step: "02",
+    title: "Envoyez",
+    text: "Partagez votre document et suivez son avancée sans chercher dans vos messages.",
+    icon: Send,
+  },
+  {
+    step: "03",
+    title: "Encaissez",
+    text: "Transformez le devis accepté en facture et gardez les paiements à portée de vue.",
+    icon: Banknote,
+  },
+];
+
+const capabilities = [
+  { icon: Sparkles, title: "Devis assistés", text: "Une base claire, modifiable et prête à envoyer." },
+  { icon: FileCheck2, title: "Factures Factur-X", text: "Des documents structurés pour préparer la facturation électronique." },
+  { icon: Users, title: "Clients centralisés", text: "Coordonnées, documents et historique réunis." },
+  { icon: TrendingUp, title: "Pipeline commercial", text: "Chaque opportunité visible, de la demande à la signature." },
+  { icon: WalletCards, title: "Trésorerie lisible", text: "Échéances et encaissements dans une même vue." },
+  { icon: ReceiptText, title: "Dépenses suivies", text: "Une vision plus juste de ce qui entre et de ce qui sort." },
+];
+
+const profiles = [
+  {
+    icon: Hammer,
+    label: "Artisans",
+    title: "Du chantier au devis, sans détour.",
+    text: "Créez et retrouvez vos documents depuis votre téléphone, au bureau comme sur le terrain.",
+  },
+  {
+    icon: BriefcaseBusiness,
+    label: "Indépendants",
+    title: "Une image pro dès le premier échange.",
+    text: "Cadrez vos missions, envoyez vos propositions et suivez vos règlements avec méthode.",
+  },
+  {
+    icon: Building2,
+    label: "Petites entreprises",
+    title: "L'équipe avance avec la même information.",
+    text: "Centralisez clients, ventes et facturation dans un espace simple à prendre en main.",
+  },
+];
+
+const faqs = [
+  ["Faut-il être à l'aise avec les logiciels de gestion ?", "Non. Devizia est pensé pour aller à l'essentiel : créer un document, l'envoyer et suivre son statut. Les fonctions avancées restent disponibles quand vous en avez besoin."],
+  ["Puis-je utiliser Devizia depuis mon téléphone ?", "Oui. L'interface s'adapte aux écrans mobiles pour consulter votre activité et gérer vos documents en déplacement."],
+  ["Mes factures peuvent-elles être générées en Factur-X ?", "Oui. Devizia prend en charge la génération de documents Factur-X, avec un PDF lisible et les données structurées associées."],
+  ["Devizia convient-il à mon métier ?", "Devizia s'adresse aux artisans, indépendants et petites équipes de services. Le catalogue et les documents s'adaptent à vos prestations."],
+  ["Puis-je essayer avant de choisir une offre ?", "Oui. Créez votre espace pour découvrir le produit, puis consultez la page Tarifs pour choisir la formule adaptée à votre activité."],
+] as const;
+
+function Logo({ inverse = false }: { inverse?: boolean }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#092b34] text-sm font-extrabold text-white shadow-lg shadow-[#092b34]/20">
-        IP
-      </div>
-      <div className="leading-tight">
-        <p className="font-display text-base font-bold tracking-tight text-[#092b34]">InvoicePro</p>
-        <p className="text-[9px] font-bold uppercase tracking-[.14em] text-[#ce7131]">Pour artisans</p>
-      </div>
-    </div>
+    <span className={`devizia-logo ${inverse ? "devizia-logo--inverse" : ""}`}>
+      <span className="devizia-logo__mark" aria-hidden="true">D</span>
+      <span>
+        <strong>Devizia</strong>
+        <small>Votre activité, plus légère</small>
+      </span>
+    </span>
   );
 }
 
 function PublicHeader() {
-  const { t, lang } = useI18n();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#dce6e5] bg-[#fffdf8]/95 backdrop-blur-md">
-      <div className="mx-auto grid h-[72px] max-w-6xl grid-cols-[1fr_auto] items-center px-4 lg:grid-cols-[1fr_auto_1fr] lg:px-6">
-        <Link to="/">
-          <Logo />
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden items-center justify-center gap-1 rounded-full border border-[#dce6e5] bg-white p-1 lg:flex">
-          <a
-            href="#fonctionnalites"
-            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
-          >
-            Fonctionnalités
-          </a>
-          <Link
-            to="/tarifs"
-            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
-          >
-            {t("nav.pricing" as never)}
-          </Link>
-          <a
-            href="#demo"
-            className="rounded-full px-4 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-[#edf3f2] hover:text-[#092b34]"
-          >
-            Voir la démo
-          </a>
+    <header className="devizia-header">
+      <div className="devizia-container devizia-header__inner">
+        <Link to="/" aria-label="Devizia, accueil"><Logo /></Link>
+        <nav className="devizia-nav" aria-label="Navigation principale">
+          <a href="#benefices">Bénéfices</a>
+          <a href="#fonctionnement">Comment ça marche</a>
+          <a href="#fonctionnalites">Fonctionnalités</a>
+          <Link to="/tarifs">Tarifs</Link>
         </nav>
-
-        <div className="hidden items-center justify-end gap-3 lg:flex">
-          <Link
-            to="/connexion"
-            className="px-2 py-2 text-xs font-bold text-slate-600 transition-colors hover:text-[#ce7131]"
-          >
-            {t("nav.login" as never)}
-          </Link>
-          <Link
-            to="/inscription"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#ce7131] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#ce7131]/20 transition-all hover:-translate-y-0.5 hover:bg-[#b85220]"
-          >
-            Tester gratuitement <ArrowRight className="h-3.5 w-3.5" />
+        <div className="devizia-header__actions">
+          <Link to="/connexion" className="devizia-login">Se connecter</Link>
+          <Link to="/inscription" className="devizia-button devizia-button--small">
+            Essayer gratuitement <ArrowRight aria-hidden="true" />
           </Link>
         </div>
-
-        {/* Mobile menu */}
         <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dce6e5] text-[#092b34] md:hidden"
-          aria-label={lang === "fr" ? "Menu" : "Menu"}
+          className="devizia-menu-button"
+          type="button"
+          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={open}
+          aria-controls="devizia-mobile-menu"
+          onClick={() => setOpen((value) => !value)}
         >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {open ? <X /> : <Menu />}
         </button>
       </div>
-
-      {mobileOpen && (
-        <div className="border-t border-[#dce6e5] bg-[#fffdf8] px-4 py-3 md:hidden">
-          <nav className="flex flex-col gap-1">
-            <a href="#fonctionnalites" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">Fonctionnalités</a>
-            <Link to="/tarifs" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">{t("nav.pricing" as never)}</Link>
-            <Link to="/connexion" onClick={() => setMobileOpen(false)} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-[#edf3f2]">{t("nav.login" as never)}</Link>
-            <Link
-              to="/inscription"
-              onClick={() => setMobileOpen(false)}
-              className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#ce7131] px-4 py-3 text-sm font-bold text-white"
-            >
-              {t("auth.signup")}
-            </Link>
-          </nav>
-        </div>
+      {open && (
+        <nav id="devizia-mobile-menu" className="devizia-mobile-nav" aria-label="Navigation mobile">
+          <a href="#benefices" onClick={close}>Bénéfices</a>
+          <a href="#fonctionnement" onClick={close}>Comment ça marche</a>
+          <a href="#fonctionnalites" onClick={close}>Fonctionnalités</a>
+          <Link to="/tarifs" onClick={close}>Tarifs</Link>
+          <Link to="/connexion" onClick={close}>Se connecter</Link>
+          <Link to="/inscription" onClick={close} className="devizia-button">Essayer gratuitement</Link>
+        </nav>
       )}
     </header>
   );
 }
 
-function Hero() {
-  const { t } = useI18n();
+function ProductPreview() {
   return (
-    <section className="relative overflow-hidden bg-[#092b34]">
-      {/* Gradient background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-[.12] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <div className="absolute -top-24 -right-24 h-[32rem] w-[32rem] rounded-full bg-orange-400/20 blur-3xl" />
-        <div className="absolute bottom-0 -left-24 h-72 w-72 rounded-full bg-teal-300/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-4 py-20 lg:px-6 lg:py-28">
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[.14em] text-slate-200">
-            <ShieldCheck className="h-3.5 w-3.5 text-orange-300" />
-            {t("landing.trust")}
-          </div>
-
-          <h1 className="mx-auto mt-7 max-w-4xl font-display text-5xl font-bold tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">
-            {t("landing.hero.title")}
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 lg:text-lg">
-            {t("landing.hero.subtitle")}
-          </p>
-
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              to="/inscription"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#ce7131] px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:bg-[#b85220]"
-            >
-              {t("landing.hero.cta_primary")}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/tarifs"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
-            >
-              {t("landing.hero.cta_secondary")}
-            </Link>
+    <div className="product-stage" aria-label="Aperçu de l'interface Devizia">
+      <div className="product-stage__glow" />
+      <div className="product-window">
+        <div className="product-window__bar">
+          <div className="window-dots" aria-hidden="true"><i /><i /><i /></div>
+          <span>app.devizia.fr</span>
+          <BadgeCheck aria-label="Espace sécurisé" />
+        </div>
+        <div className="product-window__body">
+          <aside className="product-sidebar">
+            <span className="mini-logo">D</span>
+            <i className="active" /><i /><i /><i /><i />
+          </aside>
+          <div className="quote-sheet">
+            <div className="quote-sheet__head">
+              <div><small>DEVIS</small><strong>Rénovation espace accueil</strong></div>
+              <span className="status-pill"><CheckCircle2 /> Prêt à envoyer</span>
+            </div>
+            <div className="client-row"><span>Client</span><strong>Atelier Horizon</strong></div>
+            <div className="quote-line"><span><i />Conception & préparation</span><strong>680 €</strong></div>
+            <div className="quote-line"><span><i />Réalisation de la prestation</span><strong>2 450 €</strong></div>
+            <div className="quote-line"><span><i />Finitions & livraison</span><strong>520 €</strong></div>
+            <div className="quote-total"><span>Total HT</span><strong>3 650 €</strong></div>
           </div>
         </div>
+      </div>
+      <div className="floating-card floating-card--top">
+        <span className="floating-card__icon"><Sparkles /></span>
+        <span><small>Assistant Devizia</small><strong>Devis structuré en quelques instants</strong></span>
+      </div>
+      <div className="floating-card floating-card--bottom">
+        <span className="floating-card__icon floating-card__icon--green"><Check /></span>
+        <span><small>Suivi</small><strong>Vous savez toujours où en est le client</strong></span>
+      </div>
+    </div>
+  );
+}
 
-        {/* Dashboard preview */}
-        <div className="mt-12 lg:mt-16">
-          <div className="mx-auto max-w-4xl rounded-[22px] border border-white/15 bg-[#fffdf8] p-2 shadow-2xl shadow-black/30">
-            <div className="rounded-2xl border border-[#dce6e5] bg-[#edf3f2] px-3 py-2">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-                </div>
-                <div className="flex-1 rounded bg-white px-2 py-0.5 text-[10px] text-center text-slate-400">
-                  app.invoicepro.fr/tableau-de-bord
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 p-4">
-              {[
-                { label: "CA ce mois", value: "18 400 €", color: "text-emerald-500" },
-                { label: "Devis en attente", value: "7", color: "text-amber-500" },
-                { label: "Factures dues", value: "3", color: "text-rose-500" },
-              ].map((k) => (
-                <div key={k.label} className="rounded-xl border border-[#dce6e5] bg-white p-3">
-                  <p className="text-[10px] font-semibold text-slate-400">{k.label}</p>
-                  <p className={cn("text-sm font-bold lg:text-lg", k.color)}>{k.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mx-4 mb-4 rounded-xl border border-[#ce7131]/25 bg-orange-50 p-4">
-              <p className="text-xs font-bold text-[#a94f1d]">✦ {t("landing.features.ai_quotes.title")}</p>
-              <div className="mt-2 space-y-1">
-                {[
-                  { desc: "Pose carrelage sol", total: "900 €" },
-                  { desc: "Faïence murale", total: "630 €" },
-                  { desc: "WC suspendu + pose", total: "850 €" },
-                ].map((l) => (
-                  <div key={l.desc} className="flex justify-between text-xs text-muted-foreground">
-                    <span>{l.desc}</span>
-                    <span className="font-medium text-foreground">{l.total}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+function Hero() {
+  return (
+    <section className="devizia-hero">
+      <div className="devizia-hero__grid" aria-hidden="true" />
+      <div className="devizia-container devizia-hero__layout">
+        <div className="devizia-hero__copy">
+          <div className="devizia-eyebrow"><Zap /> Devis · Factures · Paiements</div>
+          <h1>Votre administratif avance.<br /><em>Vos soirées restent à vous.</em></h1>
+          <p>Devizia réunit vos devis, factures, clients et paiements dans un outil clair — pour travailler sereinement et garder le cap sur votre activité.</p>
+          <div className="devizia-hero__actions">
+            <Link to="/inscription" className="devizia-button devizia-button--hero">Commencer gratuitement <ArrowRight /></Link>
+            <a href="#fonctionnement" className="devizia-text-link"><MousePointerClick /> Voir comment ça marche</a>
           </div>
+          <ul className="hero-checks" aria-label="Avantages">
+            <li><Check /> Prise en main rapide</li>
+            <li><Check /> Utilisable sur mobile</li>
+            <li><Check /> Sans installation</li>
+          </ul>
+        </div>
+        <ProductPreview />
+      </div>
+      <div className="devizia-container audience-strip">
+        <span>Conçu pour celles et ceux qui font tourner leur activité</span>
+        <div><strong><Hammer /> Artisans</strong><strong><BriefcaseBusiness /> Indépendants</strong><strong><Building2 /> Petites entreprises</strong></div>
+      </div>
+    </section>
+  );
+}
+
+function Problems() {
+  return (
+    <section id="benefices" className="devizia-section devizia-problems">
+      <div className="devizia-container">
+        <div className="section-heading section-heading--split">
+          <div><span className="section-kicker">Le quotidien, en plus simple</span><h2>Moins d’administratif.<br />Plus d’esprit libre.</h2></div>
+          <p>Devizia enlève les petites frictions qui prennent du temps, dispersent l’information et retardent les encaissements.</p>
+        </div>
+        <div className="problem-grid">
+          {problems.map(({ number, title, text, result, icon: Icon }) => (
+            <article className="problem-card" key={number}>
+              <div className="problem-card__top"><span>{number}</span><Icon /></div>
+              <h3>{title}</h3><p>{text}</p>
+              <div className="problem-card__result"><CheckCircle2 /> {result}</div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Workflow() {
+  return (
+    <section id="fonctionnement" className="devizia-section workflow-section">
+      <div className="devizia-container">
+        <div className="section-heading section-heading--center"><span className="section-kicker">Un parcours sans détour</span><h2>Du besoin au paiement,<br />en trois gestes simples.</h2></div>
+        <div className="workflow-grid">
+          {workflow.map(({ step, title, text, icon: Icon }, index) => (
+            <article className="workflow-step" key={step}>
+              <span className="workflow-step__number">{step}</span>
+              <div className="workflow-step__icon"><Icon /></div>
+              <h3>{title}</h3><p>{text}</p>
+              {index < workflow.length - 1 && <ChevronRight className="workflow-step__arrow" aria-hidden="true" />}
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -261,85 +305,87 @@ function Hero() {
 }
 
 function Features() {
-  const { t } = useI18n();
   return (
-    <section id="fonctionnalites" className="border-t border-border bg-surface py-16 lg:py-24">
-      <div className="mx-auto max-w-6xl px-4 lg:px-6">
-        <div className="text-center">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
-            {t("landing.features.title")}
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            {t("landing.features.subtitle")}
-          </p>
+    <section id="fonctionnalites" className="devizia-section features-section">
+      <div className="devizia-container features-layout">
+        <div className="features-copy">
+          <span className="section-kicker section-kicker--light">Tout votre suivi, au même endroit</span>
+          <h2>Un outil complet.<br /><em>Jamais compliqué.</em></h2>
+          <p>Chaque fonction répond à une question concrète : que faut-il envoyer, relancer ou encaisser aujourd’hui ?</p>
+          <Link to="/inscription" className="devizia-button devizia-button--light">Découvrir Devizia <ArrowRight /></Link>
         </div>
-
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => {
-            const Icon = f.icon;
-            return (
-              <div
-                key={f.key}
-                className="group card-elevated card-hover p-5"
-              >
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", f.bg)}>
-                  <Icon className={cn("h-5 w-5", f.color)} />
-                </div>
-                <h3 className="mt-4 font-display text-base font-semibold text-foreground">
-                  {t(`landing.features.${f.key}.title` as never)}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  {t(`landing.features.${f.key}.desc` as never)}
-                </p>
-              </div>
-            );
-          })}
+        <div className="capability-grid">
+          {capabilities.map(({ icon: Icon, title, text }) => (
+            <article className="capability" key={title}><Icon /><div><h3>{title}</h3><p>{text}</p></div></article>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function CtaSection() {
-  const { t } = useI18n();
+function Pillars() {
   return (
-    <section className="relative overflow-hidden bg-navy py-16 lg:py-24">
-      <div className="relative mx-auto max-w-4xl px-4 text-center lg:px-6">
-        <h2 className="font-display text-2xl font-bold tracking-tight text-navy-foreground lg:text-3xl">
-          {t("landing.cta.title")}
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-navy-foreground/70">
-          {t("landing.cta.subtitle")}
-        </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            to="/inscription"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-foreground px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary-foreground/90"
-          >
-            {t("landing.cta.button")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            to="/tarifs"
-            className="inline-flex items-center gap-2 rounded-xl border border-navy-foreground/20 px-6 py-3 text-sm font-semibold text-navy-foreground transition-colors hover:bg-navy-foreground/10"
-          >
-            {t("landing.hero.cta_secondary")}
-          </Link>
+    <section className="devizia-section pillars-section">
+      <div className="devizia-container">
+        <div className="section-heading section-heading--center"><span className="section-kicker">Bien plus que des documents</span><h2>La sérénité aujourd’hui.<br />La maîtrise pour demain.</h2></div>
+        <div className="pillars-grid">
+          <article className="pillar pillar--main"><div className="pillar__icon"><Clock3 /></div><span>Votre priorité</span><h3>Temps & sérénité</h3><p>Vos informations sont rangées, vos prochaines actions sont visibles et vos documents avancent sans grignoter votre temps personnel.</p><div className="pillar__quote">« Je sais ce qui reste à faire avant de fermer la journée. »</div></article>
+          <article className="pillar"><div className="pillar__icon"><TrendingUp /></div><span>Votre élan</span><h3>Performance & croissance</h3><p>Répondez plus vite, suivez vos opportunités et évitez que les factures oubliées freinent votre activité.</p></article>
+          <article className="pillar"><div className="pillar__icon"><ShieldCheck /></div><span>Votre confiance</span><h3>Conformité & contrôle</h3><p>Gardez des documents structurés, une numérotation cohérente et une vision nette de chaque étape.</p></article>
         </div>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs text-navy-foreground/60">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {t("pricing.feature.facturx")}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {t("pricing.feature.clients")}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {t("pricing.feature.invoices")}
-          </span>
+      </div>
+    </section>
+  );
+}
+
+function Profiles() {
+  return (
+    <section id="profils" className="devizia-section profiles-section">
+      <div className="devizia-container">
+        <div className="section-heading section-heading--split"><div><span className="section-kicker">Devizia s’adapte à votre réalité</span><h2>Votre métier change.<br />La simplicité reste.</h2></div><p>Un même espace de travail, avec les bons réflexes pour chaque façon d’entreprendre.</p></div>
+        <div className="profile-list">
+          {profiles.map(({ icon: Icon, label, title, text }, index) => (
+            <article className="profile-row" key={label}><span className="profile-row__index">0{index + 1}</span><div className="profile-row__label"><Icon /> {label}</div><h3>{title}</h3><p>{text}</p></article>
+          ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingAndFaq() {
+  return (
+    <section id="faq" className="devizia-section faq-section">
+      <div className="devizia-container faq-layout">
+        <div className="pricing-bridge">
+          <span className="section-kicker section-kicker--light">Commencez à votre rythme</span>
+          <h2>Le bon outil.<br />La formule qui vous ressemble.</h2>
+          <p>Découvrez les offres Devizia et choisissez selon votre volume de documents, votre équipe et vos besoins de pilotage.</p>
+          <Link to="/tarifs" className="devizia-button devizia-button--light">Voir les tarifs <ArrowRight /></Link>
+          <div className="pricing-bridge__note"><ShieldCheck /><span><strong>Pas de mauvaise surprise</strong><small>Les fonctionnalités et limites sont clairement présentées.</small></span></div>
+        </div>
+        <div className="faq-list">
+          <span className="section-kicker">Questions fréquentes</span>
+          <h2>Vous vous demandez peut-être…</h2>
+          {faqs.map(([question, answer], index) => (
+            <details key={question} open={index === 0}><summary>{question}<span>+</span></summary><p>{answer}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCta() {
+  return (
+    <section className="final-cta">
+      <div className="final-cta__orb" aria-hidden="true" />
+      <div className="devizia-container final-cta__inner">
+        <span className="section-kicker section-kicker--light">Votre prochaine soirée commence ici</span>
+        <h2>Faites avancer l’administratif.<br /><em>Puis passez à autre chose.</em></h2>
+        <p>Créez votre espace Devizia et rassemblez enfin devis, factures et suivi dans un outil qui va droit au but.</p>
+        <Link to="/inscription" className="devizia-button devizia-button--hero">Commencer gratuitement <ArrowRight /></Link>
       </div>
     </section>
   );
@@ -347,26 +393,23 @@ function CtaSection() {
 
 function Footer() {
   return (
-    <footer className="border-t border-border bg-background py-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 lg:flex-row lg:px-6">
-        <Logo />
-        <p className="text-xs text-muted-foreground">
-          © 2026 InvoicePro. Factur-X · PAF · RGPD.
-        </p>
+    <footer className="devizia-footer">
+      <div className="devizia-container devizia-footer__top">
+        <div><Logo inverse /><p>Les devis, factures et paiements qui laissent respirer votre activité.</p></div>
+        <nav aria-label="Liens produit"><strong>Produit</strong><a href="#fonctionnalites">Fonctionnalités</a><Link to="/tarifs">Tarifs</Link><Link to="/connexion">Connexion</Link></nav>
+        <nav aria-label="Liens pour démarrer"><strong>Démarrer</strong><Link to="/inscription">Créer un compte</Link><a href="#fonctionnement">Comment ça marche</a><a href="#faq">Questions fréquentes</a></nav>
       </div>
+      <div className="devizia-container devizia-footer__bottom"><span>© 2026 Devizia. Tous droits réservés.</span><span>Factur-X · Expérience responsive · Données exportables</span></div>
     </footer>
   );
 }
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="devizia-page">
+      <a href="#contenu" className="devizia-skip-link">Aller au contenu</a>
       <PublicHeader />
-      <main>
-        <Hero />
-        <Features />
-        <CtaSection />
-      </main>
+      <main id="contenu"><Hero /><Problems /><Workflow /><Features /><Pillars /><Profiles /><PricingAndFaq /><FinalCta /></main>
       <Footer />
     </div>
   );
