@@ -1297,7 +1297,7 @@ function QuotesInner() {
                         navigator.clipboard.writeText(url);
                         alert("Lien copié : " + url);
                       }}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-orange-50 hover:text-orange-600"
+                      className="flex h-7 w-7 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                     >
                       <Link className="h-3.5 w-3.5" />
                     </button>

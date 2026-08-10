@@ -425,7 +425,7 @@ function Pipeline() {
                               .filter((invoice) => invoice.status === "draft")
                               .forEach((invoice) => updateInvoice(invoice.number, { ...invoice, status: "sent", sentAt: new Date().toISOString() }));
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-orange-600 px-2.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-orange-700"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-2.5 py-2 text-[11px] font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
                         >
                           <Send className="h-3.5 w-3.5" />
                           Envoyer la facture

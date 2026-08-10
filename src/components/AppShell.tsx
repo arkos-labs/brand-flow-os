@@ -406,7 +406,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="app-workspace min-h-screen bg-background">
+    <div className="app-workspace min-h-screen overflow-x-hidden bg-background">
       {/* ── Sidebar desktop ── */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r-2 border-primary/60 surface-navy px-3 py-3 lg:flex">
         <SidebarContent />
@@ -442,7 +442,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Hamburger mobile */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-secondary transition-colors lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy/25 text-muted-foreground hover:bg-secondary transition-colors lg:hidden"
             aria-label="Menu"
           >
             <Menu className="h-4 w-4" />
@@ -468,7 +468,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Recherche mobile */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="lg:hidden flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-secondary transition-colors"
+              className="lg:hidden flex h-8 w-8 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy/25 text-muted-foreground hover:bg-secondary transition-colors"
             >
               <SearchIcon className="h-4 w-4" />
             </button>

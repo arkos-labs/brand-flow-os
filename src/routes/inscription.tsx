@@ -51,7 +51,7 @@ function InscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="devizia-auth min-h-screen bg-background flex">
       {/* Branding panel */}
       <div
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"

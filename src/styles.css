@@ -1,7 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -206,6 +206,39 @@
       linear-gradient(oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px),
       linear-gradient(90deg, oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px);
     background-size: 32px 32px;
+  }
+
+  .app-workspace :where(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+    border-radius: var(--shape-control) !important;
+  }
+
+  .app-workspace :where(.shadow-xl, .shadow-2xl) {
+    box-shadow: var(--shadow-offset-sm) !important;
+  }
+
+  .devizia-auth {
+    background-image:
+      linear-gradient(oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.58 0.2 258 / 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .devizia-auth input {
+    border-width: 2px !important;
+    border-radius: var(--shape-control) !important;
+    background: var(--card) !important;
+  }
+
+  .devizia-auth button[type="submit"] {
+    border: 2px solid var(--navy) !important;
+    border-radius: var(--shape-control) !important;
+    box-shadow: var(--shadow-offset) !important;
+    font-weight: 800;
+  }
+
+  .devizia-auth button[type="submit"]:hover {
+    transform: translate(2px, 2px);
+    box-shadow: var(--shadow-offset-sm) !important;
   }
 
   .shadow-offset {
