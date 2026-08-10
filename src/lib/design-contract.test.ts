@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const styles = readFileSync("src/styles.css", "utf8");
 const button = readFileSync("src/components/ui/button.tsx", "utf8");
@@ -8,6 +8,17 @@ const pipeline = readFileSync("src/routes/pipeline.tsx", "utf8");
 const devis = readFileSync("src/routes/devis.tsx", "utf8");
 const factures = readFileSync("src/routes/factures.tsx", "utf8");
 const connexion = readFileSync("src/routes/connexion.tsx", "utf8");
+const brandLogo = existsSync("src/components/BrandLogo.tsx")
+  ? readFileSync("src/components/BrandLogo.tsx", "utf8")
+  : "";
+
+assert.ok(existsSync("public/brand/clearquote-logo.png"), "Le logo horizontal ClearQuote doit exister");
+assert.ok(existsSync("public/brand/clearquote-mark.png"), "Le symbole compact ClearQuote doit exister");
+assert.ok(brandLogo.includes("compact?: boolean"), "BrandLogo doit accepter la variante compacte");
+assert.ok(brandLogo.includes("/brand/clearquote-logo.png"), "BrandLogo doit utiliser le logo horizontal");
+assert.ok(brandLogo.includes("/brand/clearquote-mark.png"), "BrandLogo doit utiliser le symbole compact");
+assert.ok(brandLogo.includes("Logo ClearQuote"), "Le logo horizontal doit avoir un texte alternatif ClearQuote");
+assert.ok(brandLogo.includes("Symbole ClearQuote"), "Le symbole compact doit avoir un texte alternatif ClearQuote");
 
 function buttonOpeningBefore(source: string, label: string) {
   const labelIndex = source.indexOf(label);
