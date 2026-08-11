@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 const styles = readFileSync("src/styles.css", "utf8");
 const button = readFileSync("src/components/ui/button.tsx", "utf8");
@@ -19,6 +20,7 @@ const brandLogo = existsSync("src/components/BrandLogo.tsx")
 
 assert.ok(existsSync("public/brand/clearquote-logo.png"), "Le logo horizontal ClearQuote doit exister");
 assert.ok(existsSync("public/brand/clearquote-mark.png"), "Le symbole compact ClearQuote doit exister");
+assert.ok(existsSync("public/favicon.ico"), "Le favicon ClearQuote doit exister");
 assert.ok(brandLogo.includes("compact?: boolean"), "BrandLogo doit accepter la variante compacte");
 assert.ok(brandLogo.includes("/brand/clearquote-logo.png"), "BrandLogo doit utiliser le logo horizontal");
 assert.ok(brandLogo.includes("/brand/clearquote-mark.png"), "BrandLogo doit utiliser le symbole compact");
@@ -134,8 +136,31 @@ assert.ok(
   "card-elevated doit utiliser une bordure de 2 px et le rayon court",
 );
 
-assert.ok(connexion.includes("Devizia"), "Connexion doit afficher la marque Devizia");
-assert.ok(!connexion.includes("InvoicePro"), "Connexion ne doit plus afficher la marque InvoicePro");
+function productionSourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return productionSourceFiles(path);
+    return /\.tsx?$/.test(entry.name) && !entry.name.endsWith(".test.ts") ? [path] : [];
+  });
+}
+
+const legacyBrandOccurrences = productionSourceFiles("src").flatMap((file) =>
+  readFileSync(file, "utf8")
+    .split(/\r?\n/)
+    .flatMap((line, index) => {
+      if (!/\b(?:Devizia|InvoicePro)\b/i.test(line)) return [];
+      const technicalIdentifier = /["'`][^"'`]*\b(?:devizia|invoicepro)[_-][^"'`]*["'`]/i;
+      return technicalIdentifier.test(line) ? [] : [`${file}:${index + 1}: ${line.trim()}`];
+    }),
+);
+assert.deepEqual(
+  legacyBrandOccurrences,
+  [],
+  "Aucune ancienne marque produit ne doit subsister dans les sources de production",
+);
+
+assert.ok(connexion.includes("ClearQuote"), "Connexion doit afficher la marque ClearQuote");
+assert.ok(!connexion.includes("Devizia"), "Connexion ne doit plus afficher la marque Devizia");
 assert.ok(
   connexion.includes('<h1 id="connexion-title"'),
   "Le titre visible du formulaire doit être le titre principal accessible",

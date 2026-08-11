@@ -8,15 +8,15 @@ import { BrandLogo } from "@/components/BrandLogo";
 export const Route = createFileRoute("/inscription")({
   head: () => ({
     meta: [
-      { title: "Inscription — InvoicePro" },
+      { title: "Inscription — ClearQuote" },
       {
         name: "description",
-        content: "Créez votre compte InvoicePro et démarrez votre essai gratuit.",
+        content: "Créez votre compte ClearQuote et démarrez votre essai gratuit.",
       },
-      { property: "og:title", content: "Inscription — InvoicePro" },
+      { property: "og:title", content: "Inscription — ClearQuote" },
       {
         property: "og:description",
-        content: "Créez votre compte InvoicePro et démarrez votre essai gratuit.",
+        content: "Créez votre compte ClearQuote et démarrez votre essai gratuit.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

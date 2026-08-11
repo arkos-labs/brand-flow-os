@@ -175,13 +175,13 @@ function invoiceLinesFromQuote(quote: Quote): InvoiceLine[] {
 export const Route = createFileRoute("/devis")({
   head: () => ({
     meta: [
-      { title: "Devis interactifs — InvoicePro" },
+      { title: "Devis interactifs — ClearQuote" },
       {
         name: "description",
         content:
           "Propositions web avec options à cocher, volume ajustable, acomptes et signature en ligne.",
       },
-      { property: "og:title", content: "Devis interactifs — InvoicePro" },
+      { property: "og:title", content: "Devis interactifs — ClearQuote" },
       {
         property: "og:description",
         content: "Simulateur d'upsell et suivi des propositions envoyées.",

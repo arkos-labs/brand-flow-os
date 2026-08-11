@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/pipeline")({
   head: () => ({
     meta: [
-      { title: "Pipeline des devis — InvoicePro" },
+      { title: "Pipeline des devis — ClearQuote" },
       {
         name: "description",
         content: "Pipeline Kanban : suivez l'avancement de vos devis.",

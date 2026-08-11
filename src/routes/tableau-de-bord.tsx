@@ -31,10 +31,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({
     meta: [
-      { title: "Tableau de bord — InvoicePro" },
-      { name: "description", content: "Dashboard InvoicePro — suivez votre activité, vos devis, factures et trésorerie." },
-      { property: "og:title", content: "Tableau de bord — InvoicePro" },
-      { property: "og:description", content: "Dashboard InvoicePro — suivez votre activité, vos devis, factures et trésorerie." },
+      { title: "Tableau de bord — ClearQuote" },
+      { name: "description", content: "Dashboard ClearQuote — suivez votre activité, vos devis, factures et trésorerie." },
+      { property: "og:title", content: "Tableau de bord — ClearQuote" },
+      { property: "og:description", content: "Dashboard ClearQuote — suivez votre activité, vos devis, factures et trésorerie." },
     ],
   }),
   component: Dashboard,
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/tableau-de-bord")({
 // ── Constantes couleurs Recharts ──────────────────────────────────────────────
 // CSS custom properties (oklch) ne fonctionnant pas dans SVG fill, on utilise
 // des valeurs hex cohérentes avec le design system.
-const COLOR_SENT = "#1769e0"; // Devizia blue
+const COLOR_SENT = "#1769e0"; // ClearQuote blue
 const COLOR_SIGNED = "#10b981"; // success (emerald)
 const COLOR_REFUSED = "#f43f5e"; // destructive (rose)
 const COLOR_PROGRESS = "#f59e0b"; // warning (amber)

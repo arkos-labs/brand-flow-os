@@ -28,13 +28,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/catalogue")({
   head: () => ({
     meta: [
-      { title: "Catalogue de prestations — InvoicePro" },
+      { title: "Catalogue de prestations — ClearQuote" },
       {
         name: "description",
         content:
           "Gérez vos prestations, tarifs unitaires et taux de TVA pour accélérer la création de devis.",
       },
-      { property: "og:title", content: "Catalogue de prestations — InvoicePro" },
+      { property: "og:title", content: "Catalogue de prestations — ClearQuote" },
       { property: "og:description", content: "Prestations, tarifs et TVA pour devis rapides." },
     ],
   }),

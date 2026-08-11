@@ -32,7 +32,7 @@ import { searchCompanyBySiret } from "@/lib/siret";
 export const Route = createFileRoute("/parametres")({
   head: () => ({
     meta: [
-      { title: "Paramètres entreprise — InvoicePro" },
+      { title: "Paramètres entreprise — ClearQuote" },
       {
         name: "description",
         content:

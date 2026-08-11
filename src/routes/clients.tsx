@@ -52,7 +52,7 @@ import { getClientQuoteActions } from "@/lib/quote-actions";
 export const Route = createFileRoute("/clients")({
   head: () => ({
     meta: [
-      { title: "Clients — InvoicePro" },
+      { title: "Clients — ClearQuote" },
       {
         name: "description",
         content: "Carnet d'adresses clients avec historique des devis et factures.",

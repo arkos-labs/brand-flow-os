@@ -236,7 +236,7 @@ export function generateFacturxXml(doc: FxDocument): string {
   // ── Assemblage final ──────────────────────────────────────────────────────
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Document Factur-X (EN16931) — généré par InvoicePro
+  Document Factur-X (EN16931) — généré par ClearQuote
   Date de génération : ${new Date().toISOString()}
   Numéro : ${x(doc.number)}
   Conforme : Factur-X v1.0 / EN 16931-1:2017 / CII D16B

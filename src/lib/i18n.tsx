@@ -5,7 +5,7 @@ export type Lang = "fr" | "en";
 type Dict = Record<string, { fr: string; en: string }>;
 
 export const dict = {
-  "app.name": { fr: "InvoicePro", en: "InvoicePro" },
+  "app.name": { fr: "ClearQuote", en: "ClearQuote" },
   "app.tagline": { fr: "Business OS des indépendants", en: "Business OS for independents" },
   "nav.dashboard": { fr: "Tableau de bord", en: "Dashboard" },
   "nav.pipeline": { fr: "Pipeline", en: "Pipeline" },
@@ -452,7 +452,7 @@ export const dict = {
 
   // Landing page
   "landing.hero.title": { fr: "Devis & facturation propulsés par l'IA", en: "Quotes & invoicing powered by AI" },
-  "landing.hero.subtitle": { fr: "InvoicePro remplace Word et Excel par un Business OS complet : CRM Kanban, devis interactifs, facturation Factur-X conforme 2026 et trésorerie prédictive.", en: "InvoicePro replaces Word and Excel with a complete Business OS: Kanban CRM, interactive quotes, 2026-compliant Factur-X invoicing and predictive cashflow." },
+  "landing.hero.subtitle": { fr: "ClearQuote remplace Word et Excel par un Business OS complet : CRM Kanban, devis interactifs, facturation Factur-X conforme 2026 et trésorerie prédictive.", en: "ClearQuote replaces Word and Excel with a complete Business OS: Kanban CRM, interactive quotes, 2026-compliant Factur-X invoicing and predictive cashflow." },
   "landing.hero.cta_primary": { fr: "Essai gratuit 30 jours", en: "Start 30-day free trial" },
   "landing.hero.cta_secondary": { fr: "Voir les tarifs", en: "See pricing" },
   "landing.trust": { fr: "Conforme Factur-X · PAF · Loi anti-fraude TVA · RGPD", en: "Factur-X compliant · Audit trail · VAT anti-fraud · GDPR" },

@@ -15,17 +15,17 @@ import { BrandLogo } from "@/components/BrandLogo";
 export const Route = createFileRoute("/tarifs")({
   head: () => ({
     meta: [
-      { title: "Tarifs — InvoicePro" },
+      { title: "Tarifs — ClearQuote" },
       {
         name: "description",
         content:
-          "Formules Starter, Pro et Enterprise pour InvoicePro. Toutes incluent la conformité Factur-X 2026.",
+          "Formules Starter, Pro et Enterprise pour ClearQuote. Toutes incluent la conformité Factur-X 2026.",
       },
-      { property: "og:title", content: "Tarifs — InvoicePro" },
+      { property: "og:title", content: "Tarifs — ClearQuote" },
       {
         property: "og:description",
         content:
-          "Formules Starter, Pro et Enterprise pour InvoicePro. Toutes incluent la conformité Factur-X 2026.",
+          "Formules Starter, Pro et Enterprise pour ClearQuote. Toutes incluent la conformité Factur-X 2026.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -278,7 +278,7 @@ function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 lg:flex-row lg:px-6">
         <BrandLogo className="h-9 w-auto" />
         <p className="text-xs text-muted-foreground">
-          © 2026 InvoicePro. Factur-X · PAF · RGPD.
+          © 2026 ClearQuote. Factur-X · PAF · RGPD.
         </p>
       </div>
     </footer>

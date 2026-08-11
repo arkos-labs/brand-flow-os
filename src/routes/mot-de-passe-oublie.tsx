@@ -8,15 +8,15 @@ import { BrandLogo } from "@/components/BrandLogo";
 export const Route = createFileRoute("/mot-de-passe-oublie")({
   head: () => ({
     meta: [
-      { title: "Mot de passe oublié — InvoicePro" },
+      { title: "Mot de passe oublié — ClearQuote" },
       {
         name: "description",
-        content: "Réinitialisez votre mot de passe InvoicePro.",
+        content: "Réinitialisez votre mot de passe ClearQuote.",
       },
-      { property: "og:title", content: "Mot de passe oublié — InvoicePro" },
+      { property: "og:title", content: "Mot de passe oublié — ClearQuote" },
       {
         property: "og:description",
-        content: "Réinitialisez votre mot de passe InvoicePro.",
+        content: "Réinitialisez votre mot de passe ClearQuote.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

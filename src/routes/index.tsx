@@ -32,15 +32,15 @@ import "./homepage.css";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Devizia — Un devis propre. Une facture prête. La journée est finie." },
+      { title: "ClearQuote — Un devis propre. Une facture prête. La journée est finie." },
       {
         name: "description",
         content:
-          "Devizia simplifie les devis, factures, relances et paiements des artisans, indépendants et petites entreprises. Pilotez votre activité avec sérénité.",
+          "ClearQuote simplifie les devis, factures, relances et paiements des artisans, indépendants et petites entreprises. Pilotez votre activité avec sérénité.",
       },
       {
         property: "og:title",
-        content: "Devizia — L'administratif avance, la journée se termine",
+        content: "ClearQuote — L'administratif avance, la journée se termine",
       },
       {
         property: "og:description",
@@ -82,7 +82,7 @@ const workflow = [
   {
     step: "01",
     title: "Créez",
-    text: "Décrivez la mission, ajoutez vos prestations et laissez Devizia structurer un devis professionnel.",
+    text: "Décrivez la mission, ajoutez vos prestations et laissez ClearQuote structurer un devis professionnel.",
     icon: Sparkles,
   },
   {
@@ -130,10 +130,10 @@ const profiles = [
 ];
 
 const faqs = [
-  ["Faut-il être à l'aise avec les logiciels de gestion ?", "Non. Devizia est pensé pour aller à l'essentiel : créer un document, l'envoyer et suivre son statut. Les fonctions avancées restent disponibles quand vous en avez besoin."],
-  ["Puis-je utiliser Devizia depuis mon téléphone ?", "Oui. L'interface s'adapte aux écrans mobiles pour consulter votre activité et gérer vos documents en déplacement."],
-  ["Mes factures peuvent-elles être générées en Factur-X ?", "Oui. Devizia prend en charge la génération de documents Factur-X, avec un PDF lisible et les données structurées associées."],
-  ["Devizia convient-il à mon métier ?", "Devizia s'adresse aux artisans, indépendants et petites équipes de services. Le catalogue et les documents s'adaptent à vos prestations."],
+  ["Faut-il être à l'aise avec les logiciels de gestion ?", "Non. ClearQuote est pensé pour aller à l'essentiel : créer un document, l'envoyer et suivre son statut. Les fonctions avancées restent disponibles quand vous en avez besoin."],
+  ["Puis-je utiliser ClearQuote depuis mon téléphone ?", "Oui. L'interface s'adapte aux écrans mobiles pour consulter votre activité et gérer vos documents en déplacement."],
+  ["Mes factures peuvent-elles être générées en Factur-X ?", "Oui. ClearQuote prend en charge la génération de documents Factur-X, avec un PDF lisible et les données structurées associées."],
+  ["ClearQuote convient-il à mon métier ?", "ClearQuote s'adresse aux artisans, indépendants et petites équipes de services. Le catalogue et les documents s'adaptent à vos prestations."],
   ["Puis-je essayer avant de choisir une offre ?", "Oui. Créez votre espace pour découvrir le produit, puis consultez la page Tarifs pour choisir la formule adaptée à votre activité."],
 ] as const;
 
@@ -186,12 +186,12 @@ function PublicHeader() {
 
 function ProductPreview() {
   return (
-    <div className="product-stage" aria-label="Aperçu de l'interface Devizia">
+    <div className="product-stage" aria-label="Aperçu de l'interface ClearQuote">
       <div className="product-stage__glow" />
       <div className="product-window">
         <div className="product-window__bar">
           <div className="window-dots" aria-hidden="true"><i /><i /><i /></div>
-          <span>app.devizia.fr</span>
+          <span>app.clearquote.fr</span>
           <BadgeCheck aria-label="Espace sécurisé" />
         </div>
         <div className="product-window__body">
@@ -214,7 +214,7 @@ function ProductPreview() {
       </div>
       <div className="floating-card floating-card--top">
         <span className="floating-card__icon"><Sparkles /></span>
-        <span><small>Assistant Devizia</small><strong>Devis structuré en quelques instants</strong></span>
+        <span><small>Assistant ClearQuote</small><strong>Devis structuré en quelques instants</strong></span>
       </div>
       <div className="floating-card floating-card--bottom">
         <span className="floating-card__icon floating-card__icon--green"><Check /></span>
@@ -232,7 +232,7 @@ function Hero() {
         <div className="devizia-hero__copy">
           <div className="devizia-eyebrow"><Zap /> Devis · Factures · Paiements</div>
           <h1>Un devis propre.<br />Une facture prête.<br /><em>La journée est finie.</em></h1>
-          <p>Devizia vous aide à gérer l’administratif vite et bien, sur ordinateur comme sur le terrain. Moins de clics, plus de visibilité, rien qui traîne.</p>
+          <p>ClearQuote vous aide à gérer l’administratif vite et bien, sur ordinateur comme sur le terrain. Moins de clics, plus de visibilité, rien qui traîne.</p>
           <div className="devizia-hero__actions">
             <Link to="/inscription" className="devizia-button devizia-button--hero">Commencer gratuitement <ArrowRight /></Link>
             <a href="#fonctionnement" className="devizia-text-link"><MousePointerClick /> Voir comment ça marche</a>
@@ -259,7 +259,7 @@ function Problems() {
       <div className="devizia-container">
         <div className="section-heading section-heading--split">
           <div><span className="section-kicker">Le quotidien, en plus simple</span><h2>Moins d’administratif.<br />Plus d’esprit libre.</h2></div>
-          <p>Devizia enlève les petites frictions qui prennent du temps, dispersent l’information et retardent les encaissements.</p>
+          <p>ClearQuote enlève les petites frictions qui prennent du temps, dispersent l’information et retardent les encaissements.</p>
         </div>
         <div className="problem-grid">
           {problems.map(({ number, title, text, result, icon: Icon }) => (
@@ -303,7 +303,7 @@ function Features() {
           <span className="section-kicker section-kicker--light">Tout votre suivi, au même endroit</span>
           <h2>Un outil complet.<br /><em>Jamais compliqué.</em></h2>
           <p>Chaque fonction répond à une question concrète : que faut-il envoyer, relancer ou encaisser aujourd’hui ?</p>
-          <Link to="/inscription" className="devizia-button devizia-button--light">Découvrir Devizia <ArrowRight /></Link>
+          <Link to="/inscription" className="devizia-button devizia-button--light">Découvrir ClearQuote <ArrowRight /></Link>
         </div>
         <div className="capability-grid">
           {capabilities.map(({ icon: Icon, title, text }) => (
@@ -334,7 +334,7 @@ function Profiles() {
   return (
     <section id="profils" className="devizia-section profiles-section">
       <div className="devizia-container">
-        <div className="section-heading section-heading--split"><div><span className="section-kicker">Devizia s’adapte à votre réalité</span><h2>Votre métier change.<br />La simplicité reste.</h2></div><p>Un même espace de travail, avec les bons réflexes pour chaque façon d’entreprendre.</p></div>
+        <div className="section-heading section-heading--split"><div><span className="section-kicker">ClearQuote s’adapte à votre réalité</span><h2>Votre métier change.<br />La simplicité reste.</h2></div><p>Un même espace de travail, avec les bons réflexes pour chaque façon d’entreprendre.</p></div>
         <div className="profile-list">
           {profiles.map(({ icon: Icon, label, title, text }, index) => (
             <article className="profile-row" key={label}><span className="profile-row__index">0{index + 1}</span><div className="profile-row__label"><Icon /> {label}</div><h3>{title}</h3><p>{text}</p></article>
@@ -352,7 +352,7 @@ function PricingAndFaq() {
         <div className="pricing-bridge">
           <span className="section-kicker section-kicker--light">Commencez à votre rythme</span>
           <h2>Le bon outil.<br />La formule qui vous ressemble.</h2>
-          <p>Découvrez les offres Devizia et choisissez selon votre volume de documents, votre équipe et vos besoins de pilotage.</p>
+          <p>Découvrez les offres ClearQuote et choisissez selon votre volume de documents, votre équipe et vos besoins de pilotage.</p>
           <Link to="/tarifs" className="devizia-button devizia-button--light">Voir les tarifs <ArrowRight /></Link>
           <div className="pricing-bridge__note"><ShieldCheck /><span><strong>Pas de mauvaise surprise</strong><small>Les fonctionnalités et limites sont clairement présentées.</small></span></div>
         </div>
@@ -375,7 +375,7 @@ function FinalCta() {
       <div className="devizia-container final-cta__inner">
         <span className="section-kicker section-kicker--light">Votre prochaine soirée commence ici</span>
         <h2>Faites avancer l’administratif.<br /><em>Puis passez à autre chose.</em></h2>
-        <p>Créez votre espace Devizia et rassemblez enfin devis, factures et suivi dans un outil qui va droit au but.</p>
+        <p>Créez votre espace ClearQuote et rassemblez enfin devis, factures et suivi dans un outil qui va droit au but.</p>
         <Link to="/inscription" className="devizia-button devizia-button--hero">Commencer gratuitement <ArrowRight /></Link>
       </div>
     </section>
@@ -393,7 +393,7 @@ function Footer() {
         <nav aria-label="Liens produit"><strong>Produit</strong><a href="#fonctionnalites">Fonctionnalités</a><Link to="/tarifs">Tarifs</Link><Link to="/connexion">Connexion</Link></nav>
         <nav aria-label="Liens pour démarrer"><strong>Démarrer</strong><Link to="/inscription">Créer un compte</Link><a href="#fonctionnement">Comment ça marche</a><a href="#faq">Questions fréquentes</a></nav>
       </div>
-      <div className="devizia-container devizia-footer__bottom"><span>© 2026 Devizia. Tous droits réservés.</span><span>Factur-X · Expérience responsive · Données exportables</span></div>
+      <div className="devizia-container devizia-footer__bottom"><span>© 2026 ClearQuote. Tous droits réservés.</span><span>Factur-X · Expérience responsive · Données exportables</span></div>
     </footer>
   );
 }

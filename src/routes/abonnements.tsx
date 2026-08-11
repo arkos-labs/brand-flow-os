@@ -47,7 +47,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/abonnements")({
   head: () => ({
     meta: [
-      { title: "Abonnements — InvoicePro" },
+      { title: "Abonnements — ClearQuote" },
       { name: "description", content: "Gestion des factures récurrentes." },
     ],
   }),

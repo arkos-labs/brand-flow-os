@@ -25,7 +25,7 @@ import {
 export const Route = createFileRoute("/tresorerie")({
   head: () => ({
     meta: [
-      { title: "Trésorerie — InvoicePro" },
+      { title: "Trésorerie — ClearQuote" },
       { name: "description", content: "Suivi de votre trésorerie et cashflow prédictif." },
     ],
   }),

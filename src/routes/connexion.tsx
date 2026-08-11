@@ -7,10 +7,10 @@ import { BrandLogo } from "@/components/BrandLogo";
 export const Route = createFileRoute("/connexion")({
   head: () => ({
     meta: [
-      { title: "Connexion — Devizia" },
-      { name: "description", content: "Connectez-vous à votre espace Devizia." },
-      { property: "og:title", content: "Connexion — Devizia" },
-      { property: "og:description", content: "Connectez-vous à votre espace Devizia." },
+      { title: "Connexion — ClearQuote" },
+      { name: "description", content: "Connectez-vous à votre espace ClearQuote." },
+      { property: "og:title", content: "Connexion — ClearQuote" },
+      { property: "og:description", content: "Connectez-vous à votre espace ClearQuote." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

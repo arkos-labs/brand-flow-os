@@ -51,7 +51,7 @@ function buildXmpMetadata(docNumber: string, issueDate: string): string {
 
     <rdf:Description rdf:about=""
         xmlns:xmp="http://ns.adobe.com/xap/1.0/">
-      <xmp:CreatorTool>InvoicePro</xmp:CreatorTool>
+      <xmp:CreatorTool>ClearQuote</xmp:CreatorTool>
       <xmp:CreateDate>${now}</xmp:CreateDate>
       <xmp:ModifyDate>${now}</xmp:ModifyDate>
       <xmp:MetadataDate>${now}</xmp:MetadataDate>

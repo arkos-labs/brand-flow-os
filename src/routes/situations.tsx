@@ -44,7 +44,7 @@ import {
 export const Route = createFileRoute("/situations")({
   head: () => ({
     meta: [
-      { title: "Situations de travaux — InvoicePro" },
+      { title: "Situations de travaux — ClearQuote" },
       {
         name: "description",
         content:

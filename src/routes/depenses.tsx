@@ -52,7 +52,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/depenses")({
   head: () => ({
     meta: [
-      { title: "Dépenses & Achats — InvoicePro" },
+      { title: "Dépenses & Achats — ClearQuote" },
       { name: "description", content: "Suivi des frais, achats et sous-traitance." },
     ],
   }),

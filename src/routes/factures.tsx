@@ -50,13 +50,13 @@ import { ReminderModal } from "@/components/ReminderModal";
 export const Route = createFileRoute("/factures")({
   head: () => ({
     meta: [
-      { title: "Factures Factur-X — InvoicePro" },
+      { title: "Factures Factur-X — ClearQuote" },
       {
         name: "description",
         content:
           "Suivi des factures : numérotation verrouillée, échéances, statuts de paiement et format Factur-X.",
       },
-      { property: "og:title", content: "Factures Factur-X — InvoicePro" },
+      { property: "og:title", content: "Factures Factur-X — ClearQuote" },
       {
         property: "og:description",
         content: "Suivi des factures, échéances et statuts de paiement.",

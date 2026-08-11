@@ -77,7 +77,7 @@ export function exportCatalogueToExcel(products: Product[], filename = "catalogu
 
   // Feuille 2 : modèle + aide
   const helpData = [
-    ["MODÈLE D'IMPORT CSV / EXCEL — InvoicePro"],
+    ["MODÈLE D'IMPORT CSV / EXCEL — ClearQuote"],
     [""],
     ["Colonne", "Valeurs autorisées", "Exemple"],
     ["ref", "Texte libre (unique)", "MO-PLO-001"],

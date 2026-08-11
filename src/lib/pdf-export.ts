@@ -1,5 +1,5 @@
 /**
- * Générateur PDF — Devis & Factures InvoicePro
+ * Générateur PDF — Devis & Factures ClearQuote
  * Layout A4 professionnel avec toutes les mentions légales obligatoires France 2026
  *
  * Mentions légales incluses (art. L441-9, L441-3 C.com et CGI) :
@@ -34,9 +34,9 @@ const MR = 195;      // Marge droite
 const CW = 180;      // Largeur contenu
 const MT = 18;       // Marge top
 
-// Palette couleurs (Navy InvoicePro) par défaut
+// Palette couleurs (Navy ClearQuote) par défaut
 const COLOR_NAVY    = [15, 23, 42]  as [number, number, number];
-const COLOR_PRIMARY = [206, 113, 49] as [number, number, number]; // Devizia copper
+const COLOR_PRIMARY = [206, 113, 49] as [number, number, number]; // ClearQuote copper
 const COLOR_MUTED   = [107, 114, 128] as [number, number, number]; // gray-500
 const COLOR_BORDER  = [229, 231, 235] as [number, number, number]; // gray-200
 const COLOR_BG_LIGHT= [248, 250, 252] as [number, number, number]; // slate-50
