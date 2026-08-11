@@ -6,7 +6,7 @@ type BrandLogoProps = {
 
 export function BrandLogo({ compact = false, className = "", priority = false }: BrandLogoProps) {
   const src = compact ? "/brand/clearquote-mark.png" : "/brand/clearquote-logo.png";
-  const alt = compact ? "Symbole ClearQuote" : "Logo ClearQuote";
+  const alt = compact ? "Symbole ClearQuote" : "ClearQuote";
 
   return (
     <img

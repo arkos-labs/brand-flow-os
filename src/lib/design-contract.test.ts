@@ -24,7 +24,10 @@ assert.ok(existsSync("public/favicon.ico"), "Le favicon ClearQuote doit exister"
 assert.ok(brandLogo.includes("compact?: boolean"), "BrandLogo doit accepter la variante compacte");
 assert.ok(brandLogo.includes("/brand/clearquote-logo.png"), "BrandLogo doit utiliser le logo horizontal");
 assert.ok(brandLogo.includes("/brand/clearquote-mark.png"), "BrandLogo doit utiliser le symbole compact");
-assert.ok(brandLogo.includes("Logo ClearQuote"), "Le logo horizontal doit avoir un texte alternatif ClearQuote");
+assert.ok(
+  brandLogo.includes('compact ? "Symbole ClearQuote" : "ClearQuote"'),
+  "Le logo horizontal doit avoir exactement ClearQuote comme texte alternatif",
+);
 assert.ok(brandLogo.includes("Symbole ClearQuote"), "Le symbole compact doit avoir un texte alternatif ClearQuote");
 
 for (const [name, source] of [
