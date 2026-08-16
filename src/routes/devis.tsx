@@ -204,6 +204,18 @@ function QuotesInner() {
   const [emailQuote, setEmailQuote] = useState<Quote | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailTemplateId, setEmailTemplateId] = useState<string>("modele-1");
+  const [sendToEmail, setSendToEmail] = useState<string>("");
+
+  const openEmailDialog = (q: Quote) => {
+    // Try to resolve client email: from the quote itself, then from the clients list
+    const resolved =
+      q.clientEmail ||
+      clients.find((c) => c.id === q.clientId)?.email ||
+      clients.find((c) => c.name.toLowerCase() === q.client.toLowerCase())?.email ||
+      "";
+    setSendToEmail(resolved);
+    setEmailQuote(q);
+  };
 
   const todayStr = new Date().toISOString().split("T")[0] ?? "";
   const dueDateStr = (() => {
@@ -1337,7 +1349,7 @@ function QuotesInner() {
                     </button>
                     <button
                       title="Envoyer par email"
-                      onClick={() => setEmailQuote(q)}
+                      onClick={() => openEmailDialog(q)}
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Send className="h-3.5 w-3.5" />
@@ -1605,7 +1617,7 @@ function QuotesInner() {
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={() => {
                     if (previewQuote) {
-                      setEmailQuote(previewQuote);
+                      openEmailDialog(previewQuote);
                       setPreviewQuote(null);
                     }
                   }}
@@ -1656,11 +1668,25 @@ function QuotesInner() {
 
           <div className="flex-1 bg-slate-100 p-4 overflow-hidden relative">
             <div className="absolute inset-4 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-              <div className="border-b px-4 py-2 bg-slate-50 flex gap-4 text-sm text-slate-600">
-                <div className="flex-1">
-                  <strong>À :</strong> {emailQuote?.client}
+              <div className="border-b px-4 py-2 bg-slate-50 flex gap-4 text-sm text-slate-600 items-center">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <strong className="shrink-0">À :</strong>
+                  <input
+                    type="email"
+                    value={sendToEmail}
+                    onChange={(e) => setSendToEmail(e.target.value)}
+                    placeholder="email@client.fr"
+                    className={`flex-1 min-w-0 rounded border px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                      sendToEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sendToEmail)
+                        ? "border-red-400 bg-red-50 text-red-700"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  />
+                  {!sendToEmail && (
+                    <span className="text-xs text-red-500 shrink-0">⚠ Email manquant</span>
+                  )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 shrink-0">
                   <strong>Sujet :</strong> Votre devis {emailQuote?.number} de{" "}
                   {company.name || "notre entreprise"}
                 </div>
@@ -1683,57 +1709,59 @@ function QuotesInner() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
               disabled={isSendingEmail}
               onClick={async () => {
-                if (emailQuote) {
-                  if (true) { // Always allow sending via Resend
-                    setIsSendingEmail(true);
-                    try {
-                      // 1. Generate PDF
-                      const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
-                      const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
-                      
-                      const artisanEmail = company?.email;
-                      
-                      // 2. Send via API
-                      const res = await fetch("/api/quotes/send", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          to: emailQuote.clientEmail || emailQuote.client, // Ensure there is an email
-                          subject: `Votre devis ${emailQuote.number} de ${company.name || "notre entreprise"}`,
-                          html,
-                          pdfBase64,
-                          pdfFilename: `Devis_${emailQuote.number}.pdf`,
-                          artisanEmail: artisanEmail,
-                        })
-                      });
-                      
-                      const data = await res.json();
-                      
-                      if (res.ok) {
-                        updateQuote(emailQuote.number, {
-                          ...emailQuote,
-                          status: { fr: "Envoyé", en: "Sent" },
-                          sentAt: new Date().toISOString(),
-                        });
-                        alert("Le devis a été envoyé avec succès !");
-                        setEmailQuote(null);
-                      } else {
-                        alert("Erreur lors de l'envoi : " + (data.message || res.statusText));
-                      }
-                    } catch (err: any) {
-                      alert("Erreur : " + err.message);
-                    } finally {
-                      setIsSendingEmail(false);
-                    }
-                  } else {
-                    alert("Mode local : le devis est marqué comme envoyé. Veuillez connecter votre compte Gmail dans les Paramètres pour un véritable envoi.");
+                if (!emailQuote) return;
+
+                // Validate email before anything else
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!sendToEmail || !emailRegex.test(sendToEmail)) {
+                  alert(
+                    sendToEmail
+                      ? `L'adresse email "${sendToEmail}" n'est pas valide.\nCorrigez-la dans le champ "À :" ci-dessus.`
+                      : `Aucun email renseigné pour ce client.\nSaisissez l'adresse email dans le champ "À :" ci-dessus, ou ajoutez-la dans la fiche client.`
+                  );
+                  return;
+                }
+
+                setIsSendingEmail(true);
+                try {
+                  // 1. Generate PDF
+                  const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
+                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
+
+                  const artisanEmail = company?.email;
+
+                  // 2. Send via API
+                  const res = await fetch("/api/quotes/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      to: sendToEmail,
+                      subject: `Votre devis ${emailQuote.number} de ${company.name || "notre entreprise"}`,
+                      html,
+                      pdfBase64,
+                      pdfFilename: `Devis_${emailQuote.number}.pdf`,
+                      artisanEmail: artisanEmail,
+                    }),
+                  });
+
+                  const data = await res.json();
+
+                  if (res.ok) {
                     updateQuote(emailQuote.number, {
                       ...emailQuote,
+                      clientEmail: sendToEmail,
                       status: { fr: "Envoyé", en: "Sent" },
                       sentAt: new Date().toISOString(),
                     });
+                    alert(`✅ Devis envoyé avec succès à ${sendToEmail} !`);
                     setEmailQuote(null);
+                  } else {
+                    alert(`❌ Erreur lors de l'envoi :\n\n${data.message || res.statusText}`);
                   }
+                } catch (err: any) {
+                  alert(`❌ Erreur réseau :\n\n${err.message}`);
+                } finally {
+                  setIsSendingEmail(false);
                 }
               }}
             >

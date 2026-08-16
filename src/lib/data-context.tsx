@@ -222,6 +222,7 @@ export type Quote = {
   number: string;
   client: string;
   clientId?: string;
+  clientEmail?: string;
   amount: number;
   status: Bi;
   date: string;
