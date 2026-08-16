@@ -590,89 +590,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [clients, setClients] = useState<Client[]>([]);
   const [upsells, setUpsells] = useState<Upsell[]>([]);
-  const [marches, setMarches] = useState<Marche[]>(initialMarches);
-  const [situations, setSituations] = useState<Situation[]>(initialSituations);
+  const [marches, setMarches] = useState<Marche[]>([]);
+  const [situations, setSituations] = useState<Situation[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   // Organisation Supabase de l'utilisateur connecté
   const orgIdRef = useRef<string | null>(null);
 
-  // Charger depuis le localStorage au montage (puis enrichir depuis Supabase)
+  // Charger depuis Supabase uniquement
   useEffect(() => {
-    // Nettoyer toutes les anciennes clés de données de démo
-    const demoKeys = [
-      "invoicepro_showcase_reset_v1",
-      "invoicepro_showcase_reset_v2",
-      "invoicepro_showcase_reset_v3",
-      `invoicepro_showcase_reset_${SHOWCASE_DATA_VERSION}`,
-    ];
-    // Si Supabase est connecté, on ne charge JAMAIS de données locales non-vérifiées
-    // → on démarre avec des tableaux vides et Supabase les remplacera
-    // Si non connecté, on charge localStorage (vraies données utilisateur, pas démo)
+    setLoaded(true); // Permet de débloquer le rendu de l'UI même sans données
 
-    const storedQuotes = localStorage.getItem("invoicepro_quotes_v4");
-    const storedInvoices = localStorage.getItem("invoicepro_invoices_v4");
-    const storedProducts = localStorage.getItem("invoicepro_products") ?? localStorage.getItem("demo-products-v2");
-    const storedSettings = localStorage.getItem("invoicepro_company_v1");
-    const storedClients = localStorage.getItem("invoicepro_clients");
-    const storedUpsells = localStorage.getItem("invoicepro_upsells");
-    const storedMarches = localStorage.getItem("invoicepro_marches");
-    const storedSituations = localStorage.getItem("invoicepro_situations");
-    const storedExpenses = localStorage.getItem("invoicepro_expenses");
-    const storedSubscriptions = localStorage.getItem("invoicepro_subscriptions");
-
-    // Démarrage avec données vides — Supabase les remplacera dès que connecté
-    // On ne charge localStorage que si ce sont de vraies données (pas de démo injectée)
-    {
-      const parsedQuotes = storedQuotes ? JSON.parse(storedQuotes) as Quote[] : [];
-      setQuotes(sortDocumentsByActivity(parsedQuotes));
-    }
-    {
-      const parsedInvoices = storedInvoices ? JSON.parse(storedInvoices) as Invoice[] : [];
-      setInvoices(sortDocumentsByActivity(parsedInvoices));
-    }
-    const existingProducts: Product[] = storedProducts ? JSON.parse(storedProducts) : [];
-    const productsWithRepair = existingProducts.some((product) => product.id === repairServiceProduct.id)
-      ? existingProducts
-      : [...existingProducts, repairServiceProduct];
-    setProducts(productsWithRepair);
-    localStorage.setItem("invoicepro_products", JSON.stringify(productsWithRepair));
-    if (storedSettings) setCompany(JSON.parse(storedSettings));
-    setClients(storedClients ? JSON.parse(storedClients) : []);
-    if (storedUpsells) setUpsells(JSON.parse(storedUpsells));
-    if (storedMarches) setMarches(JSON.parse(storedMarches));
-    if (storedSituations) setSituations(JSON.parse(storedSituations));
-    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : []);
-    if (storedSubscriptions) setSubscriptions(JSON.parse(storedSubscriptions));
-    setLoaded(true);
-
-    // Tentative de chargement depuis Supabase (si connecté)
     getMyOrgId().then(async (orgId) => {
       if (!orgId) return;
       orgIdRef.current = orgId;
-      // Utilisateur connecté → vider immédiatement les données locales (démo ou cache)
-      // pour éviter l'affichage de fausses données pendant le chargement Supabase
-      setQuotes([]);
-      setInvoices([]);
-      setClients([]);
+      
       const remote = await loadOrgData(orgId);
       if (!remote) return;
-      // Si Supabase a des données → elles ont la priorité (données réelles vs demo)
-      // Si 0 données → nouvel utilisateur authentifié → on efface la démo locale
-      // Utilisateur connecté → toujours utiliser Supabase comme source de vérité
-      // On écrase systématiquement le localStorage (y compris l'éventuelle démo)
-      const realQuotes = remote.quotes;
-      setQuotes(sortDocumentsByActivity(realQuotes));
-      localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(realQuotes));
-
-      const realInvoices = remote.invoices;
-      setInvoices(sortDocumentsByActivity(realInvoices));
-      localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(realInvoices));
-
-      const realClients = remote.clients;
-      setClients(realClients);
-      localStorage.setItem("invoicepro_clients", JSON.stringify(realClients));
+      
+      setQuotes(sortDocumentsByActivity(remote.quotes));
+      setInvoices(sortDocumentsByActivity(remote.invoices));
+      setClients(remote.clients);
 
       // Realtime subscription for instant signature updates
       supabase
@@ -787,46 +726,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     prevQuotesRef.current = quotes;
   }, [quotes, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(quotes));
-  }, [quotes, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(invoices));
-  }, [invoices, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_upsells", JSON.stringify(upsells));
-  }, [upsells, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_products", JSON.stringify(products));
-  }, [products, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_company_v1", JSON.stringify(company));
-  }, [company, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_clients", JSON.stringify(clients));
-  }, [clients, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_marches", JSON.stringify(marches));
-  }, [marches, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_situations", JSON.stringify(situations));
-  }, [situations, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_expenses", JSON.stringify(expenses));
-  }, [expenses, loaded]);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem("invoicepro_subscriptions", JSON.stringify(subscriptions));
-  }, [subscriptions, loaded]);
 
   // Generateur de factures pour les abonnements
   useEffect(() => {
