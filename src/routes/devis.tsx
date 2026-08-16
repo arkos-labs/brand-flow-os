@@ -39,7 +39,9 @@ import {
   X,
   Link,
   Search,
+  AlertTriangle,
 } from "lucide-react";
+import { Link as RouterLink } from "@tanstack/react-router";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScaledDocument } from "@/components/ScaledDocument";
 import {
@@ -606,8 +608,24 @@ function QuotesInner() {
     setIsQuoteOpen(false);
   };
 
+  const isCompanyIncomplete = !company.name || !company.siret;
+
   return (
     <>
+      {/* ─── Bannière profil incomplet ────────────────────────────────────── */}
+      {isCompanyIncomplete && (
+        <RouterLink to="/parametres">
+          <div className="mx-4 mb-2 mt-3 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 cursor-pointer hover:bg-amber-100 transition-colors dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              <strong>Votre profil d'entreprise est incomplet.</strong>{" "}
+              Ajoutez votre nom, SIRET et adresse dans{" "}
+              <span className="underline font-medium">Paramètres</span>{" "}
+              pour que vos devis soient légalement valides.
+            </span>
+          </div>
+        </RouterLink>
+      )}
       <PageHeader
         title={t("quotes.title")}
         subtitle={t("quotes.subtitle")}

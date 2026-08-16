@@ -9,7 +9,11 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Settings,
+  Users,
+  X,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -127,10 +131,103 @@ function DonutCenter({ rate, lang }: { rate: number | null; lang: string }) {
   );
 }
 
+// ── Onboarding Modal ──────────────────────────────────────────────────────────
+function OnboardingModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-md rounded-2xl bg-background border border-border shadow-2xl p-8">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="mb-6">
+          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+            <FileText className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Bienvenue sur ClearQuote 👋</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            3 étapes pour créer votre premier devis en moins de 5 minutes.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {/* Étape 1 */}
+          <Link to="/parametres" onClick={onClose}>
+            <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4 hover:bg-muted/60 transition-colors cursor-pointer">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+                1
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Remplir votre profil d'entreprise</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Nom, SIRET, adresse — obligatoire pour les devis légaux</p>
+              </div>
+              <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+          </Link>
+
+          {/* Étape 2 */}
+          <Link to="/clients" onClick={onClose}>
+            <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4 hover:bg-muted/60 transition-colors cursor-pointer">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground text-sm font-bold">
+                2
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Ajouter votre premier client</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Nom, email, adresse — ou directement depuis le devis</p>
+              </div>
+              <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+          </Link>
+
+          {/* Étape 3 */}
+          <Link to="/devis" onClick={onClose}>
+            <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4 hover:bg-muted/60 transition-colors cursor-pointer">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground text-sm font-bold">
+                3
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Créer votre premier devis</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Génération PDF + envoi par email en quelques clics</p>
+              </div>
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+          </Link>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-6 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          C'est parti →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function Dashboard() {
   const { t, lang, money, date } = useI18n();
-  const { quotes, invoices, expenses } = useData();
+  const { quotes, invoices, expenses, company } = useData();
+
+  // ── Onboarding : afficher si nouvel utilisateur ───────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    const isDone = localStorage.getItem("clearquote_onboarding_done");
+    if (!isDone && quotes.length === 0 && invoices.length === 0) {
+      // Délai léger pour laisser le temps au chargement Supabase
+      const timer = setTimeout(() => setShowOnboarding(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [quotes.length, invoices.length]);
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem("clearquote_onboarding_done", "true");
+    setShowOnboarding(false);
+  };
 
   // ── KPI base ──────────────────────────────────────────────────────────────
   const acceptedQuotes = quotes.filter((q) => SIGNED_STATUSES.includes(q.status.fr));
@@ -266,6 +363,8 @@ function Dashboard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    <>
+    {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
     <div className="flex flex-col gap-6">
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 text-center lg:flex-row lg:items-center lg:justify-between lg:text-left">
@@ -640,5 +739,6 @@ function Dashboard() {
         </div>
       </div>
     </div>
+    </>
   );
 }

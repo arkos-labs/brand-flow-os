@@ -587,28 +587,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Charger depuis le localStorage au montage (puis enrichir depuis Supabase)
   useEffect(() => {
-    const showcaseResetKey = `invoicepro_showcase_reset_${SHOWCASE_DATA_VERSION}`;
-    if (!localStorage.getItem(showcaseResetKey)) {
-      const showcase = createShowcaseData();
-      localStorage.setItem("invoicepro_clients", JSON.stringify(showcase.clients));
-      localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(showcase.quotes));
-      localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(showcase.invoices));
-      localStorage.setItem("invoicepro_expenses", JSON.stringify(showcase.expenses));
-      localStorage.setItem("invoicepro_subscriptions", JSON.stringify(showcase.subscriptions));
-      localStorage.setItem("invoicepro_marches", JSON.stringify(showcase.marches));
-      localStorage.setItem("invoicepro_situations", JSON.stringify(showcase.situations));
-
-      const savedCompany = localStorage.getItem("invoicepro_company_v1");
-      const companySettings = savedCompany
-        ? JSON.parse(savedCompany) as CompanySettings
-        : defaultCompanySettings;
-      localStorage.setItem("invoicepro_company_v1", JSON.stringify({
-        ...companySettings,
-        nextQuoteNumber: showcase.nextQuoteNumber,
-        nextInvoiceNumber: showcase.nextInvoiceNumber,
-      }));
-      localStorage.setItem(showcaseResetKey, new Date().toISOString());
-    }
+    // Nettoyer toutes les anciennes clés de données de démo
+    const demoKeys = [
+      "invoicepro_showcase_reset_v1",
+      "invoicepro_showcase_reset_v2",
+      "invoicepro_showcase_reset_v3",
+      `invoicepro_showcase_reset_${SHOWCASE_DATA_VERSION}`,
+    ];
+    // Si Supabase est connecté, on ne charge JAMAIS de données locales non-vérifiées
+    // → on démarre avec des tableaux vides et Supabase les remplacera
+    // Si non connecté, on charge localStorage (vraies données utilisateur, pas démo)
 
     const storedQuotes = localStorage.getItem("invoicepro_quotes_v4");
     const storedInvoices = localStorage.getItem("invoicepro_invoices_v4");
@@ -620,13 +608,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const storedSituations = localStorage.getItem("invoicepro_situations");
     const storedExpenses = localStorage.getItem("invoicepro_expenses");
     const storedSubscriptions = localStorage.getItem("invoicepro_subscriptions");
-    
+
+    // Démarrage avec données vides — Supabase les remplacera dès que connecté
+    // On ne charge localStorage que si ce sont de vraies données (pas de démo injectée)
     {
-      const parsedQuotes = storedQuotes ? JSON.parse(storedQuotes) as Quote[] : functionalDemoQuotes;
+      const parsedQuotes = storedQuotes ? JSON.parse(storedQuotes) as Quote[] : [];
       setQuotes(sortDocumentsByActivity(parsedQuotes));
     }
     {
-      const parsedInvoices = storedInvoices ? JSON.parse(storedInvoices) as Invoice[] : functionalDemoInvoices;
+      const parsedInvoices = storedInvoices ? JSON.parse(storedInvoices) as Invoice[] : [];
       setInvoices(sortDocumentsByActivity(parsedInvoices));
     }
     const existingProducts: Product[] = storedProducts ? JSON.parse(storedProducts) : [];
@@ -636,11 +626,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProducts(productsWithRepair);
     localStorage.setItem("invoicepro_products", JSON.stringify(productsWithRepair));
     if (storedSettings) setCompany(JSON.parse(storedSettings));
-    setClients(storedClients ? JSON.parse(storedClients) : functionalDemoClients);
+    setClients(storedClients ? JSON.parse(storedClients) : []);
     if (storedUpsells) setUpsells(JSON.parse(storedUpsells));
     if (storedMarches) setMarches(JSON.parse(storedMarches));
     if (storedSituations) setSituations(JSON.parse(storedSituations));
-    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : functionalDemoExpenses);
+    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : []);
     if (storedSubscriptions) setSubscriptions(JSON.parse(storedSubscriptions));
     setLoaded(true);
 
@@ -648,21 +638,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getMyOrgId().then(async (orgId) => {
       if (!orgId) return;
       orgIdRef.current = orgId;
+      // Utilisateur connecté → vider immédiatement les données locales (démo ou cache)
+      // pour éviter l'affichage de fausses données pendant le chargement Supabase
+      setQuotes([]);
+      setInvoices([]);
+      setClients([]);
       const remote = await loadOrgData(orgId);
       if (!remote) return;
       // Si Supabase a des données → elles ont la priorité (données réelles vs demo)
-      if (remote.quotes.length > 0) {
-        setQuotes(sortDocumentsByActivity(remote.quotes));
-        localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(remote.quotes));
-      }
-      if (remote.invoices.length > 0) {
-        setInvoices(sortDocumentsByActivity(remote.invoices));
-        localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(remote.invoices));
-      }
-      if (remote.clients.length > 0) {
-        setClients(remote.clients);
-        localStorage.setItem("invoicepro_clients", JSON.stringify(remote.clients));
-      }
+      // Si 0 données → nouvel utilisateur authentifié → on efface la démo locale
+      // Utilisateur connecté → toujours utiliser Supabase comme source de vérité
+      // On écrase systématiquement le localStorage (y compris l'éventuelle démo)
+      const realQuotes = remote.quotes;
+      setQuotes(sortDocumentsByActivity(realQuotes));
+      localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(realQuotes));
+
+      const realInvoices = remote.invoices;
+      setInvoices(sortDocumentsByActivity(realInvoices));
+      localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(realInvoices));
+
+      const realClients = remote.clients;
+      setClients(realClients);
+      localStorage.setItem("invoicepro_clients", JSON.stringify(realClients));
 
       // Realtime subscription for instant signature updates
       supabase

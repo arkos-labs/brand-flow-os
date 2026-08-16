@@ -4,6 +4,7 @@ import {
   Building2,
   MapPin,
   Phone,
+  Mail,
   ImagePlus,
   Trash2,
   FileText,

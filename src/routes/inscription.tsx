@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, User } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, AlertCircle, CheckCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/inscription")({
   head: () => ({
@@ -34,22 +35,132 @@ function InscriptionPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [devLoading, setDevLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    // Validation
+    if (!email || !password || !confirmPassword) {
+      setError("Veuillez remplir tous les champs.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/tableau-de-bord`,
+        },
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes("already registered") || signUpError.message.includes("User already registered")) {
+          setError("Un compte existe déjà avec cet email. Connectez-vous ou utilisez un autre email.");
+        } else if (signUpError.message.includes("invalid email")) {
+          setError("Adresse email invalide.");
+        } else if (signUpError.message.includes("Password should be")) {
+          setError("Le mot de passe doit contenir au moins 6 caractères.");
+        } else {
+          setError(signUpError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // Check if email confirmation is required
+        if (data.session) {
+          // User is immediately logged in (email confirmation disabled)
+          // Create default organization
+          try {
+            await supabase.from("organizations").insert({
+              name: "Mon entreprise",
+              owner_id: data.user.id,
+            });
+          } catch {
+            // Organization might already exist or table might not exist yet — not blocking
+          }
+          navigate({ to: "/tableau-de-bord" });
+        } else {
+          // Email confirmation required
+          setEmailSent(true);
+        }
+      }
+    } catch (err) {
+      setError("Une erreur inattendue s'est produite. Réessayez.");
+    } finally {
       setLoading(false);
-      navigate({ to: "/tableau-de-bord" });
-    }, 800);
+    }
   }
 
-  function handleDevAccess() {
+  async function handleDevAccess() {
     setDevLoading(true);
-    setTimeout(() => {
-      setDevLoading(false);
+    setError(null);
+    try {
+      // Dev access: sign in with the demo account or create one
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: "demo@clearquote.fr",
+        password: "demo123456",
+      });
+      if (signInError) {
+        // Try to create the demo account
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: "demo@clearquote.fr",
+          password: "demo123456",
+        });
+        if (signUpError) {
+          // Fallback: just navigate anyway for local dev
+          navigate({ to: "/tableau-de-bord" });
+          return;
+        }
+      }
       navigate({ to: "/tableau-de-bord" });
-    }, 400);
+    } catch {
+      navigate({ to: "/tableau-de-bord" });
+    } finally {
+      setDevLoading(false);
+    }
+  }
+
+  // Email confirmation sent state
+  if (emailSent) {
+    return (
+      <div className="devizia-auth min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center">
+          <div className="flex justify-center mb-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950">
+              <CheckCircle className="h-8 w-8 text-emerald-600" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Vérifiez vos emails</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Un lien de confirmation a été envoyé à <strong>{email}</strong>. Cliquez dessus pour activer votre compte.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Pas reçu ?{" "}
+            <button
+              onClick={() => setEmailSent(false)}
+              className="text-primary font-semibold hover:underline"
+            >
+              Réessayer
+            </button>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -107,6 +218,13 @@ function InscriptionPage() {
           <h1 className="text-2xl font-bold text-foreground mb-1">{t("auth.signup.title")}</h1>
           <p className="text-sm text-muted-foreground mb-8">{t("auth.signup.subtitle")}</p>
 
+          {error && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-950/30 px-4 py-3 mb-4">
+              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">
@@ -119,6 +237,7 @@ function InscriptionPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="vous@exemple.fr"
+                  required
                   className="w-full rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -135,6 +254,8 @@ function InscriptionPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  required
+                  minLength={8}
                   className="w-full rounded-xl border border-border bg-background pl-9 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <button
@@ -145,6 +266,7 @@ function InscriptionPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p className="text-[11px] text-muted-foreground/60 mt-1">Minimum 8 caractères</p>
             </div>
 
             <div>
@@ -158,9 +280,17 @@ function InscriptionPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  required
+                  className={`w-full rounded-xl border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 transition-all ${
+                    confirmPassword && password !== confirmPassword
+                      ? "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      : "border-border focus:border-primary focus:ring-primary/20"
+                  }`}
                 />
               </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-[11px] text-red-500 mt-1">Les mots de passe ne correspondent pas</p>
+              )}
             </div>
 
             <Button
@@ -171,7 +301,7 @@ function InscriptionPage() {
               {loading ? (
                 <>
                   <span className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                  {t("auth.signup")}…
+                  Création du compte…
                 </>
               ) : (
                 <>

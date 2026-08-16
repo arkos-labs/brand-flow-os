@@ -28,11 +28,12 @@ import {
   Calendar,
   Archive,
 } from "lucide-react";
-import { useState, useRef, useEffect, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { useTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import { formatNavigationBadge } from "@/lib/navigation-badge";
 import { GlobalSearch } from "./GlobalSearch";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -420,7 +421,30 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
         </div>
         <button
-          onClick={() => { window.location.href = "/"; }}
+          onClick={async () => {
+            await supabase.auth.signOut();
+            // Vider TOUT le cache local (données réelles + démo + showcase)
+            const keysToRemove = [
+              "invoicepro_quotes_v4",
+              "invoicepro_invoices_v4",
+              "invoicepro_clients",
+              "invoicepro_products",
+              "invoicepro_company_v1",
+              "invoicepro_upsells",
+              "invoicepro_marches",
+              "invoicepro_situations",
+              "invoicepro_expenses",
+              "invoicepro_subscriptions",
+              "clearquote_onboarding_done",
+              "demo-products-v2",
+            ];
+            // Supprimer aussi toutes les clés showcase (quel que soit la version)
+            Object.keys(localStorage)
+              .filter((k) => k.startsWith("invoicepro_showcase_reset"))
+              .forEach((k) => localStorage.removeItem(k));
+            keysToRemove.forEach((k) => localStorage.removeItem(k));
+            window.location.href = "/connexion";
+          }}
           title="Se déconnecter"
           aria-label="Se déconnecter"
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/40 transition-colors hover:bg-destructive/15 hover:text-destructive"
