@@ -1684,12 +1684,14 @@ function QuotesInner() {
               disabled={isSendingEmail}
               onClick={async () => {
                 if (emailQuote) {
-                  if (company.google_refresh_token) {
+                  if (true) { // Always allow sending via Resend
                     setIsSendingEmail(true);
                     try {
                       // 1. Generate PDF
                       const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
                       const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
+                      
+                      const artisanEmail = user?.email || company?.email;
                       
                       // 2. Send via API
                       const res = await fetch("/api/quotes/send", {
@@ -1701,7 +1703,7 @@ function QuotesInner() {
                           html,
                           pdfBase64,
                           pdfFilename: `Devis_${emailQuote.number}.pdf`,
-                          refreshToken: company.google_refresh_token,
+                          artisanEmail: artisanEmail,
                         })
                       });
                       
@@ -1713,7 +1715,7 @@ function QuotesInner() {
                           status: { fr: "Envoyé", en: "Sent" },
                           sentAt: new Date().toISOString(),
                         });
-                        alert("Le devis a été envoyé avec succès via votre adresse Gmail !");
+                        alert("Le devis a été envoyé avec succès !");
                         setEmailQuote(null);
                       } else {
                         alert("Erreur lors de l'envoi : " + (data.message || res.statusText));
