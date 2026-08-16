@@ -676,7 +676,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       // Realtime subscription for instant signature updates
       supabase
-        .channel("public:data")
+        .channel(`realtime-data-${orgId}`)
         .on(
           "postgres_changes",
           {
@@ -685,7 +685,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             table: "quotes",
             filter: `organization_id=eq.${orgId}`,
           },
-          () => {
+          (payload) => {
+            console.log("🔥 WEBSOCKET EVENT REÇU (quotes) :", payload);
             supabase.from("quotes").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false })
               .then(({ data }) => {
                 if (data) {
@@ -703,7 +704,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             table: "invoices",
             filter: `organization_id=eq.${orgId}`,
           },
-          () => {
+          (payload) => {
+            console.log("🔥 WEBSOCKET EVENT REÇU (invoices) :", payload);
             supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false })
               .then(({ data }) => {
                 if (data) {
@@ -713,7 +715,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
               });
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log("📡 Supabase Realtime status:", status);
+        });
 
     }).catch(() => { /* silencieux si pas de connexion */ });
   }, []);
