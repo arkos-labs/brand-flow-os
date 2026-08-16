@@ -675,23 +675,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       // Realtime subscription for instant signature updates
       supabase
-        .channel("public:quotes")
+        .channel("public:data")
         .on(
           "postgres_changes",
           {
-            event: "UPDATE",
+            event: "*",
             schema: "public",
             table: "quotes",
             filter: `organization_id=eq.${orgId}`,
           },
-          (payload) => {
-            if (payload.new && payload.new.payload) {
-              const updatedQuote = payload.new.payload as Quote;
-              setQuotes((prev) => {
-                const newQuotes = prev.map((q) => (q.number === updatedQuote.number ? updatedQuote : q));
-                return sortDocumentsByActivity(newQuotes);
+          () => {
+            supabase.from("quotes").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false })
+              .then(({ data }) => {
+                if (data) {
+                  const realQuotes = data.map((r) => r.payload as Quote).filter(Boolean);
+                  setQuotes(sortDocumentsByActivity(realQuotes));
+                }
               });
-            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "invoices",
+            filter: `organization_id=eq.${orgId}`,
+          },
+          () => {
+            supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false })
+              .then(({ data }) => {
+                if (data) {
+                  const realInvoices = data.map((r) => r.payload as Invoice).filter(Boolean);
+                  setInvoices(sortDocumentsByActivity(realInvoices));
+                }
+              });
           }
         )
         .subscribe();
