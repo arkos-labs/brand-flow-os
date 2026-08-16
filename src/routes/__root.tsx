@@ -163,18 +163,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Devis interactifs, facturation Factur-X, CRM et trésorerie prédictive pour freelances, agences et TPE.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "ClearQuote" },
+      { property: "og:image", content: "https://clearquote.fr/og-default.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://clearquote.fr/og-default.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap",
-        crossOrigin: "anonymous"
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "ClearQuote",
+          "url": "https://clearquote.fr",
+          "logo": "https://clearquote.fr/og-default.png",
+          "description": "ClearQuote est un logiciel de devis, facturation et gestion commerciale pour artisans, indépendants et petites entreprises françaises. Conformité Factur-X 2026 incluse.",
+          "foundingLocation": { "@type": "Place", "addressCountry": "FR" },
+          "sameAs": [
+            "https://www.linkedin.com/company/clearquote",
+            "https://twitter.com/clearquote"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "availableLanguage": "French",
+            "url": "https://clearquote.fr/contactez-nous"
+          }
+        }),
+      },
     ],
   }),
 

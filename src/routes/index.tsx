@@ -49,7 +49,80 @@ export const Route = createFileRoute("/")({
           "Créez, envoyez et suivez vos devis et factures depuis un seul outil pensé pour les petites entreprises.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://clearquote.fr/" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "index, follow" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://clearquote.fr/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Faut-il être à l'aise avec les logiciels de gestion ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Non. ClearQuote est pensé pour aller à l'essentiel : créer un document, l'envoyer et suivre son statut. Les fonctions avancées restent disponibles quand vous en avez besoin."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Puis-je utiliser ClearQuote depuis mon téléphone ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui. L'interface s'adapte aux écrans mobiles pour consulter votre activité et gérer vos documents en déplacement."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Mes factures peuvent-elles être générées en Factur-X ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui. ClearQuote prend en charge la génération de documents Factur-X, avec un PDF lisible et les données structurées associées."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "ClearQuote convient-il à mon métier ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "ClearQuote s'adresse aux artisans, indépendants et petites équipes de services. Le catalogue et les documents s'adaptent à vos prestations."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Puis-je essayer avant de choisir une offre ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui. Créez votre espace pour découvrir le produit, puis consultez la page Tarifs pour choisir la formule adaptée à votre activité."
+              }
+            }
+          ]
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "ClearQuote",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://clearquote.fr",
+          "description": "Logiciel de devis, facturation et gestion commerciale pour artisans, indépendants et petites entreprises. Conformité Factur-X 2026 incluse.",
+          "offers": [
+            { "@type": "Offer", "name": "Solo", "price": "0", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Pro", "price": "29", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Agency", "price": "79", "priceCurrency": "EUR" }
+          ]
+        }),
+      },
     ],
   }),
   component: LandingPage,

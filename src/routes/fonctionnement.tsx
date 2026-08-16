@@ -20,6 +20,8 @@ export const Route = createFileRoute("/fonctionnement")({
       { property: "og:title", content: "Comment fonctionne ClearQuote — 4 étapes simples" },
       { property: "og:description", content: "De l'inscription au paiement en quelques minutes. ClearQuote simplifie l'administratif des artisans, freelances et TPE." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://clearquote.fr/fonctionnement" },
+      { property: "og:image", content: "https://clearquote.fr/og-default.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow" },
     ],

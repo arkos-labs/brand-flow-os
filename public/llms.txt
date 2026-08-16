@@ -1,0 +1,31 @@
+# ClearQuote
+
+ClearQuote est un logiciel de devis, facturation et gestion commerciale pour artisans, indépendants et petites entreprises françaises. Il permet de créer des devis professionnels, générer des factures conformes Factur-X 2026, suivre les clients via un CRM Kanban, et visualiser la trésorerie en temps réel.
+
+## Pages principales
+
+- / : Accueil — présentation générale de ClearQuote et ses bénéfices
+- /fonctionnalites : Détail des fonctionnalités (devis assistés, factures Factur-X, CRM, trésorerie)
+- /fonctionnement : Comment utiliser ClearQuote en 3 étapes (créer, envoyer, encaisser)
+- /benefices : Bénéfices pour artisans, freelances et petites équipes
+- /tarifs : Formules tarifaires Solo (0 €/mois), Pro (29 €/mois), Agency (79 €/mois)
+- /contactez-nous : Contact et support
+- /centre-aide : Documentation et aide utilisateur
+- /inscription : Créer un compte ClearQuote gratuitement
+- /connexion : Se connecter à son espace ClearQuote
+
+## Faits clés
+
+- Catégorie : SaaS de gestion commerciale et financière (Business OS)
+- Cibles : Artisans (BTP, plomberie, menuiserie, électricité), freelances, agences, TPE de services
+- Conformité : Factur-X 2026, Piste d'Audit Fiable (PAF), numérotation légale française
+- Tarif d'entrée : Gratuit — formule Solo jusqu'à 3 documents par mois
+- Essai gratuit : 14 jours sans carte bancaire (formule Pro)
+- Fonctionnalités principales : devis interactifs, facturation électronique, CRM Kanban, pipeline commercial, suivi de trésorerie, gestion des dépenses, catalogue de prestations, portail client avec signature électronique
+- Pays : France
+- Langue : Français
+- URL : https://clearquote.fr
+
+## À propos
+
+ClearQuote aide les professionnels qui facturent à la prestation à gagner du temps sur l'administratif : moins de clics pour créer un devis, un suivi clair des paiements à encaisser, et une vision nette de la trésorerie à venir.

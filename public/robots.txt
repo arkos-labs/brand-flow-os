@@ -12,3 +12,18 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Crawlers IA — autorisés pour la visibilité dans les réponses génératives
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Anthropic-ai
+Allow: /
+
+Sitemap: https://clearquote.fr/sitemap.xml

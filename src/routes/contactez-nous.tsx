@@ -9,7 +9,10 @@ export const Route = createFileRoute("/contactez-nous")({
   head: () => ({
     meta: [
       { title: "Contactez-nous — ClearQuote" },
+      { name: "description", content: "Contactez l'équipe ClearQuote pour toute question sur votre compte, la facturation ou une demande de démonstration." },
+      { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/contactez-nous" }],
   }),
   component: ContactezNousPage,
 });

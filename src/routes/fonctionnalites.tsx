@@ -21,6 +21,8 @@ export const Route = createFileRoute("/fonctionnalites")({
       { property: "og:title", content: "Fonctionnalités ClearQuote — Tout ce dont vous avez besoin" },
       { property: "og:description", content: "Devis, factures, CRM, temps et trésorerie dans un seul outil conforme Factur-X 2026." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://clearquote.fr/fonctionnalites" },
+      { property: "og:image", content: "https://clearquote.fr/og-default.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow" },
     ],

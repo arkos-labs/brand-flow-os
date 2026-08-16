@@ -9,7 +9,10 @@ export const Route = createFileRoute("/centre-aide")({
   head: () => ({
     meta: [
       { title: "Centre d'aide — ClearQuote" },
+      { name: "description", content: "Trouvez des réponses à vos questions sur ClearQuote : devis, factures, compte, facturation électronique Factur-X et conformité 2026." },
+      { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/centre-aide" }],
   }),
   component: CentreAidePage,
 });

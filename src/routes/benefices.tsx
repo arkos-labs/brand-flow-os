@@ -20,6 +20,8 @@ export const Route = createFileRoute("/benefices")({
       { property: "og:title", content: "Pourquoi choisir ClearQuote — Les bénéfices concrets" },
       { property: "og:description", content: "4h gagnées par semaine en moyenne. Zéro devis oublié. Conformité Factur-X 2026 incluse. Découvrez ce que ClearQuote change vraiment." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://clearquote.fr/benefices" },
+      { property: "og:image", content: "https://clearquote.fr/og-default.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow" },
     ],

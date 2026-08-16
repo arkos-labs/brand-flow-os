@@ -17,6 +17,8 @@ export const Route = createFileRoute("/tarifs")({
       { property: "og:title", content: "Tarifs ClearQuote — À partir de 0 €/mois" },
       { property: "og:description", content: "Formules sans engagement. Conformité Factur-X 2026 incluse. Essai gratuit 14 jours." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://clearquote.fr/tarifs" },
+      { property: "og:image", content: "https://clearquote.fr/og-default.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow" },
     ],
