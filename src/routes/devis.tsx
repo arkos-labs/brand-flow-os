@@ -1726,7 +1726,7 @@ function QuotesInner() {
                 try {
                   // 1. Generate PDF
                   const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
-                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
+                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId, window.location.origin);
 
                   const artisanEmail = company?.email;
 

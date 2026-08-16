@@ -1,6 +1,6 @@
 import { Quote, CompanySettings } from "./data-context";
 
-export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, templateId: string = "modele-1"): string {
+export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, templateId: string = "modele-1", baseUrl: string = ""): string {
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
   };
@@ -15,6 +15,7 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
 
   const totalHT = quote.details?.items.reduce((acc, item) => acc + (Number(item.priceHT) * Number(item.qty)), 0) || 0;
   const tvaAmount = quote.amount - totalHT;
+  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}`;
 
   if (templateId === "modele-relance") {
     return `
@@ -23,21 +24,24 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; }
-        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .header { font-size: 18px; font-weight: bold; color: #0f172a; margin-bottom: 20px; }
-        .btn { display: inline-block; background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; background-color: #f8f9fa; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #ef4444; }
+        .header { font-size: 20px; font-weight: bold; color: #0f172a; margin-bottom: 20px; }
+        .btn { display: inline-block; background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; margin-bottom: 20px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
     <div class="container">
-        ${company.logoBase64 ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 50px;" /></div>` : ''}
+        ${company.logoBase64 ? `<div style="text-align: left; margin-bottom: 30px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 50px;" /></div>` : ''}
         <div class="header">Relance : Devis ${quote.number} en attente</div>
         <p>Bonjour <strong>${quote.client}</strong>,</p>
         <p>Sauf erreur de notre part, nous n'avons pas encore reçu votre validation pour le devis <strong>${quote.number}</strong> d'un montant de <strong>${formatMoney(quote.amount)} TTC</strong>.</p>
-        <p>Ce devis arrive bientôt à expiration. Si vous avez des questions ou souhaitez apporter des modifications, n'hésitez pas à nous contacter.</p>
-        <a href="http://localhost:5173/portail/${quote.number}" class="btn">Consulter et signer le devis</a>
-        <p style="margin-top: 30px; font-size: 12px; color: #94a3b8;">Cordialement,<br>${company.name || "L'équipe"}</p>
+        <p>Ce devis arrive bientôt à expiration. Vous le trouverez en pièce jointe de cet e-mail. Si vous avez des questions ou souhaitez apporter des modifications, n'hésitez pas à nous contacter.</p>
+        <p>Si vous êtes d'accord avec cette proposition, vous pouvez consulter et signer électroniquement le devis en ligne en cliquant sur le bouton ci-dessous :</p>
+        <div style="text-align: center;">
+            <a href="${portalUrl}" class="btn">Consulter et signer le devis</a>
+        </div>
+        <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px;">Cordialement,<br><strong>${company.name || "L'équipe"}</strong><br>${company.phone || ""}</p>
     </div>
 </body>
 </html>`;
@@ -50,353 +54,92 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; }
-        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; border-top: 4px solid #10b981; }
-        .header { font-size: 18px; font-weight: bold; color: #0f172a; margin-bottom: 20px; }
-        .btn { display: inline-block; background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; background-color: #f8f9fa; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #10b981; }
+        .header { font-size: 20px; font-weight: bold; color: #0f172a; margin-bottom: 20px; }
+        .btn { display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; margin-bottom: 20px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
     <div class="container">
-        ${company.logoBase64 ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 50px;" /></div>` : ''}
+        ${company.logoBase64 ? `<div style="text-align: left; margin-bottom: 30px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 50px;" /></div>` : ''}
         <div class="header">Merci pour votre confiance !</div>
         <p>Bonjour <strong>${quote.client}</strong>,</p>
         <p>Nous vous remercions pour la signature du devis <strong>${quote.number}</strong>.</p>
-        <p>Notre équipe va commencer à préparer l'intervention. Vous recevrez très prochainement votre facture ou une demande d'acompte (le cas échéant).</p>
-        <a href="http://localhost:5173/portail/${quote.number}" class="btn">Accéder à mon espace client</a>
-        <p style="margin-top: 30px; font-size: 12px; color: #94a3b8;">Cordialement,<br>${company.name || "L'équipe"}</p>
+        <p>Notre équipe va commencer à préparer l'intervention. Vous recevrez très prochainement votre facture ou une demande d'acompte (le cas échéant). Une copie de votre devis signé est jointe à cet e-mail.</p>
+        <div style="text-align: center;">
+            <a href="${portalUrl}" class="btn">Accéder à mon espace client</a>
+        </div>
+        <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px;">Cordialement,<br><strong>${company.name || "L'équipe"}</strong><br>${company.phone || ""}</p>
     </div>
 </body>
 </html>`;
   }
 
-  // Fallback to "modele-1" (Devis complet)
+  // STANDARD QUOTE TEMPLATE
   return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <style>
-        * { box-sizing: border-box; }
-        @page {
-            size: A4;
-            margin: 15mm;
-            background-color: #f8f9fa;
-        }
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #212529;
-            margin: 0;
-            padding: 0;
-            font-size: 10pt;
-            background-color: #f8f9fa;
-        }
-        
-        /* HEADER FULL BLEED */
-        .header {
-            background-color: #0f172a;
-            color: #ffffff;
-            margin: -15mm -15mm 25px -15mm;
-            padding: 25px 15mm;
-            display: table;
-            width: 100%;
-        }
-        .header-left {
-            display: table-cell;
-            vertical-align: middle;
-            width: 50%;
-        }
-        .header-right {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: right;
-            width: 50%;
-        }
-        .logo-container {
-            margin-bottom: 8px;
-            min-height: 60px;
-        }
-        .company-logo {
-            max-width: 180px;
-            max-height: 60px;
-            object-fit: contain;
-            display: block;
-        }
-        .company-siret {
-            font-size: 9pt;
-            color: #94a3b8;
-        }
-        .doc-title {
-            font-size: 26pt;
-            font-weight: bold;
-            letter-spacing: 2px;
-            color: #38bdf8;
-            margin: 0 0 5px 0;
-            text-transform: uppercase;
-        }
-        .doc-meta {
-            font-size: 10pt;
-            color: #cbd5e1;
-            line-height: 1.4;
-        }
-
-        /* MAIN CONTENT AREA */
-        .main-container {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-        }
-
-        /* ADDRESSES */
-        .address-section {
-            display: table;
-            width: 100%;
-            margin-bottom: 35px;
-        }
-        .address-col {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-        .address-box {
-            padding-right: 20px;
-        }
-        .address-box-client {
-            background-color: #f0f9ff;
-            padding: 15px;
-            border-left: 4px solid #0ea5e9;
-            border-radius: 4px;
-        }
-        .label {
-            font-size: 8pt;
-            font-weight: bold;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .address-text {
-            font-size: 11pt;
-            line-height: 1.5;
-            color: #334155;
-        }
-        .bold { font-weight: bold; color: #0f172a; }
-
-        /* TABLE */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        th {
-            font-size: 9pt;
-            font-weight: bold;
-            color: #64748b;
-            text-transform: uppercase;
-            text-align: left;
-            padding: 10px 10px 10px 0;
-            border-bottom: 2px solid #0f172a;
-        }
-        th.right, td.right { text-align: right; padding-right: 0; }
-        td {
-            padding: 15px 10px 15px 0;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: top;
-        }
-        .item-name {
-            font-weight: bold;
-            font-size: 11pt;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-        .item-desc {
-            font-size: 9pt;
-            color: #64748b;
-        }
-
-        /* TOTALS */
-        .totals-wrapper {
-            display: table;
-            width: 100%;
-            margin-bottom: 40px;
-        }
-        .totals-spacer { display: table-cell; width: 50%; }
-        .totals-box { display: table-cell; width: 50%; }
-        .total-row {
-            display: table;
-            width: 100%;
-            padding: 8px 0;
-            font-size: 11pt;
-        }
-        .total-label { display: table-cell; text-align: left; color: #64748b; }
-        .total-val { display: table-cell; text-align: right; font-weight: bold; color: #334155;}
-        
-        .total-ttc-row {
-            display: table;
-            width: 100%;
-            background-color: #0f172a;
-            color: #ffffff;
-            padding: 12px 15px;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .total-ttc-label { display: table-cell; text-align: left; font-weight: bold; font-size: 12pt; }
-        .total-ttc-val { display: table-cell; text-align: right; font-weight: bold; font-size: 14pt; color: #38bdf8; }
-
-        /* SIGNATURE */
-        .signature-section {
-            display: table;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .sig-box {
-            display: table-cell;
-            width: 100%;
-            border: 1px solid #e2e8f0;
-            background-color: #fafaf9;
-            padding: 20px;
-            border-radius: 6px;
-        }
-        .sig-header {
-            font-weight: bold;
-            color: #0f172a;
-            font-size: 11pt;
-            margin-bottom: 5px;
-        }
-        .sig-legal {
-            font-size: 8pt;
-            color: #64748b;
-            margin-bottom: 40px;
-            line-height: 1.4;
-        }
-        .sig-fields {
-            display: table;
-            width: 100%;
-        }
-        .sig-field {
-            display: table-cell;
-            width: 50%;
-            font-weight: bold;
-            color: #94a3b8;
-            font-size: 9pt;
-        }
-
-        /* FOOTER */
-        .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            font-size: 8pt;
-            color: #94a3b8;
-            line-height: 1.5;
-        }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; background-color: #f8f9fa; padding: 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border-top: 4px solid #0f172a; }
+        .header { font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 25px; }
+        .btn { display: inline-block; background-color: #0f172a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin-top: 25px; margin-bottom: 25px; font-weight: bold; font-size: 16px; transition: background-color 0.2s; }
+        .btn:hover { background-color: #1e293b; }
+        .summary-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .summary-label { color: #64748b; font-size: 14px; }
+        .summary-val { font-weight: bold; color: #0f172a; }
+        .summary-total { font-size: 18px; color: #38bdf8; font-weight: bold; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-left">
-            <div class="logo-container">
-                ${company.logoBase64 ? `<img class="company-logo" src="${company.logoBase64}" alt="Logo">` : `<h1 class="company-name" style="margin: 0; font-size: 22pt; color: white;">${company.name || "MON ENTREPRISE"}</h1>`}
-            </div>
-            <div class="company-siret">SIRET : ${company.siret || ""} &bull; TVA : ${company.vatNumber || ""}</div>
-        </div>
-        <div class="header-right">
-            <h2 class="doc-title">DEVIS</h2>
-            <div class="doc-meta">
-                Réf : <strong>${quote.number}</strong><br>
-                Date : ${formatDate(quote.date)}
-            </div>
-        </div>
-    </div>
-
-    <div class="main-container">
+    <div class="container">
+        ${company.logoBase64 ? `<div style="text-align: left; margin-bottom: 35px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 55px;" /></div>` : ''}
         
-        <div class="address-section">
-            <div class="address-col">
-                <div class="address-box">
-                    <div class="label">Émetteur</div>
-                    <div class="address-text">
-                        <span class="bold">${company.name || "Mon Entreprise SAS"}</span><br>
-                        ${company.address || ""}<br>
-                        ${company.postalCode || ""} ${company.city || ""}<br>
-                        ${company.email || ""}
-                    </div>
-                </div>
-            </div>
-            <div class="address-col">
-                <div class="address-box-client">
-                    <div class="label">Client</div>
-                    <div class="address-text">
-                        <span class="bold">${quote.client}</span><br>
-                        ${quote.details?.address || ""}<br>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
+        <div class="header">Votre devis ${quote.number}</div>
+        
+        <p>Bonjour <strong>${quote.client}</strong>,</p>
+        <p>Veuillez trouver ci-joint notre proposition commerciale concernant votre projet.</p>
+        
+        <div class="summary-box">
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 15px;">
                 <tr>
-                    <th>Désignation</th>
-                    <th class="right" style="width: 10%;">Qté</th>
-                    <th class="right" style="width: 25%;">Prix Unitaire HT</th>
-                    <th class="right" style="width: 25%;">Total HT</th>
+                    <td style="color: #64748b; font-size: 14px; padding-bottom: 8px;">Date du devis</td>
+                    <td style="text-align: right; font-weight: bold; color: #0f172a; padding-bottom: 8px;">${formatDate(quote.date)}</td>
                 </tr>
-            </thead>
-            <tbody>
-                ${quote.details?.items.filter(i => i.label).map(item => `
                 <tr>
-                    <td>
-                        <div class="item-name">${item.label}</div>
-                    </td>
-                    <td class="right">${item.qty}</td>
-                    <td class="right">${formatMoney(Number(item.priceHT))}</td>
-                    <td class="right">${formatMoney(Number(item.priceHT) * Number(item.qty))}</td>
+                    <td style="color: #64748b; font-size: 14px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">Valable jusqu'au</td>
+                    <td style="text-align: right; font-weight: bold; color: #0f172a; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">${formatDate(new Date(new Date(quote.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())}</td>
                 </tr>
-                `).join('')}
-            </tbody>
-        </table>
-
-        <div class="totals-wrapper">
-            <div class="totals-spacer"></div>
-            <div class="totals-box">
-                <div class="total-row">
-                    <div class="total-label">Total HT</div>
-                    <div class="total-val">${formatMoney(quote.details?.totalHT || quote.amount)}</div>
-                </div>
-                <div class="total-row">
-                    <div class="total-label">TVA (${quote.details?.vatRate || 20}%)</div>
-                    <div class="total-val">${formatMoney((quote.details?.totalTTC || quote.amount) - (quote.details?.totalHT || quote.amount))}</div>
-                </div>
-                <div class="total-ttc-row">
-                    <div class="total-ttc-label">TOTAL TTC</div>
-                    <div class="total-ttc-val">${formatMoney(quote.details?.totalTTC || quote.amount)}</div>
-                </div>
-            </div>
+                <tr>
+                    <td style="color: #64748b; font-size: 14px; padding-top: 15px;">Montant HT</td>
+                    <td style="text-align: right; font-weight: bold; color: #0f172a; padding-top: 15px;">${formatMoney(quote.details?.totalHT || quote.amount)}</td>
+                </tr>
+                <tr>
+                    <td style="color: #0f172a; font-size: 18px; font-weight: bold; padding-top: 15px;">TOTAL TTC</td>
+                    <td style="text-align: right; font-weight: bold; font-size: 20px; color: #38bdf8; padding-top: 15px;">${formatMoney(quote.details?.totalTTC || quote.amount)}</td>
+                </tr>
+            </table>
         </div>
 
-        <div class="signature-section">
-            <div class="sig-box">
-                <div class="sig-header">Accord et Signature</div>
-                <div class="sig-legal">En signant ce devis, le client accepte les Conditions Générales de Vente sans réserve.<br>Document valable jusqu'au ${formatDate(quote.date)}.</div>
-                <div class="sig-fields">
-                    <div class="sig-field">Fait à : ..........................................<br><br>Date : ..........................................</div>
-                    <div class="sig-field" style="text-align:right; padding-right:20px;">Signature du client :</div>
-                </div>
-            </div>
+        <p>Vous trouverez le détail complet des prestations dans le document PDF en pièce jointe.</p>
+        
+        <p>Si cette proposition vous convient, vous pouvez consulter et <strong>signer le devis électroniquement</strong> de manière sécurisée en cliquant sur le bouton ci-dessous :</p>
+        
+        <div style="text-align: center;">
+            <a href="${portalUrl}" class="btn">Consulter et signer le devis</a>
         </div>
-
+        
+        <p style="margin-top: 35px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;">
+            Cordialement,<br>
+            <strong style="color: #334155;">${company.name || "L'équipe"}</strong><br>
+            ${company.phone ? `${company.phone}<br>` : ''}
+            ${company.email ? `${company.email}` : ''}
+        </p>
     </div>
-
-    <div class="footer">
-        ${company.name || "Entreprise"} - RCS ${company.siret || ""}<br>
-        En cas de retard de paiement, une pénalité de 3 fois le taux d'intérêt légal sera appliquée, ainsi qu'une indemnité forfaitaire de 40 € pour frais de recouvrement.
-    </div>
-
 </body>
 </html>
   `;
