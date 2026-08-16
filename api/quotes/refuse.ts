@@ -6,9 +6,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { quoteNumber, signatureData, orgId } = req.body;
+  const { quoteNumber, orgId, reason, refusedAt } = req.body;
 
-  if (!quoteNumber || !signatureData || !orgId) {
+  if (!quoteNumber || !orgId) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -22,16 +22,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // We fetch the current quote from the database to update its status
+    // Vérifier que le devis appartient bien à cette organisation
     const { data: quote, error: fetchError } = await supabaseAdmin
       .from("quotes")
-      .select("payload")
+      .select("id, payload")
       .eq("number", quoteNumber)
       .eq("organization_id", orgId)
       .single();
@@ -41,18 +38,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: "Quote not found" });
     }
 
+    // Mettre à jour le payload pour les routes qui lisent le JSON brut
     const payload = (quote.payload as Record<string, unknown>) ?? {};
-    payload.status = { fr: "Signé", en: "Signed" };
-    payload.signedAt = signatureData.signedAt;
-    payload.signatureData = signatureData;
+    payload.status = { fr: "Refusé", en: "Refused" };
+    payload.refusedAt = refusedAt ?? new Date().toISOString();
+    if (reason) payload.refuseReason = reason;
 
-    // status "accepted" sur la colonne dédiée → déclenche le Realtime côté artisan
     const { error: updateError } = await supabaseAdmin
       .from("quotes")
       .update({
-        status: "accepted",
-        signed_at: signatureData.signedAt ?? new Date().toISOString(),
-        signature_data: signatureData,
+        status: "refused",
+        refused_at: refusedAt ?? new Date().toISOString(),
+        refuse_reason: reason ?? null,
         payload,
       })
       .eq("number", quoteNumber)
@@ -64,8 +61,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json({ success: true });
-  } catch (err: any) {
-    console.error("API Error:", err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("API Error:", message);
     return res.status(500).json({ error: "Internal server error" });
   }
 }

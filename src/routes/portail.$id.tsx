@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { useData } from "@/lib/data-context";
+import { useSupabaseData } from "@/lib/supabase-context";
 import { useI18n } from "@/lib/i18n";
 import { exportQuotePdf, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
 import { DocumentTemplate } from "@/components/DocumentTemplate";
@@ -137,7 +137,15 @@ function SignaturePad({ onSign }: { onSign: (dataUrl: string) => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 function ClientPortalPremium() {
   const { id } = Route.useParams();
-  const { quotes, updateQuote, company: localCompany } = useData();
+  const { quotes, updateQuote, organization } = useSupabaseData();
+  // company locale : l'organisation connectée (artisan) ou les données encodées dans l'URL (client public)
+  const localCompany = organization
+    ? {
+        name: organization.name,
+        email: organization.email ?? "",
+        logoBase64: organization.logo_url ?? undefined,
+      }
+    : null;
   const { money, date } = useI18n();
 
   // Parse public data from URL if available
@@ -181,10 +189,17 @@ function ClientPortalPremium() {
   const docData = quote ? quoteToDocumentData(quote) : null;
   const docCompany = company ? companyToDocCompany(company) : null;
 
-  // Un devis est "signé" soit via Supabase, soit localement (session courante)
-  const isSignedRemote = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé" || quote?.status?.fr === "Payé";
+  // Un devis est "signé" soit via Supabase (status string DB), soit via payload (objet {fr,en}), soit localement
+  const statusStr = typeof quote?.status === "string" ? quote.status : quote?.status?.fr ?? "";
+  const isSignedRemote =
+    statusStr === "accepted" ||
+    statusStr === "invoiced" ||
+    statusStr === "paid" ||
+    statusStr === "Signé" ||
+    statusStr === "Facturé" ||
+    statusStr === "Payé";
   const isSigned = isSignedRemote || localSigned;
-  const isRefused = quote?.status?.fr === "Refusé";
+  const isRefused = statusStr === "refused" || statusStr === "Refusé";
 
   // Initialise l'écran selon le statut actuel
   const [step, setStep] = useState<"view" | "signed" | "refused">("view");
@@ -238,13 +253,11 @@ function ClientPortalPremium() {
     };
 
     if (orgParam) {
-      // Cas du client public qui signe via l'URL d'email
+      // Cas du client public qui signe via l'URL d'email → API sans auth
       try {
         await fetch("/api/quotes/sign", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             quoteNumber: quote.number,
             signatureData: signaturePayload,
@@ -255,13 +268,16 @@ function ClientPortalPremium() {
         console.error("Failed to sync signature", err);
       }
     } else {
-      // Cas de l'artisan qui signe lui-même depuis son tableau de bord
-      updateQuote(quote.number, {
-        ...quote,
-        status: { fr: "Signé", en: "Signed" },
-        signedAt,
-        signatureData: signaturePayload,
-      });
+      // Cas de l'artisan connecté → mise à jour directe Supabase (déclenche le Realtime)
+      try {
+        await updateQuote(quote.id, {
+          status: "accepted",
+          signed_at: signedAt,
+          signature_data: signaturePayload,
+        });
+      } catch (err) {
+        console.error("Failed to update quote via Supabase", err);
+      }
     }
 
     setIsSubmitting(false);
@@ -274,12 +290,38 @@ function ClientPortalPremium() {
     setTimeout(() => fetchLiveQuote(), 1000);
   };
 
-  const handleRefuse = () => {
-    updateQuote(quote.number, {
-      ...quote,
-      status: { fr: "Refusé", en: "Refused" },
-      refusedAt: new Date().toISOString(),
-    });
+  const handleRefuse = async () => {
+    const refusedAt = new Date().toISOString();
+
+    if (orgParam) {
+      // Client public → API sans auth
+      try {
+        await fetch("/api/quotes/refuse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quoteNumber: quote.number,
+            orgId: orgParam,
+            reason: refuseReason || null,
+            refusedAt,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to sync refusal", err);
+      }
+    } else {
+      // Artisan connecté → Supabase direct (déclenche le Realtime)
+      try {
+        await updateQuote(quote.id, {
+          status: "refused",
+          refused_at: refusedAt,
+          refuse_reason: refuseReason || null,
+        });
+      } catch (err) {
+        console.error("Failed to update quote via Supabase", err);
+      }
+    }
+
     setIsRefuseOpen(false);
     setStep("refused");
   };
