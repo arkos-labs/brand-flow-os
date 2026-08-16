@@ -123,7 +123,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [organization, setOrganization] = useState<DbOrganization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const isLoading = isAuthLoading || isDataLoading;
 
   const [clients, setClients] = useState<DbClient[]>([]);
   const [catalogItems, setCatalogItems] = useState<DbCatalogItem[]>([]);
@@ -137,11 +139,13 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -150,12 +154,14 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   // ── Chargement des données au login ──────────────────────────────────────
 
   const loadAll = useCallback(async () => {
+    if (isAuthLoading) return;
+
     if (!user) {
-      setIsLoading(false);
+      setIsDataLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    setIsDataLoading(true);
 
     try {
       // Profil + organisation
@@ -198,9 +204,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         // Passage automatique en overdue retiré car la fonction n'existe plus
       }
     } finally {
-      setIsLoading(false);
+      setIsDataLoading(false);
     }
-  }, [user]);
+  }, [user, isAuthLoading]);
 
   useEffect(() => {
     loadAll();
