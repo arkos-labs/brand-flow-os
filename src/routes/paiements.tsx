@@ -252,16 +252,18 @@ function PaymentsPage() {
                     <td className="px-5 py-3.5 text-right font-display font-bold tabular-nums">{money(row.amount)}</td>
                     <td className="px-5 py-3.5"><StatusBadge status={row.status} /></td>
                     <td className="px-5 py-3.5 text-right">
-                      {row.status === "late" && row.invoice && (
-                        <Button variant="outline" size="sm" onClick={() => { setSelectedInvoice(row.invoice!); setIsModalOpen(true); }} className="gap-1.5">
-                          <Send className="h-3.5 w-3.5" /> Relancer
-                        </Button>
-                      )}
-                      {(row.status === "pending") && row.invoice && (
-                        <Button size="sm" onClick={() => confirmPayment(row.invoice!)} className="gap-1.5 bg-success text-white hover:bg-success/90">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Paiement reçu
-                        </Button>
-                      )}
+                      <div className="flex justify-end gap-2">
+                        {row.status === "late" && row.invoice && (
+                          <Button variant="outline" size="sm" onClick={() => { setSelectedInvoice(row.invoice!); setIsModalOpen(true); }} className="gap-1.5">
+                            <Send className="h-3.5 w-3.5" /> Relancer
+                          </Button>
+                        )}
+                        {(row.status === "pending" || row.status === "late") && row.invoice && (
+                          <Button size="sm" onClick={() => confirmPayment(row.invoice!)} className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Paiement reçu
+                          </Button>
+                        )}
+                      </div>
                       {row.status === "draft" && <span className="text-xs text-muted-foreground">À envoyer depuis Factures</span>}
                       {row.status === "paid" && <span className="text-xs font-semibold text-success">Encaissement validé</span>}
                       {row.status === "completed" && <span className="text-xs text-primary">À facturer</span>}

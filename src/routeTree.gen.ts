@@ -11,17 +11,30 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AbonnementsRouteImport } from './routes/abonnements'
+import { Route as ArchivesRouteImport } from './routes/archives'
+import { Route as BeneficesRouteImport } from './routes/benefices'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as CentreAideRouteImport } from './routes/centre-aide'
 import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as ConditionsUtilisationRouteImport } from './routes/conditions-utilisation'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as ContactezNousRouteImport } from './routes/contactez-nous'
 import { Route as DepensesRouteImport } from './routes/depenses'
 import { Route as DevisRouteImport } from './routes/devis'
 import { Route as FacturesRouteImport } from './routes/factures'
+import { Route as FonctionnalitesRouteImport } from './routes/fonctionnalites'
+import { Route as FonctionnementRouteImport } from './routes/fonctionnement'
 import { Route as InscriptionRouteImport } from './routes/inscription'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as MisesAJourRouteImport } from './routes/mises-a-jour'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as NouveautesRouteImport } from './routes/nouveautes'
 import { Route as PaiementsRouteImport } from './routes/paiements'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PipelineRouteImport } from './routes/pipeline'
+import { Route as PlanSiteRouteImport } from './routes/plan-site'
+import { Route as RendezVousRouteImport } from './routes/rendez-vous'
 import { Route as SituationsRouteImport } from './routes/situations'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as TarifsRouteImport } from './routes/tarifs'
@@ -38,9 +51,24 @@ const AbonnementsRoute = AbonnementsRouteImport.update({
   path: '/abonnements',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArchivesRoute = ArchivesRouteImport.update({
+  id: '/archives',
+  path: '/archives',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BeneficesRoute = BeneficesRouteImport.update({
+  id: '/benefices',
+  path: '/benefices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CentreAideRoute = CentreAideRouteImport.update({
+  id: '/centre-aide',
+  path: '/centre-aide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -48,9 +76,24 @@ const ClientsRoute = ClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConditionsUtilisationRoute = ConditionsUtilisationRouteImport.update({
+  id: '/conditions-utilisation',
+  path: '/conditions-utilisation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactezNousRoute = ContactezNousRouteImport.update({
+  id: '/contactez-nous',
+  path: '/contactez-nous',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DepensesRoute = DepensesRouteImport.update({
@@ -68,14 +111,39 @@ const FacturesRoute = FacturesRouteImport.update({
   path: '/factures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FonctionnalitesRoute = FonctionnalitesRouteImport.update({
+  id: '/fonctionnalites',
+  path: '/fonctionnalites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FonctionnementRoute = FonctionnementRouteImport.update({
+  id: '/fonctionnement',
+  path: '/fonctionnement',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InscriptionRoute = InscriptionRouteImport.update({
   id: '/inscription',
   path: '/inscription',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MisesAJourRoute = MisesAJourRouteImport.update({
+  id: '/mises-a-jour',
+  path: '/mises-a-jour',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NouveautesRoute = NouveautesRouteImport.update({
+  id: '/nouveautes',
+  path: '/nouveautes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaiementsRoute = PaiementsRouteImport.update({
@@ -91,6 +159,16 @@ const ParametresRoute = ParametresRouteImport.update({
 const PipelineRoute = PipelineRouteImport.update({
   id: '/pipeline',
   path: '/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanSiteRoute = PlanSiteRouteImport.update({
+  id: '/plan-site',
+  path: '/plan-site',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RendezVousRoute = RendezVousRouteImport.update({
+  id: '/rendez-vous',
+  path: '/rendez-vous',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SituationsRoute = SituationsRouteImport.update({
@@ -122,17 +200,30 @@ const PortailIdRoute = PortailIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/abonnements': typeof AbonnementsRoute
+  '/archives': typeof ArchivesRoute
+  '/benefices': typeof BeneficesRoute
   '/catalogue': typeof CatalogueRoute
+  '/centre-aide': typeof CentreAideRoute
   '/clients': typeof ClientsRoute
+  '/conditions-utilisation': typeof ConditionsUtilisationRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/contactez-nous': typeof ContactezNousRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/fonctionnalites': typeof FonctionnalitesRoute
+  '/fonctionnement': typeof FonctionnementRoute
   '/inscription': typeof InscriptionRoute
+  '/legal': typeof LegalRoute
+  '/mises-a-jour': typeof MisesAJourRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
+  '/plan-site': typeof PlanSiteRoute
+  '/rendez-vous': typeof RendezVousRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
@@ -142,17 +233,30 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/abonnements': typeof AbonnementsRoute
+  '/archives': typeof ArchivesRoute
+  '/benefices': typeof BeneficesRoute
   '/catalogue': typeof CatalogueRoute
+  '/centre-aide': typeof CentreAideRoute
   '/clients': typeof ClientsRoute
+  '/conditions-utilisation': typeof ConditionsUtilisationRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/contactez-nous': typeof ContactezNousRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/fonctionnalites': typeof FonctionnalitesRoute
+  '/fonctionnement': typeof FonctionnementRoute
   '/inscription': typeof InscriptionRoute
+  '/legal': typeof LegalRoute
+  '/mises-a-jour': typeof MisesAJourRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
+  '/plan-site': typeof PlanSiteRoute
+  '/rendez-vous': typeof RendezVousRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
@@ -163,17 +267,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/abonnements': typeof AbonnementsRoute
+  '/archives': typeof ArchivesRoute
+  '/benefices': typeof BeneficesRoute
   '/catalogue': typeof CatalogueRoute
+  '/centre-aide': typeof CentreAideRoute
   '/clients': typeof ClientsRoute
+  '/conditions-utilisation': typeof ConditionsUtilisationRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/contactez-nous': typeof ContactezNousRoute
   '/depenses': typeof DepensesRoute
   '/devis': typeof DevisRoute
   '/factures': typeof FacturesRoute
+  '/fonctionnalites': typeof FonctionnalitesRoute
+  '/fonctionnement': typeof FonctionnementRoute
   '/inscription': typeof InscriptionRoute
+  '/legal': typeof LegalRoute
+  '/mises-a-jour': typeof MisesAJourRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/paiements': typeof PaiementsRoute
   '/parametres': typeof ParametresRoute
   '/pipeline': typeof PipelineRoute
+  '/plan-site': typeof PlanSiteRoute
+  '/rendez-vous': typeof RendezVousRoute
   '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
@@ -185,17 +302,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/abonnements'
+    | '/archives'
+    | '/benefices'
     | '/catalogue'
+    | '/centre-aide'
     | '/clients'
+    | '/conditions-utilisation'
+    | '/confidentialite'
     | '/connexion'
+    | '/contactez-nous'
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/fonctionnalites'
+    | '/fonctionnement'
     | '/inscription'
+    | '/legal'
+    | '/mises-a-jour'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
+    | '/plan-site'
+    | '/rendez-vous'
     | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
@@ -205,17 +335,30 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/abonnements'
+    | '/archives'
+    | '/benefices'
     | '/catalogue'
+    | '/centre-aide'
     | '/clients'
+    | '/conditions-utilisation'
+    | '/confidentialite'
     | '/connexion'
+    | '/contactez-nous'
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/fonctionnalites'
+    | '/fonctionnement'
     | '/inscription'
+    | '/legal'
+    | '/mises-a-jour'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
+    | '/plan-site'
+    | '/rendez-vous'
     | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
@@ -225,17 +368,30 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/abonnements'
+    | '/archives'
+    | '/benefices'
     | '/catalogue'
+    | '/centre-aide'
     | '/clients'
+    | '/conditions-utilisation'
+    | '/confidentialite'
     | '/connexion'
+    | '/contactez-nous'
     | '/depenses'
     | '/devis'
     | '/factures'
+    | '/fonctionnalites'
+    | '/fonctionnement'
     | '/inscription'
+    | '/legal'
+    | '/mises-a-jour'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/paiements'
     | '/parametres'
     | '/pipeline'
+    | '/plan-site'
+    | '/rendez-vous'
     | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
@@ -246,17 +402,30 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AbonnementsRoute: typeof AbonnementsRoute
+  ArchivesRoute: typeof ArchivesRoute
+  BeneficesRoute: typeof BeneficesRoute
   CatalogueRoute: typeof CatalogueRoute
+  CentreAideRoute: typeof CentreAideRoute
   ClientsRoute: typeof ClientsRoute
+  ConditionsUtilisationRoute: typeof ConditionsUtilisationRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
+  ContactezNousRoute: typeof ContactezNousRoute
   DepensesRoute: typeof DepensesRoute
   DevisRoute: typeof DevisRoute
   FacturesRoute: typeof FacturesRoute
+  FonctionnalitesRoute: typeof FonctionnalitesRoute
+  FonctionnementRoute: typeof FonctionnementRoute
   InscriptionRoute: typeof InscriptionRoute
+  LegalRoute: typeof LegalRoute
+  MisesAJourRoute: typeof MisesAJourRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
+  NouveautesRoute: typeof NouveautesRoute
   PaiementsRoute: typeof PaiementsRoute
   ParametresRoute: typeof ParametresRoute
   PipelineRoute: typeof PipelineRoute
+  PlanSiteRoute: typeof PlanSiteRoute
+  RendezVousRoute: typeof RendezVousRoute
   SituationsRoute: typeof SituationsRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   TarifsRoute: typeof TarifsRoute
@@ -280,11 +449,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AbonnementsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/archives': {
+      id: '/archives'
+      path: '/archives'
+      fullPath: '/archives'
+      preLoaderRoute: typeof ArchivesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benefices': {
+      id: '/benefices'
+      path: '/benefices'
+      fullPath: '/benefices'
+      preLoaderRoute: typeof BeneficesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalogue': {
       id: '/catalogue'
       path: '/catalogue'
       fullPath: '/catalogue'
       preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/centre-aide': {
+      id: '/centre-aide'
+      path: '/centre-aide'
+      fullPath: '/centre-aide'
+      preLoaderRoute: typeof CentreAideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clients': {
@@ -294,11 +484,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conditions-utilisation': {
+      id: '/conditions-utilisation'
+      path: '/conditions-utilisation'
+      fullPath: '/conditions-utilisation'
+      preLoaderRoute: typeof ConditionsUtilisationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/connexion': {
       id: '/connexion'
       path: '/connexion'
       fullPath: '/connexion'
       preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contactez-nous': {
+      id: '/contactez-nous'
+      path: '/contactez-nous'
+      fullPath: '/contactez-nous'
+      preLoaderRoute: typeof ContactezNousRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/depenses': {
@@ -322,6 +533,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fonctionnalites': {
+      id: '/fonctionnalites'
+      path: '/fonctionnalites'
+      fullPath: '/fonctionnalites'
+      preLoaderRoute: typeof FonctionnalitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fonctionnement': {
+      id: '/fonctionnement'
+      path: '/fonctionnement'
+      fullPath: '/fonctionnement'
+      preLoaderRoute: typeof FonctionnementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inscription': {
       id: '/inscription'
       path: '/inscription'
@@ -329,11 +554,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mises-a-jour': {
+      id: '/mises-a-jour'
+      path: '/mises-a-jour'
+      fullPath: '/mises-a-jour'
+      preLoaderRoute: typeof MisesAJourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mot-de-passe-oublie': {
       id: '/mot-de-passe-oublie'
       path: '/mot-de-passe-oublie'
       fullPath: '/mot-de-passe-oublie'
       preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nouveautes': {
+      id: '/nouveautes'
+      path: '/nouveautes'
+      fullPath: '/nouveautes'
+      preLoaderRoute: typeof NouveautesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/paiements': {
@@ -355,6 +601,20 @@ declare module '@tanstack/react-router' {
       path: '/pipeline'
       fullPath: '/pipeline'
       preLoaderRoute: typeof PipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan-site': {
+      id: '/plan-site'
+      path: '/plan-site'
+      fullPath: '/plan-site'
+      preLoaderRoute: typeof PlanSiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rendez-vous': {
+      id: '/rendez-vous'
+      path: '/rendez-vous'
+      fullPath: '/rendez-vous'
+      preLoaderRoute: typeof RendezVousRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/situations': {
@@ -398,17 +658,30 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AbonnementsRoute: AbonnementsRoute,
+  ArchivesRoute: ArchivesRoute,
+  BeneficesRoute: BeneficesRoute,
   CatalogueRoute: CatalogueRoute,
+  CentreAideRoute: CentreAideRoute,
   ClientsRoute: ClientsRoute,
+  ConditionsUtilisationRoute: ConditionsUtilisationRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
+  ContactezNousRoute: ContactezNousRoute,
   DepensesRoute: DepensesRoute,
   DevisRoute: DevisRoute,
   FacturesRoute: FacturesRoute,
+  FonctionnalitesRoute: FonctionnalitesRoute,
+  FonctionnementRoute: FonctionnementRoute,
   InscriptionRoute: InscriptionRoute,
+  LegalRoute: LegalRoute,
+  MisesAJourRoute: MisesAJourRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
+  NouveautesRoute: NouveautesRoute,
   PaiementsRoute: PaiementsRoute,
   ParametresRoute: ParametresRoute,
   PipelineRoute: PipelineRoute,
+  PlanSiteRoute: PlanSiteRoute,
+  RendezVousRoute: RendezVousRoute,
   SituationsRoute: SituationsRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   TarifsRoute: TarifsRoute,

@@ -1,6 +1,6 @@
 import type { Client, Expense, Invoice, Marche, Quote, QuoteDetails, Situation, Subscription } from "./data-context";
 
-export const SHOWCASE_DATA_VERSION = "2026-08-scenarios-v1";
+export const SHOWCASE_DATA_VERSION = "2026-08-scenarios-v2-empty";
 
 type ShowcaseData = {
   clients: Client[];
@@ -103,14 +103,14 @@ export function createShowcaseData(): ShowcaseData {
   ];
 
   return {
-    clients,
-    quotes,
-    invoices,
-    expenses,
+    clients: [],
+    quotes: [],
+    invoices: [],
+    expenses: [],
     subscriptions: [],
     marches: [],
     situations: [],
-    nextQuoteNumber: quotes.length + 1,
-    nextInvoiceNumber: invoices.length + 1,
+    nextQuoteNumber: 1,
+    nextInvoiceNumber: 1,
   };
 }

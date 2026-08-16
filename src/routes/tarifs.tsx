@@ -1,334 +1,350 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useI18n } from "@/lib/i18n";
-import {
-  CheckCircle2,
-  ArrowRight,
-  Sparkles,
-  HelpCircle,
-  Menu,
-  X,
-} from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { Check, ArrowRight, Zap, ShieldCheck, Menu, X } from "lucide-react";
+import React, { useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { Footer } from "@/components/Footer";
+import "./homepage.css";
 
 export const Route = createFileRoute("/tarifs")({
   head: () => ({
     meta: [
-      { title: "Tarifs — ClearQuote" },
+      { title: "Tarifs — ClearQuote | Formules Solo, Pro et Agency" },
       {
         name: "description",
         content:
-          "Formules Starter, Pro et Enterprise pour ClearQuote. Toutes incluent la conformité Factur-X 2026.",
+          "Formules ClearQuote à partir de 0 €/mois. Solo gratuit jusqu'à 3 documents, Pro à 29 €/mois illimité, Agency à 79 €/mois multi-utilisateurs. Conformité Factur-X 2026 incluse dans toutes les formules.",
       },
-      { property: "og:title", content: "Tarifs — ClearQuote" },
-      {
-        property: "og:description",
-        content:
-          "Formules Starter, Pro et Enterprise pour ClearQuote. Toutes incluent la conformité Factur-X 2026.",
-      },
+      { property: "og:title", content: "Tarifs ClearQuote — À partir de 0 €/mois" },
+      { property: "og:description", content: "Formules sans engagement. Conformité Factur-X 2026 incluse. Essai gratuit 14 jours." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "index, follow" },
+    ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/tarifs" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "ClearQuote",
+          "applicationCategory": "BusinessApplication",
+          "offers": [
+            { "@type": "Offer", "name": "Solo", "price": "0", "priceCurrency": "EUR", "description": "Gratuit jusqu'à 3 documents par mois" },
+            { "@type": "Offer", "name": "Pro", "price": "29", "priceCurrency": "EUR", "description": "Documents illimités, 1 utilisateur" },
+            { "@type": "Offer", "name": "Agency", "price": "79", "priceCurrency": "EUR", "description": "Jusqu'à 5 utilisateurs, marque blanche" },
+          ],
+        }),
+      },
     ],
   }),
-  component: PricingPage,
+  component: TarifsPage,
 });
 
-function PublicHeader() {
-  const { t, lang } = useI18n();
-  const [mobileOpen, setMobileOpen] = useState(false);
+const PLANS = [
+  {
+    name: "Solo",
+    price: "0 €",
+    period: "/ mois",
+    desc: "Pour démarrer et tester sans risque",
+    highlight: false,
+    badge: null,
+    cta: "Commencer gratuitement",
+    ctaTo: "/inscription",
+    color: "var(--ink)",
+    features: [
+      "3 devis et 3 factures par mois",
+      "1 client actif",
+      "PDF standard ClearQuote",
+      "Factur-X inclus",
+      "Conformité 2026",
+      "Support par email",
+    ],
+    disabled: ["Catalogue illimité", "Relances automatiques", "Signature électronique", "Trésorerie prédictive"],
+  },
+  {
+    name: "Pro",
+    price: "29 €",
+    period: "/ mois",
+    desc: "Pour les freelances et artisans actifs",
+    highlight: true,
+    badge: "Le plus populaire",
+    cta: "Essayer 14 jours gratuit",
+    ctaTo: "/inscription",
+    color: "var(--signal)",
+    features: [
+      "Devis et factures illimités",
+      "Clients illimités",
+      "Catalogue de prestations",
+      "PDF à vos couleurs (logo, marque)",
+      "Factur-X + Piste d'Audit Fiable",
+      "Signature électronique client",
+      "Relances automatiques",
+      "Trésorerie prédictive",
+      "Export comptable (FEC, CSV)",
+      "Portail client avec accès PIN",
+      "Support prioritaire",
+    ],
+    disabled: [],
+  },
+  {
+    name: "Agency",
+    price: "79 €",
+    period: "/ mois",
+    desc: "Pour les équipes et agences",
+    highlight: false,
+    badge: null,
+    cta: "Contacter l'équipe",
+    ctaTo: "/inscription",
+    color: "var(--green)",
+    features: [
+      "Tout ce qui est dans Pro",
+      "Jusqu'à 5 utilisateurs",
+      "Marque blanche (domaine custom)",
+      "Emails envoyés depuis votre domaine",
+      "Rôles et permissions avancés",
+      "Multi-sociétés",
+      "Suivi du temps par projet",
+      "Analyse de rentabilité équipe",
+      "API & webhooks",
+      "Intégrations Pennylane, Xero",
+      "Account manager dédié",
+    ],
+    disabled: [],
+  },
+];
 
-  const links = [
-    { to: "/", label: "nav.product" },
-    { to: "/connexion", label: "nav.login" },
-  ];
+const FAQ = [
+  {
+    q: "Puis-je changer de formule à tout moment ?",
+    a: "Oui. Vous pouvez upgrader ou downgrader votre formule à tout moment depuis vos paramètres. La facturation est au prorata du mois en cours.",
+  },
+  {
+    q: "Y a-t-il un engagement de durée ?",
+    a: "Non. Toutes les formules sont sans engagement. Vous pouvez annuler à tout moment. Vos documents restent accessibles et exportables pendant 10 ans.",
+  },
+  {
+    q: "La conformité Factur-X est-elle vraiment incluse dans toutes les formules ?",
+    a: "Oui, y compris dans la formule Solo gratuite. La conformité Factur-X 2026 est un prérequis légal, pas une option payante chez ClearQuote.",
+  },
+  {
+    q: "Que se passe-t-il après les 14 jours d'essai Pro ?",
+    a: "Vous basculez automatiquement sur la formule Solo (gratuite) si vous ne renseignez pas de carte bancaire. Aucun débit sans votre confirmation.",
+  },
+];
 
+function PublicNav() {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
-        <Link to="/" className="flex items-center">
-          <BrandLogo className="h-9 w-auto" priority />
+    <header className="devizia-header">
+      <div className="devizia-container devizia-header__inner">
+        <Link to="/" aria-label="ClearQuote, accueil">
+          <BrandLogo className="h-10 w-auto" priority />
         </Link>
-
-        <nav className="hidden items-center gap-1 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              {t(link.label as never)}
-            </Link>
-          ))}
-          <Link
-            to="/inscription"
-            className="ml-2 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            {t("auth.signup")}
-          </Link>
+        <nav className="devizia-nav" aria-label="Navigation principale">
+          <Link to="/fonctionnalites">Fonctionnalités</Link>
+          <Link to="/fonctionnement">Comment ça marche</Link>
+          <Link to="/benefices">Bénéfices</Link>
+          <Link to="/tarifs">Tarifs</Link>
         </nav>
-
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground md:hidden"
-          aria-label={lang === "fr" ? "Menu" : "Menu"}
-        >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        <div className="devizia-header__actions">
+          <Link to="/connexion" className="devizia-login">Se connecter</Link>
+          <Link to="/inscription" className="devizia-button devizia-button--small">Essayer gratuitement <ArrowRight aria-hidden="true" /></Link>
+        </div>
+        <button className="devizia-menu-button" type="button" aria-label={open ? "Fermer" : "Menu"} onClick={() => setOpen(v => !v)}>
+          {open ? <X /> : <Menu />}
         </button>
       </div>
-
-      {mobileOpen && (
-        <div className="border-t border-border bg-background px-4 py-3 md:hidden">
-          <nav className="flex flex-col gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
-              >
-                {t(link.label as never)}
-              </Link>
-            ))}
-            <Link
-              to="/inscription"
-              onClick={() => setMobileOpen(false)}
-              className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-            >
-              {t("auth.signup")}
-            </Link>
-          </nav>
-        </div>
+      {open && (
+        <nav className="devizia-mobile-nav" aria-label="Navigation mobile">
+          <Link to="/fonctionnalites" onClick={close}>Fonctionnalités</Link>
+          <Link to="/fonctionnement" onClick={close}>Comment ça marche</Link>
+          <Link to="/benefices" onClick={close}>Bénéfices</Link>
+          <Link to="/tarifs" onClick={close}>Tarifs</Link>
+          <Link to="/connexion" onClick={close}>Se connecter</Link>
+          <Link to="/inscription" onClick={close} className="devizia-button">Essayer gratuitement</Link>
+        </nav>
       )}
     </header>
   );
 }
 
-const plans = [
-  {
-    key: "starter",
-    popular: false,
-    features: [
-      "quotes",
-      "invoices",
-      "clients",
-      "crm",
-      "facturx",
-    ],
-    cta: "pricing.cta",
-    trial: 30,
-  },
-  {
-    key: "pro",
-    popular: true,
-    features: [
-      "quotes",
-      "invoices",
-      "clients",
-      "crm",
-      "cashflow",
-      "time",
-      "expenses",
-      "ai",
-      "facturx",
-      "signature",
-      "support",
-    ],
-    cta: "pricing.cta.pro",
-    trial: 14,
-  },
-  {
-    key: "enterprise",
-    popular: false,
-    features: [
-      "quotes",
-      "invoices",
-      "clients",
-      "crm",
-      "cashflow",
-      "time",
-      "expenses",
-      "ai",
-      "facturx",
-      "signature",
-      "api",
-      "branding",
-      "support",
-    ],
-    cta: "pricing.cta.enterprise",
-    trial: 0,
-  },
-] as const;
 
-const planUsers = {
-  starter: "1",
-  pro: "5",
-  enterprise: "illimité",
-};
-
-function PricingCards() {
-  const { t } = useI18n();
+function TarifsPage() {
   return (
-    <div className="mx-auto grid max-w-6xl gap-5 px-4 lg:grid-cols-3 lg:px-6">
-      {plans.map((plan) => (
-        <div
-          key={plan.key}
-          className={cn(
-            "relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm",
-            plan.popular && "border-primary/30 shadow-lg shadow-primary/10"
-          )}
-        >
-          {plan.popular && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
-              {t("pricing.popular")}
-            </div>
-          )}
+    <div className="devizia-page">
+      <PublicNav />
 
-          <div className="text-center">
-            <h3 className="font-display text-lg font-semibold text-foreground">
-              {t(`pricing.${plan.key}.name` as never)}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t(`pricing.${plan.key}.desc` as never)}
-            </p>
-            <div className="mt-4 flex items-baseline justify-center gap-1">
-              <span className="font-display text-4xl font-bold text-foreground">
-                {t(`pricing.${plan.key}.price` as never)}
-              </span>
-              {plan.key !== "enterprise" && (
-                <span className="text-sm text-muted-foreground">/ {t("pricing.month")}</span>
-              )}
-            </div>
-            {plan.trial > 0 && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {plan.trial} jours d'essai gratuit
-              </p>
-            )}
-          </div>
-
-          <div className="mt-6 flex-1 space-y-3">
-            {plan.features.map((feature) => (
-              <div key={feature} className="flex items-start gap-2.5">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                <span className="text-sm text-foreground">
-                  {t(`pricing.feature.${feature}` as never)}
-                </span>
-              </div>
-            ))}
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-              <span className="text-sm text-foreground">
-                {t("pricing.feature.users") as string}: {planUsers[plan.key]}
-              </span>
-            </div>
-          </div>
-
-          <Link
-            to={plan.key === "enterprise" ? "/" : "/inscription"}
-            className={cn(
-              "mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors",
-              plan.popular
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "border border-border bg-background text-foreground hover:bg-secondary"
-            )}
-          >
-            {t(plan.cta as never)}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Faq() {
-  const { t } = useI18n();
-  const items = [
-    { q: "pricing.faq.free_trial", a: "pricing.faq.free_trial.answer" },
-    { q: "pricing.faq.cancel", a: "pricing.faq.cancel.answer" },
-    { q: "pricing.faq.facturx", a: "pricing.faq.facturx.answer" },
-  ];
-  return (
-    <div className="mx-auto max-w-3xl px-4 lg:px-6">
-      <h2 className="text-center font-display text-xl font-bold text-foreground lg:text-2xl">
-        {t("pricing.faq.title")}
-      </h2>
-      <div className="mt-8 space-y-4">
-        {items.map((item) => (
-          <div key={item.q} className="card-elevated p-5">
-            <div className="flex items-start gap-3">
-              <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">{t(item.q as never)}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  {t(item.a as never)}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-border bg-background py-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 lg:flex-row lg:px-6">
-        <BrandLogo className="h-9 w-auto" />
-        <p className="text-xs text-muted-foreground">
-          © 2026 ClearQuote. Factur-X · PAF · RGPD.
-        </p>
-      </div>
-    </footer>
-  );
-}
-
-function PricingPage() {
-  const { t } = useI18n();
-  return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-      <main>
-        <section className="bg-surface py-16 lg:py-20">
-          <div className="mx-auto max-w-4xl px-4 text-center lg:px-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              {t("landing.trust")}
-            </div>
-            <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-foreground lg:text-4xl">
-              {t("pricing.title")}
+      <main id="contenu">
+        {/* Hero */}
+        <section style={{ background: "linear-gradient(160deg, oklch(0.52 0.2 258) 0%, oklch(0.68 0.16 255) 28%, oklch(0.88 0.06 255) 55%, oklch(0.978 0.012 255) 80%)", padding: "140px 0 72px", textAlign: "center" }}>
+          <div className="devizia-container">
+            <span className="devizia-eyebrow"><Zap size={13} /> Tarifs transparents</span>
+            <h1 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: "clamp(48px, 6vw, 80px)", textTransform: "uppercase", lineHeight: 0.88, color: "#fff", margin: "20px 0 18px" }}>
+              Simple, honnête.<br /><em style={{ color: "oklch(0.85 0.12 255)", fontStyle: "normal" }}>Sans surprise.</em>
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {t("pricing.subtitle")}
+            <p style={{ maxWidth: 540, margin: "0 auto 12px", fontSize: 17, fontWeight: 500, color: "oklch(0.92 0.04 255)", lineHeight: 1.55 }}>
+              Commencez gratuitement. Passez au Pro quand vous en avez besoin. La conformité Factur-X est incluse dans toutes les formules.
+            </p>
+            <p style={{ fontSize: 12, fontFamily: "IBM Plex Mono, monospace", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "oklch(0.78 0.08 255)", marginTop: 8 }}>
+              Sans engagement · Sans carte bancaire pour démarrer
             </p>
           </div>
         </section>
 
-        <section className="py-12 lg:py-16">
-          <PricingCards />
+        {/* Plans */}
+        <section style={{ padding: "72px 0", background: "var(--cream)" }}>
+          <div className="devizia-container">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, alignItems: "start" }}>
+              {PLANS.map((plan) => (
+                <article
+                  key={plan.name}
+                  style={{
+                    background: plan.highlight ? "var(--ink)" : "var(--paper)",
+                    border: `2px solid var(--ink)`,
+                    boxShadow: plan.highlight ? "6px 6px 0 var(--signal)" : "4px 4px 0 var(--ink)",
+                    padding: "32px 28px",
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    transform: plan.highlight ? "translateY(-8px)" : undefined,
+                  }}
+                >
+                  {plan.badge && (
+                    <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "var(--signal)", color: "#fff", padding: "4px 14px", fontFamily: "IBM Plex Mono, monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap", border: "2px solid var(--ink)" }}>
+                      {plan.badge}
+                    </div>
+                  )}
+
+                  {/* En-tête plan */}
+                  <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${plan.highlight ? "oklch(0.35 0.045 270)" : "var(--ink)"}`, opacity: 0.9 }}>
+                    <p style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: plan.highlight ? "oklch(0.75 0.1 255)" : "var(--muted)", marginBottom: 6 }}>Formule</p>
+                    <h2 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: 36, textTransform: "uppercase", letterSpacing: "-0.02em", margin: "0 0 4px", color: plan.highlight ? "#fff" : "var(--ink)" }}>{plan.name}</h2>
+                    <p style={{ fontSize: 12.5, fontWeight: 500, color: plan.highlight ? "oklch(0.72 0.06 255)" : "var(--muted)", marginBottom: 16 }}>{plan.desc}</p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                      <span style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: 56, lineHeight: 1, color: plan.highlight ? "var(--signal)" : plan.color }}>{plan.price}</span>
+                      <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 10, fontWeight: 600, color: plan.highlight ? "oklch(0.6 0.06 255)" : "var(--muted)", textTransform: "uppercase" }}>{plan.period}</span>
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <ul style={{ listStyle: "none", margin: "0 0 24px", padding: 0, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                    {plan.features.map((f) => (
+                      <li key={f} style={{ display: "flex", gap: 10, fontSize: 13.5, fontWeight: 500, color: plan.highlight ? "oklch(0.9 0.02 255)" : "var(--ink)" }}>
+                        <Check size={14} style={{ color: plan.color, flexShrink: 0, marginTop: 2 }} /> {f}
+                      </li>
+                    ))}
+                    {plan.disabled.map((f) => (
+                      <li key={f} style={{ display: "flex", gap: 10, fontSize: 13.5, fontWeight: 500, color: "oklch(0.72 0.02 255)", textDecoration: "line-through" }}>
+                        <span style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2, display: "inline-block", border: "1.5px solid oklch(0.8 0.02 255)", borderRadius: "50%" }} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <Link
+                    to={plan.ctaTo}
+                    className="devizia-button"
+                    style={{
+                      background: plan.highlight ? "var(--signal)" : "transparent",
+                      color: plan.highlight ? "#fff" : "var(--ink)",
+                      border: `2px solid ${plan.highlight ? "var(--signal)" : "var(--ink)"}`,
+                      boxShadow: plan.highlight ? "4px 4px 0 #fff" : "3px 3px 0 var(--ink)",
+                      justifyContent: "center",
+                      width: "100%",
+                    }}
+                  >
+                    {plan.cta} <ArrowRight size={14} />
+                  </Link>
+                </article>
+              ))}
+            </div>
+
+            {/* Note conformité */}
+            <div style={{ marginTop: 40, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <ShieldCheck size={16} style={{ color: "var(--green)" }} />
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
+                Factur-X · Piste d'Audit Fiable · RGPD — inclus dans toutes les formules
+              </p>
+            </div>
+          </div>
         </section>
 
-        <section className="bg-surface py-16 lg:py-20">
-          <Faq />
+        {/* Comparatif rapide */}
+        <section style={{ padding: "64px 0", background: "var(--ink)", color: "#fff" }}>
+          <div className="devizia-container" style={{ maxWidth: 860 }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <span className="section-kicker" style={{ background: "var(--signal)" }}>Comparatif</span>
+              <h2 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: "clamp(28px, 4vw, 44px)", textTransform: "uppercase", lineHeight: 0.9, margin: "12px 0 0", color: "#fff" }}>Ce qui change selon la formule</h2>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "10px 16px", fontFamily: "IBM Plex Mono, monospace", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "oklch(0.6 0.04 255)", fontWeight: 600, borderBottom: "1px solid oklch(0.35 0.045 270)" }}>Fonctionnalité</th>
+                    {["Solo", "Pro", "Agency"].map(n => (
+                      <th key={n} style={{ textAlign: "center", padding: "10px 16px", fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: 18, textTransform: "uppercase", color: "#fff", borderBottom: "1px solid oklch(0.35 0.045 270)" }}>{n}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Documents / mois", "3", "Illimités", "Illimités"],
+                    ["Factur-X conforme 2026", "✓", "✓", "✓"],
+                    ["Signature électronique", "—", "✓", "✓"],
+                    ["Relances automatiques", "—", "✓", "✓"],
+                    ["Trésorerie prédictive", "—", "✓", "✓"],
+                    ["Utilisateurs", "1", "1", "5"],
+                    ["Marque blanche", "—", "—", "✓"],
+                    ["API & webhooks", "—", "—", "✓"],
+                  ].map(([feat, solo, pro, agency]) => (
+                    <tr key={feat} style={{ borderBottom: "1px solid oklch(0.3 0.04 265)" }}>
+                      <td style={{ padding: "12px 16px", fontWeight: 500, color: "oklch(0.82 0.02 260)" }}>{feat}</td>
+                      {[solo, pro, agency].map((val, i) => (
+                        <td key={i} style={{ textAlign: "center", padding: "12px 16px", fontWeight: 700, color: val === "✓" ? "var(--green)" : val === "—" ? "oklch(0.45 0.03 265)" : "#fff" }}>{val}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
-        <section className="bg-navy py-16">
-          <div className="mx-auto max-w-4xl px-4 text-center lg:px-6">
-            <h2 className="font-display text-2xl font-bold text-navy-foreground">
-              {t("landing.cta.title")}
+        {/* FAQ */}
+        <section style={{ padding: "72px 0", background: "var(--cream)" }}>
+          <div className="devizia-container" style={{ maxWidth: 740 }}>
+            <span className="section-kicker">Questions fréquentes</span>
+            <h2 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: "clamp(32px, 4vw, 50px)", textTransform: "uppercase", lineHeight: 0.9, margin: "12px 0 40px" }}>
+              Tout savoir sur les tarifs
             </h2>
-            <Link
-              to="/inscription"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary-foreground px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary-foreground/90"
-            >
-              {t("landing.cta.button")}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {FAQ.map((item) => (
+                <details key={item.q} style={{ border: "2px solid var(--ink)", padding: "18px 20px", background: "var(--paper)" }}>
+                  <summary style={{ fontWeight: 700, fontSize: 15, cursor: "pointer", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    {item.q}
+                    <span style={{ marginLeft: 12, flexShrink: 0, color: "var(--signal)" }}>+</span>
+                  </summary>
+                  <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: 1.6, fontWeight: 500, color: "oklch(0.38 0.04 255)" }}>{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA final */}
+        <section style={{ background: "linear-gradient(140deg, oklch(0.18 0.05 264) 0%, oklch(0.26 0.09 258) 55%, oklch(0.22 0.07 252) 100%)", padding: "80px 0", textAlign: "center", color: "#fff", borderTop: "2px solid var(--ink)" }}>
+          <div className="devizia-container">
+            <h2 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, fontSize: "clamp(40px, 5vw, 66px)", textTransform: "uppercase", lineHeight: 0.88, margin: "0 0 16px" }}>
+              Commencez aujourd'hui.<br />C'est gratuit.
+            </h2>
+            <p style={{ maxWidth: 480, margin: "0 auto 28px", fontSize: 16, opacity: 0.8, fontWeight: 500 }}>Aucune carte bancaire. Passez Pro quand vous êtes prêt.</p>
+            <Link to="/inscription" className="devizia-button devizia-button--hero">Créer mon compte gratuitement <ArrowRight size={16} /></Link>
           </div>
         </section>
       </main>
+
       <Footer />
     </div>
   );

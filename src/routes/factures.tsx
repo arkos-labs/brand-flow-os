@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Ban,
   Plus,
+  Trash2,
   FileText,
   ChevronRight,
   Eye,
@@ -25,6 +26,7 @@ import {
   calculateInvoiceTotals,
   isQuoteReadyToInvoice,
   selectInvoiceLines,
+  invoiceLinesFromQuote,
   type InvoiceLine,
 } from "@/lib/invoice-from-quote";
 import { recordInvoicePayment, type PaymentMethod } from "@/lib/document-workflow";
@@ -91,40 +93,7 @@ function daysSince(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 }
 
-function invoiceLinesFromQuote(quote: Quote): InvoiceLine[] {
-  const vatRate = quote.details?.vatRate ?? 20;
-  const quoteLines = [
-    ...(quote.details?.items ?? []).map((item) => ({
-      id: `${quote.number}-prestation-${item.id}`,
-      label: item.label,
-      qty: Number(item.qty) || 0,
-      priceHT: Number(item.priceHT) || 0,
-      vatRate,
-      kind: "prestation" as const,
-    })),
-    ...(quote.details?.upsells ?? []).map((item) => ({
-      id: `${quote.number}-option-${item.id}`,
-      label: item.label,
-      qty: Number(item.qty) || 0,
-      priceHT: Number(item.priceHT) || 0,
-      vatRate,
-      kind: "option" as const,
-    })),
-  ];
-
-  return quoteLines.length > 0
-    ? quoteLines
-    : [
-        {
-          id: `${quote.number}-total`,
-          label: `Prestations du devis ${quote.number}`,
-          qty: 1,
-          priceHT: quote.amount / (1 + vatRate / 100),
-          vatRate,
-          kind: "prestation",
-        },
-      ];
-}
+// invoiceLinesFromQuote est importée depuis @/lib/invoice-from-quote (version canonique partagée)
 
 function Invoices() {
   const { t, money, date, lang } = useI18n();
@@ -143,6 +112,26 @@ function Invoices() {
   const [newSiret, setNewSiret] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
+
+  // Lignes de prestation pour la création manuelle de facture
+  type NewLine = { id: string; label: string; qty: string; priceHT: string; vatRate: string };
+  const emptyLine = (): NewLine => ({ id: crypto.randomUUID(), label: "", qty: "1", priceHT: "", vatRate: "20" });
+  const [newLines, setNewLines] = useState<NewLine[]>([emptyLine()]);
+
+  const addNewLine = () => setNewLines((prev) => [...prev, emptyLine()]);
+  const removeNewLine = (id: string) => setNewLines((prev) => prev.length > 1 ? prev.filter((l) => l.id !== id) : prev);
+  const updateNewLine = (id: string, field: keyof NewLine, value: string) =>
+    setNewLines((prev) => prev.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
+
+  const newLinesTotals = newLines.reduce(
+    (acc, l) => {
+      const ht = (parseFloat(l.priceHT) || 0) * (parseFloat(l.qty) || 0);
+      const tva = ht * ((parseFloat(l.vatRate) || 20) / 100);
+      return { totalHT: acc.totalHT + ht, totalTVA: acc.totalTVA + tva };
+    },
+    { totalHT: 0, totalTVA: 0 },
+  );
+  const newLinesTotalTTC = newLinesTotals.totalHT + newLinesTotals.totalTVA;
   const [quoteToInvoice, setQuoteToInvoice] = useState<Quote | null>(null);
   const [selectedQuoteLineIds, setSelectedQuoteLineIds] = useState<Set<string>>(new Set());
 
@@ -279,8 +268,9 @@ function Invoices() {
     setSelectedQuoteLineIds(new Set());
   };
 
+  // isQuoteReadyToInvoice couvre : Signé, Facturé, Payé
   const pendingQuotes = (quotes || []).filter((q) => {
-    if (!isQuoteReadyToInvoice(q.status.fr) && q.status.fr !== "Facturé") return false;
+    if (!isQuoteReadyToInvoice(q.status.fr)) return false;
     const billed = new Set(q.invoicedLineIds ?? []);
     return invoiceLinesFromQuote(q).some((line) => !billed.has(line.id));
   });
@@ -346,7 +336,8 @@ function Invoices() {
     e.preventDefault();
     if (newClientType === "pro" && !newCompanyName) return;
     if (newClientType === "particulier" && (!newFirstName || !newLastName)) return;
-    if (!newAmount) return;
+    const validLines = newLines.filter((l) => l.label && parseFloat(l.priceHT) > 0);
+    if (validLines.length === 0) return;
 
     const displayName = newClientType === "pro" ? newCompanyName : `${newFirstName} ${newLastName}`.trim();
 
@@ -375,14 +366,29 @@ function Invoices() {
     const year = today.getFullYear();
     const pad = String(num).padStart(4, "0");
 
+    const invoiceLines: InvoiceLine[] = validLines.map((l) => ({
+      id: l.id,
+      label: l.label,
+      qty: parseFloat(l.qty) || 1,
+      priceHT: parseFloat(l.priceHT) || 0,
+      vatRate: parseFloat(l.vatRate) || 20,
+    }));
+
+    const totalHT = invoiceLines.reduce((s, l) => s + l.qty * l.priceHT, 0);
+    const totalVAT = invoiceLines.reduce((s, l) => s + l.qty * l.priceHT * (l.vatRate / 100), 0);
+    const totalTTC = totalHT + totalVAT;
+
     const newInvoice: Invoice = {
       number: `${company.invoicePrefix || "FA"}-${year}-${pad}`,
       client: displayName,
       clientId,
       date: today.toISOString().split("T")[0] ?? "",
       due: due.toISOString().split("T")[0] ?? "",
-      amount: parseFloat(newAmount),
+      amount: Math.round(totalTTC * 100) / 100,
+      totalHT: Math.round(totalHT * 100) / 100,
+      totalVAT: Math.round(totalVAT * 100) / 100,
       status: "draft",
+      items: invoiceLines,
     };
 
     addInvoice(newInvoice);
@@ -393,6 +399,7 @@ function Invoices() {
     setNewLastName("");
     setNewSiret("");
     setNewAmount("");
+    setNewLines([emptyLine()]);
     setClientSearch("");
     setShowClientList(false);
   };
@@ -415,6 +422,9 @@ function Invoices() {
       date: today.toISOString().split("T")[0] ?? "",
       due: due.toISOString().split("T")[0] ?? "",
       amount: inv.amount,
+      ...(inv.totalHT !== undefined ? { totalHT: inv.totalHT } : {}),
+      ...(inv.totalVAT !== undefined ? { totalVAT: inv.totalVAT } : {}),
+      ...(inv.items ? { items: inv.items } : {}),
       status: "draft",
     });
     updateCompany({ nextInvoiceNumber: num + 1 });
@@ -492,7 +502,7 @@ function Invoices() {
                   {lang === "fr" ? "Nouvelle Facture" : "New Invoice"}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Créer une facture</DialogTitle>
               </DialogHeader>
@@ -612,17 +622,83 @@ function Invoices() {
                   </div>
                 )}
 
+                {/* Lignes de prestation */}
                 <div className="space-y-2">
-                  <Label>Montant TTC</Label>
-                  <Input
-                    required
-                    type="number"
-                    min="0"
-                    value={newAmount}
-                    onChange={(e) => setNewAmount(e.target.value)}
-                    placeholder="Ex: 2500"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Prestations *</Label>
+                    <button type="button" onClick={addNewLine} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                      <Plus className="h-3 w-3" /> Ajouter une ligne
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {/* En-têtes */}
+                    <div className="grid grid-cols-[1fr_56px_96px_72px_28px] gap-1.5 text-xs text-muted-foreground px-1">
+                      <span>Description</span><span className="text-center">Qté</span><span className="text-right">Prix HT</span><span className="text-right">TVA %</span><span/>
+                    </div>
+                    {newLines.map((line) => (
+                      <div key={line.id} className="grid grid-cols-[1fr_56px_96px_72px_28px] gap-1.5 items-center">
+                        <Input
+                          required
+                          placeholder="Description de la prestation"
+                          value={line.label}
+                          onChange={(e) => updateNewLine(line.id, "label", e.target.value)}
+                          className="text-sm h-8"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="1"
+                          value={line.qty}
+                          onChange={(e) => updateNewLine(line.id, "qty", e.target.value)}
+                          className="text-sm h-8 text-center"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          required
+                          placeholder="0.00"
+                          value={line.priceHT}
+                          onChange={(e) => updateNewLine(line.id, "priceHT", e.target.value)}
+                          className="text-sm h-8 text-right"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="20"
+                          value={line.vatRate}
+                          onChange={(e) => updateNewLine(line.id, "vatRate", e.target.value)}
+                          className="text-sm h-8 text-right"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewLine(line.id)}
+                          className="flex items-center justify-center text-muted-foreground hover:text-destructive"
+                          disabled={newLines.length === 1}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Récap totaux */}
+                  {newLinesTotalTTC > 0 && (
+                    <div className="rounded-lg bg-muted/30 px-3 py-2 mt-1 text-xs space-y-0.5 text-right">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Total HT</span><span className="font-medium text-foreground">{newLinesTotals.totalHT.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>TVA</span><span className="font-medium text-foreground">{newLinesTotals.totalTVA.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
+                      </div>
+                      <div className="flex justify-between font-semibold text-sm border-t border-border pt-1 mt-1">
+                        <span>Total TTC</span><span className="text-primary">{newLinesTotalTTC.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                   Numéro attribué automatiquement :{" "}
                   <span className="font-mono font-semibold text-foreground">
@@ -631,7 +707,7 @@ function Invoices() {
                   </span>
                 </div>
                 <div className="pt-2">
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full" disabled={newLines.every((l) => !l.label || !parseFloat(l.priceHT))}>
                     Enregistrer (Brouillon)
                   </Button>
                 </div>

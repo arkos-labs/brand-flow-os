@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useData } from "@/lib/data-context";
 import { useI18n } from "@/lib/i18n";
-import { exportQuotePdf } from "@/lib/pdf-export";
+import { exportQuotePdf, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
+import { DocumentTemplate } from "@/components/DocumentTemplate";
+import { ScaledDocument } from "@/components/ScaledDocument";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,8 @@ import {
 export const Route = createFileRoute("/portail/$id")({
   component: ClientPortalPremium,
 });
+
+// ScaledDocument is now imported from @/components/ScaledDocument
 
 // ─── Signature Pad ───────────────────────────────────────────────────────────
 function SignaturePad({ onSign }: { onSign: (dataUrl: string) => void }) {
@@ -137,7 +141,8 @@ function ClientPortalPremium() {
   const { money, date } = useI18n();
 
   const quote = quotes.find((q) => q.number === id);
-  const details = quote?.details;
+  const docData = quote ? quoteToDocumentData(quote) : null;
+  const docCompany = company ? companyToDocCompany(company) : null;
 
   // Un devis est "signé" du point de vue client uniquement s'il porte le statut Signé
   const isSigned = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé";
@@ -191,6 +196,7 @@ function ClientPortalPremium() {
         signerName: typedName.trim() || quote.client,
         signedAt,
         consent: agreed,
+        image: signatureMode === "draw" ? signatureData : undefined,
       },
     });
     setIsSignOpen(false);
@@ -270,14 +276,7 @@ function ClientPortalPremium() {
     );
   }
 
-  // ── Calculs ──────────────────────────────────────────────────────────────────
-  const items = details?.items ?? [];
-  const upsells = details?.upsells ?? [];
-  const allItems = [...items, ...upsells];
-  const vatRate = details?.vatRate ?? 20;
-  const totalHT = details?.totalHT ?? quote.amount / (1 + vatRate / 100);
-  const totalTTC = details?.totalTTC ?? quote.amount;
-  const totalVAT = totalTTC - totalHT;
+
 
   // ── Vue principale ───────────────────────────────────────────────────────────
   return (
@@ -349,110 +348,10 @@ function ClientPortalPremium() {
 
         {/* ── Card devis ─────────────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-5">
-
-          {/* En-tête du document */}
-          <div className="flex items-start justify-between p-6 sm:p-8 border-b border-slate-100">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">Prestataire</p>
-              <p className="font-bold text-slate-900">{company.name || "—"}</p>
-              {company.address && <p className="text-sm text-slate-500">{company.address}</p>}
-              {(company.postalCode || company.city) && (
-                <p className="text-sm text-slate-500">{company.postalCode} {company.city}</p>
-              )}
-              {company.siret && <p className="text-xs text-slate-400 mt-1">SIRET {company.siret}</p>}
-            </div>
-            <div className="text-right">
-              <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 uppercase tracking-wide">
-                DEVIS
-              </span>
-              <p className="mt-2 font-mono text-sm font-bold text-slate-900">{quote.number}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{date(quote.date)}</p>
-            </div>
-          </div>
-
-          {/* Destinataire */}
-          <div className="px-6 sm:px-8 py-5 border-b border-slate-100 bg-slate-50/50">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Destinataire</p>
-            <p className="font-bold text-slate-900 text-lg">{quote.client}</p>
-            {details?.companyName && details.companyName !== quote.client && (
-              <p className="text-sm text-slate-600">{details.companyName}</p>
-            )}
-            {details?.siret && <p className="text-xs text-slate-400">SIRET {details.siret}</p>}
-            {details?.address && <p className="text-sm text-slate-500 mt-1">{details.address}</p>}
-            {details?.phone && <p className="text-sm text-slate-500">{details.phone}</p>}
-          </div>
-
-          {/* Tableau des prestations */}
-          <div className="px-6 sm:px-8 py-5">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left pb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Désignation
-                  </th>
-                  <th className="text-center pb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 w-16">
-                    Qté
-                  </th>
-                  <th className="text-right pb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 w-28">
-                    Prix unit. HT
-                  </th>
-                  <th className="text-right pb-3 text-xs font-semibold uppercase tracking-wider text-slate-400 w-28">
-                    Total HT
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {allItems.length > 0 ? (
-                  allItems.map((item, i) => {
-                    const price = Number(item.priceHT) || 0;
-                    const qty = Number(item.qty) || 1;
-                    return (
-                      <tr key={item.id || i} className="border-b border-slate-50 last:border-0">
-                        <td className="py-3 text-slate-800 font-medium">{item.label}</td>
-                        <td className="py-3 text-center text-slate-600">{qty}</td>
-                        <td className="py-3 text-right text-slate-600 font-mono text-xs">
-                          {money(price)}
-                        </td>
-                        <td className="py-3 text-right font-semibold text-slate-800 font-mono text-xs">
-                          {money(price * qty)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-400 text-sm italic">
-                      Détail des prestations non disponible
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Totaux */}
-          <div className="px-6 sm:px-8 py-5 border-t border-slate-100 bg-slate-50/50">
-            <div className="ml-auto max-w-xs space-y-2">
-              <div className="flex justify-between text-sm text-slate-600">
-                <span>Total HT</span>
-                <span className="font-medium font-mono">{money(totalHT)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-slate-500">
-                <span>TVA ({vatRate}%)</span>
-                <span className="font-mono">{money(totalVAT)}</span>
-              </div>
-              <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2 mt-2">
-                <span>Total TTC</span>
-                <span className="text-primary font-mono">{money(totalTTC)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Conditions & mentions */}
-          {company.footerNote && (
-            <div className="px-6 sm:px-8 py-4 border-t border-slate-100">
-              <p className="text-xs text-slate-400 leading-relaxed">{company.footerNote}</p>
-            </div>
+          {docData && docCompany && (
+            <ScaledDocument>
+              <DocumentTemplate doc={docData} company={docCompany} />
+            </ScaledDocument>
           )}
         </div>
 

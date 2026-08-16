@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import {
   quotes as initialQuotes,
   invoices as initialInvoices,
@@ -9,6 +9,93 @@ import {
 } from "./demo-data";
 import { getDocumentActivityDate, type PaymentMethod } from "./document-workflow";
 import { createShowcaseData, SHOWCASE_DATA_VERSION } from "./showcase-data";
+import { supabase, getMyOrgId } from "./supabase";
+
+// ─── Helpers Supabase sync ────────────────────────────────────────────────────
+
+function quoteStatusToDb(fr: string): string {
+  const map: Record<string, string> = {
+    "Brouillon": "draft",
+    "Envoyé": "sent",
+    "Signé": "accepted",
+    "Refusé": "rejected",
+    // "Facturé" et "Payé" : le devis est accepté et a progressé → on les distingue
+    // via le champ payload (objet Quote complet) ; la colonne status reste "accepted"
+    // pour la conformité schema Supabase, mais le statut précis est dans payload.status.fr
+    "Facturé": "accepted",
+    "Clôturé": "expired",
+    "Payé": "accepted",
+  };
+  return map[fr] ?? "draft";
+}
+
+function invoiceStatusToDb(s: string): string {
+  const map: Record<string, string> = { draft: "draft", sent: "sent", paid: "paid", late: "overdue" };
+  return map[s] ?? "draft";
+}
+
+async function upsertQuote(quote: Quote, orgId: string) {
+  await supabase.from("quotes").upsert({
+    organization_id: orgId,
+    number: quote.number,
+    client_name: quote.client,
+    status: quoteStatusToDb(quote.status.fr) as "draft" | "sent" | "accepted" | "rejected" | "expired",
+    issue_date: quote.date,
+    validity_date: (quote as Quote & { validityDate?: string }).validityDate ?? null,
+    total_ht: quote.details?.totalHT ?? (quote.amount / 1.2),
+    total_vat: quote.details ? (quote.details.totalTTC - quote.details.totalHT) : (quote.amount - quote.amount / 1.2),
+    total_ttc: quote.details?.totalTTC ?? quote.amount,
+    payload: quote,
+  }, { onConflict: "organization_id,number" });
+}
+
+async function upsertInvoice(invoice: Invoice, orgId: string) {
+  await supabase.from("invoices").upsert({
+    organization_id: orgId,
+    number: invoice.number,
+    client_name: invoice.client,
+    status: invoiceStatusToDb(invoice.status) as "draft" | "sent" | "paid" | "partially_paid" | "overdue" | "canceled",
+    issue_date: invoice.date,
+    due_date: invoice.due ?? null,
+    total_ht: invoice.totalHT ?? (invoice.amount / 1.2),
+    total_vat: invoice.totalVAT ?? (invoice.amount - invoice.amount / 1.2),
+    total_ttc: invoice.amount,
+    amount_paid: invoice.paidAmount ?? 0,
+    payload: invoice,
+  }, { onConflict: "organization_id,number" });
+}
+
+async function upsertClient(client: Client, orgId: string) {
+  await supabase.from("clients").upsert({
+    id: client.id,
+    organization_id: orgId,
+    is_company: client.type === "pro",
+    company_name: client.companyName ?? client.name,
+    first_name: client.firstName ?? null,
+    last_name: client.lastName ?? null,
+    siret: client.siret ?? null,
+    email: client.email ?? null,
+    phone: client.phone ?? null,
+    payload: client,
+  }, { onConflict: "id" });
+}
+
+async function deleteQuoteFromDb(number: string, orgId: string) {
+  await supabase.from("quotes").delete().eq("organization_id", orgId).eq("number", number);
+}
+
+async function loadOrgData(orgId: string): Promise<{ quotes: Quote[]; invoices: Invoice[]; clients: Client[] } | null> {
+  const [qRes, iRes, cRes] = await Promise.all([
+    supabase.from("quotes").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("clients").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+  ]);
+  if (qRes.error || iRes.error || cRes.error) return null;
+  const quotes = (qRes.data ?? []).map((r) => r.payload as Quote).filter(Boolean);
+  const invoices = (iRes.data ?? []).map((r) => r.payload as Invoice).filter(Boolean);
+  const clients = (cRes.data ?? []).map((r) => r.payload as Client).filter(Boolean);
+  return { quotes, invoices, clients };
+}
 
 export type Product = DemoProduct;
 
@@ -147,6 +234,7 @@ export type Quote = {
     signerName: string;
     signedAt: string;
     consent: boolean;
+    image?: string;
   };
   details?: QuoteDetails;
   invoicedLineIds?: string[];
@@ -493,7 +581,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
-  // Charger depuis le localStorage au montage
+  // Organisation Supabase de l'utilisateur connecté
+  const orgIdRef = useRef<string | null>(null);
+
+  // Charger depuis le localStorage au montage (puis enrichir depuis Supabase)
   useEffect(() => {
     const showcaseResetKey = `invoicepro_showcase_reset_${SHOWCASE_DATA_VERSION}`;
     if (!localStorage.getItem(showcaseResetKey)) {
@@ -551,6 +642,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setExpenses(storedExpenses ? JSON.parse(storedExpenses) : functionalDemoExpenses);
     if (storedSubscriptions) setSubscriptions(JSON.parse(storedSubscriptions));
     setLoaded(true);
+
+    // Tentative de chargement depuis Supabase (si connecté)
+    getMyOrgId().then(async (orgId) => {
+      if (!orgId) return;
+      orgIdRef.current = orgId;
+      const remote = await loadOrgData(orgId);
+      if (!remote) return;
+      // Si Supabase a des données → elles ont la priorité (données réelles vs demo)
+      if (remote.quotes.length > 0) {
+        setQuotes(sortDocumentsByActivity(remote.quotes));
+        localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(remote.quotes));
+      }
+      if (remote.invoices.length > 0) {
+        setInvoices(sortDocumentsByActivity(remote.invoices));
+        localStorage.setItem("invoicepro_invoices_v4", JSON.stringify(remote.invoices));
+      }
+      if (remote.clients.length > 0) {
+        setClients(remote.clients);
+        localStorage.setItem("invoicepro_clients", JSON.stringify(remote.clients));
+      }
+    }).catch(() => { /* silencieux si pas de connexion */ });
   }, []);
 
   useEffect(() => {
@@ -654,14 +766,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, [company.invoicePrefix, company.nextInvoiceNumber, company.paymentTermsDays, invoices, loaded]);
 
-  const addQuote = (quote: Quote) => setQuotes((prev) => sortDocumentsByActivity([...prev, quote]));
+  const addQuote = (quote: Quote) => {
+    setQuotes((prev) => sortDocumentsByActivity([...prev, quote]));
+    if (orgIdRef.current) upsertQuote(quote, orgIdRef.current).catch(console.warn);
+  };
   const updateQuote = (number: string, updated: Quote) => {
     setQuotes((prev) => sortDocumentsByActivity(prev.map((q) => (q.number === number ? updated : q))));
+    if (orgIdRef.current) upsertQuote(updated, orgIdRef.current).catch(console.warn);
   };
-  const deleteQuote = (number: string) => setQuotes((prev) => prev.filter((quote) => quote.number !== number));
-  const addInvoice = (invoice: Invoice) => setInvoices((prev) => sortDocumentsByActivity([...prev, invoice]));
+  const deleteQuote = (number: string) => {
+    setQuotes((prev) => prev.filter((quote) => quote.number !== number));
+    if (orgIdRef.current) deleteQuoteFromDb(number, orgIdRef.current).catch(console.warn);
+  };
+  const addInvoice = (invoice: Invoice) => {
+    setInvoices((prev) => sortDocumentsByActivity([...prev, invoice]));
+    if (orgIdRef.current) upsertInvoice(invoice, orgIdRef.current).catch(console.warn);
+  };
   const updateInvoice = (number: string, updated: Invoice) => {
     setInvoices((prev) => sortDocumentsByActivity(prev.map((inv) => (inv.number === number ? updated : inv))));
+    if (orgIdRef.current) upsertInvoice(updated, orgIdRef.current).catch(console.warn);
   };
   const addUpsell = (upsell: Upsell) => {
     setUpsells((prev) => [...prev, upsell]);
@@ -683,9 +806,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setCompany((prev) => ({ ...prev, ...settings }));
   };
 
-  const addClient = (c: Client) => setClients((prev) => [c, ...prev]);
-  const updateClient = (id: string, updated: Client) =>
+  const addClient = (c: Client) => {
+    setClients((prev) => [c, ...prev]);
+    if (orgIdRef.current) upsertClient(c, orgIdRef.current).catch(console.warn);
+  };
+  const updateClient = (id: string, updated: Client) => {
     setClients((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    if (orgIdRef.current) upsertClient(updated, orgIdRef.current).catch(console.warn);
+  };
   const deleteClient = (id: string) =>
     setClients((prev) => prev.filter((c) => c.id !== id));
 
@@ -746,10 +874,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
   };
 
-  if (!loaded) {
-    return null; // or a loader
-  }
-
+  // Ne jamais bloquer le rendu du Provider : si les données ne sont pas encore
+  // chargées (SSR ou premier tick client), on rend quand même le contexte avec
+  // les valeurs en cours (vides par défaut) pour éviter "useData must be used
+  // within a DataProvider".
   return (
     <DataContext.Provider
       value={{

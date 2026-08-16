@@ -25,6 +25,8 @@ import {
   Repeat,
   Menu,
   LogOut,
+  Calendar,
+  Archive,
 } from "lucide-react";
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
@@ -59,11 +61,21 @@ const groups: {
       { to: "/paiements", label: "nav.payments", icon: CheckSquare },
       { to: "/depenses", label: "nav.expenses" as Key, icon: CreditCard },
       { to: "/tresorerie", label: "nav.cashflow", icon: TrendingUp },
+      { to: "/archives", label: "nav.archives" as Key, icon: Archive },
+    ],
+  },
+  {
+    section: "nav.section.tools" as Key,
+    items: [
+      { to: "/rendez-vous", label: "nav.appointments" as Key, icon: Calendar },
     ],
   },
 ];
 
-const PUBLIC_PATHS = ["/", "/connexion", "/inscription", "/mot-de-passe-oublie", "/tarifs"];
+const PUBLIC_PATHS = [
+  "/", "/connexion", "/inscription", "/mot-de-passe-oublie", "/tarifs", "/fonctionnalites", "/fonctionnement", "/benefices",
+  "/centre-aide", "/contactez-nous", "/nouveautes", "/mises-a-jour", "/confidentialite", "/conditions-utilisation", "/legal", "/plan-site"
+];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

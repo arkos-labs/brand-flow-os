@@ -6,6 +6,8 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useNavigate,
+  useLocation,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -13,24 +15,93 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
-import { DataProvider } from "@/lib/data-context";
+import { SupabaseDataProvider, useSupabaseData } from "@/lib/supabase-context";
 import { ThemeProvider } from "@/lib/theme";
+
+// Routes publiques (pas besoin d'être connecté)
+const PUBLIC_ROUTES = new Set([
+  "/",
+  "/connexion",
+  "/inscription",
+  "/mot-de-passe-oublie",
+  "/tarifs",
+  "/fonctionnalites",
+  "/fonctionnement",
+  "/centre-aide",
+  "/contactez-nous",
+  "/conditions-utilisation",
+  "/confidentialite",
+  "/legal",
+  "/plan-site",
+  "/mises-a-jour",
+  "/nouveautes",
+  "/rendez-vous",
+  "/benefices",
+]);
+
+function isPublicRoute(pathname: string): boolean {
+  // Vérifie correspondance exacte OU préfixe (ex: /portail/xxx)
+  if (PUBLIC_ROUTES.has(pathname)) return true;
+  if (pathname.startsWith("/portail/")) return true;
+  return false;
+}
+
+// ── Garde d'authentification ─────────────────────────────────────────────────
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { session, isLoading } = useSupabaseData();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const pathname = location.pathname;
+
+    if (!session && !isPublicRoute(pathname)) {
+      // Non connecté → redirige vers /connexion
+      navigate({ to: "/connexion", replace: true });
+      return;
+    }
+
+    if (session && (pathname === "/connexion" || pathname === "/inscription")) {
+      // Déjà connecté → redirige vers le tableau de bord
+      navigate({ to: "/tableau-de-bord", replace: true });
+    }
+  }, [session, isLoading, location.pathname, navigate]);
+
+  // Écran de chargement pendant la vérification de session
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <span className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+          <p className="text-sm text-muted-foreground">Chargement de votre espace…</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+// ── Composants d'erreur / 404 ─────────────────────────────────────────────────
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Page introuvable</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          Cette page n'existe pas ou a été déplacée.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Retour à l'accueil
           </Link>
         </div>
       </div>
@@ -47,39 +118,37 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-2xl text-center w-full">
+      <div className="max-w-2xl w-full text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Cette page n'a pas pu se charger
         </h1>
         <div className="mt-4 text-sm text-red-600 bg-red-50/50 p-4 rounded-xl border border-red-100 text-left overflow-auto max-h-[50vh] font-mono whitespace-pre-wrap w-full">
           <strong>{error.name}: {error.message}</strong>
           {"\n\n"}
           {error.stack}
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
+            onClick={() => { router.invalidate(); reset(); }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Réessayer
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Retour à l'accueil
           </a>
         </div>
       </div>
     </div>
   );
 }
+
+import { DataProvider } from "@/lib/data-context";
+
+// ── Route racine ───────────────────────────────────────────────────────────────
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -115,7 +184,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
@@ -134,12 +203,16 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <LanguageProvider>
-          <DataProvider>
-            <AppShell>
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </AppShell>
-          </DataProvider>
+          {/* SupabaseDataProvider remplace DataProvider — gère auth + données */}
+          <SupabaseDataProvider>
+            <DataProvider>
+              <AuthGuard>
+                <AppShell>
+                  <Outlet />
+                </AppShell>
+              </AuthGuard>
+            </DataProvider>
+          </SupabaseDataProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>

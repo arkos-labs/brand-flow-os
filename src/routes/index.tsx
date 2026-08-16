@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { Footer } from "@/components/Footer";
 import "./homepage.css";
 
 export const Route = createFileRoute("/")({
@@ -148,9 +149,9 @@ function PublicHeader() {
           <BrandLogo className="h-10 w-auto" priority />
         </Link>
         <nav className="devizia-nav" aria-label="Navigation principale">
-          <a href="#benefices">Bénéfices</a>
-          <a href="#fonctionnement">Comment ça marche</a>
-          <a href="#fonctionnalites">Fonctionnalités</a>
+          <Link to="/fonctionnalites">Fonctionnalités</Link>
+          <Link to="/fonctionnement">Comment ça marche</Link>
+          <Link to="/benefices">Bénéfices</Link>
           <Link to="/tarifs">Tarifs</Link>
         </nav>
         <div className="devizia-header__actions">
@@ -172,9 +173,9 @@ function PublicHeader() {
       </div>
       {open && (
         <nav id="devizia-mobile-menu" className="devizia-mobile-nav" aria-label="Navigation mobile">
-          <a href="#benefices" onClick={close}>Bénéfices</a>
-          <a href="#fonctionnement" onClick={close}>Comment ça marche</a>
-          <a href="#fonctionnalites" onClick={close}>Fonctionnalités</a>
+          <Link to="/fonctionnalites" onClick={close}>Fonctionnalités</Link>
+          <Link to="/fonctionnement" onClick={close}>Comment ça marche</Link>
+          <Link to="/benefices" onClick={close}>Bénéfices</Link>
           <Link to="/tarifs" onClick={close}>Tarifs</Link>
           <Link to="/connexion" onClick={close}>Se connecter</Link>
           <Link to="/inscription" onClick={close} className="devizia-button">Essayer gratuitement</Link>
@@ -382,21 +383,6 @@ function FinalCta() {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="devizia-footer">
-      <div className="devizia-container devizia-footer__top">
-        <div>
-          <span className="clearquote-logo--inverse"><BrandLogo className="h-9 w-auto" /></span>
-          <p>Les devis, factures et paiements qui laissent respirer votre activité.</p>
-        </div>
-        <nav aria-label="Liens produit"><strong>Produit</strong><a href="#fonctionnalites">Fonctionnalités</a><Link to="/tarifs">Tarifs</Link><Link to="/connexion">Connexion</Link></nav>
-        <nav aria-label="Liens pour démarrer"><strong>Démarrer</strong><Link to="/inscription">Créer un compte</Link><a href="#fonctionnement">Comment ça marche</a><a href="#faq">Questions fréquentes</a></nav>
-      </div>
-      <div className="devizia-container devizia-footer__bottom"><span>© 2026 ClearQuote. Tous droits réservés.</span><span>Factur-X · Expérience responsive · Données exportables</span></div>
-    </footer>
-  );
-}
 
 function LandingPage() {
   return (

@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useBlocker } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useData, ClientType, QuoteItem, Upsell, Quote, Invoice } from "@/lib/data-context";
 import { InvoiceStatus } from "@/lib/demo-data";
-import { exportQuotePdf } from "@/lib/pdf-export";
+import { exportQuotePdf, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
+import { DocumentTemplate } from "@/components/DocumentTemplate";
 import { generateQuoteEmailHtml } from "@/lib/email-templates";
 import { Button } from "@/components/ui/button";
 import { searchCompanyBySiret } from "@/lib/siret";
@@ -39,6 +40,7 @@ import {
   Search,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScaledDocument } from "@/components/ScaledDocument";
 import {
   Select,
   SelectContent,
@@ -54,6 +56,7 @@ import { cn } from "@/lib/utils";
 import {
   calculateInvoiceTotals,
   selectInvoiceLines,
+  invoiceLinesFromQuote,
   type InvoiceLine,
 } from "@/lib/invoice-from-quote";
 import { AIQuoteWidget, AIQuoteResultItem } from "@/components/AIQuoteWidget";
@@ -135,42 +138,7 @@ function AutocompleteInput({
   );
 }
 
-function invoiceLinesFromQuote(quote: Quote): InvoiceLine[] {
-  const vatRate = quote.details?.vatRate ?? 20;
-  const lines: InvoiceLine[] = [
-    ...(quote.details?.items ?? [])
-      .filter((item) => item.label)
-      .map((item) => ({
-        id: `${quote.number}-prestation-${item.id}`,
-        label: item.label,
-        qty: Number(item.qty) || 0,
-        priceHT: Number(item.priceHT) || 0,
-        vatRate,
-        kind: "prestation" as const,
-      })),
-    ...(quote.details?.upsells ?? [])
-      .filter((item) => item.label)
-      .map((item) => ({
-        id: `${quote.number}-option-${item.id}`,
-        label: item.label,
-        qty: Number(item.qty) || 0,
-        priceHT: Number(item.priceHT) || 0,
-        vatRate,
-        kind: "option" as const,
-      })),
-  ];
-
-  return lines.length > 0
-    ? lines
-    : [{
-        id: `${quote.number}-total`,
-        label: `Prestations du devis ${quote.number}`,
-        qty: 1,
-        priceHT: quote.amount / (1 + vatRate / 100),
-        vatRate,
-        kind: "prestation",
-      }];
-}
+// invoiceLinesFromQuote est importée depuis @/lib/invoice-from-quote (version canonique partagée)
 
 export const Route = createFileRoute("/devis")({
   head: () => ({
@@ -334,6 +302,17 @@ function QuotesInner() {
 
   // New Quote Full Form State
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+
+  // Empêcher la perte de données si on change de page par erreur
+  useBlocker({
+    shouldBlockFn: () => {
+      if (isQuoteOpen) {
+        return !window.confirm("Vous êtes en train de créer un devis. Voulez-vous vraiment quitter cette page et perdre vos données ?");
+      }
+      return false;
+    },
+    enableBeforeUnload: () => isQuoteOpen,
+  });
   const [isAIWidgetOpen, setIsAIWidgetOpen] = useState(false);
   const [clientType, setClientType] = useState<ClientType>("pro");
   const [lastName, setLastName] = useState("");
@@ -341,6 +320,9 @@ function QuotesInner() {
   const [companyName, setCompanyName] = useState("");
   const [siret, setSiret] = useState("");
   const [address, setAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [serviceAddress, setServiceAddress] = useState("");
   const [vatRate, setVatRate] = useState<number>(20);
@@ -378,7 +360,10 @@ function QuotesInner() {
     setLastName(c.lastName || c.name || "");
     setCompanyName(c.companyName || "");
     setSiret(c.siret || "");
-    setAddress([c.address, c.postalCode, c.city].filter(Boolean).join(", "));
+    setAddress(c.address || "");
+    setPostalCode(c.postalCode || "");
+    setCity(c.city || "");
+    setEmail(c.email || "");
     setPhone(c.phone || "");
     setClientSearch("");
     setShowClientList(false);
@@ -408,6 +393,9 @@ function QuotesInner() {
     setCompanyName(saved?.companyName || knownClient?.companyName || (type === "pro" ? quote.client : ""));
     setSiret(saved?.siret || knownClient?.siret || "");
     setAddress(saved?.address || knownClient?.address || "");
+    setPostalCode(saved?.postalCode || knownClient?.postalCode || "");
+    setCity(saved?.city || knownClient?.city || "");
+    setEmail(saved?.email || knownClient?.email || "");
     setPhone(saved?.phone || knownClient?.phone || "");
     setServiceAddress(saved?.serviceAddress || saved?.address || knownClient?.address || "");
     setVatRate(saved?.vatRate ?? 20);
@@ -542,6 +530,9 @@ function QuotesInner() {
         companyName,
         siret,
         address,
+        postalCode,
+        city,
+        email,
         phone,
         serviceAddress,
         items: quoteItems,
@@ -564,8 +555,10 @@ function QuotesInner() {
           lastName: clientType === "particulier" ? lastName : "",
           siret,
           address,
+          postalCode,
+          city,
           phone,
-          email: "",
+          email,
           createdAt: new Date().toISOString().split("T")[0] ?? "",
         });
       }
@@ -585,6 +578,9 @@ function QuotesInner() {
     setCompanyName("");
     setSiret("");
     setAddress("");
+    setPostalCode("");
+    setCity("");
+    setEmail("");
     setPhone("");
     setServiceAddress("");
     setClientSearch("");
@@ -741,9 +737,25 @@ function QuotesInner() {
                       <Label>Adresse de facturation</Label>
                       <Input value={address} onChange={(e) => setAddress(e.target.value)} />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Téléphone</Label>
-                      <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Code postal</Label>
+                        <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Ville</Label>
+                        <Input value={city} onChange={(e) => setCity(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Téléphone</Label>
+                        <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                      </div>
                     </div>
                   </section>
 
@@ -813,7 +825,7 @@ function QuotesInner() {
                               placeholder="Sélectionnez ou tapez..."
                             />
                           </div>
-                          <div className="w-24 space-y-1">
+                          <div className="w-20 space-y-1">
                             <Label className="text-xs">Qté</Label>
                             <Input
                               type="number"
@@ -828,6 +840,27 @@ function QuotesInner() {
                                 )
                               }
                             />
+                          </div>
+                          <div className="w-28 space-y-1">
+                            <Label className="text-xs">Unité</Label>
+                            <Select
+                              value={item.unit || "u"}
+                              onValueChange={(v) => updateQuoteItem(item.id, "unit", v)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Unité" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="u">u (Unité)</SelectItem>
+                                <SelectItem value="pce">pce (Pièce)</SelectItem>
+                                <SelectItem value="h">h (Heure)</SelectItem>
+                                <SelectItem value="j">j (Jour)</SelectItem>
+                                <SelectItem value="m²">m² (M. carré)</SelectItem>
+                                <SelectItem value="m">m (Mètre)</SelectItem>
+                                <SelectItem value="ml">ml (M. lin.)</SelectItem>
+                                <SelectItem value="forfait">Forfait</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="w-32 space-y-1">
                             <Label className="text-xs">Prix HT</Label>
@@ -1530,116 +1563,18 @@ function QuotesInner() {
           <DialogHeader className="p-4 border-b shrink-0">
             <DialogTitle>Aperçu du Devis {previewQuote?.number}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 bg-muted/20 p-4 sm:p-8 overflow-y-auto print:p-0 print:bg-white print:overflow-visible">
-            <div className="bg-white mx-auto max-w-[21cm] min-h-[29.7cm] p-[2cm] shadow-sm ring-1 ring-border rounded-sm print:shadow-none print:ring-0 print:p-0 print:m-0 text-black">
-              <div className="flex justify-between items-start mb-16">
-                <div>
-                  {company.logoBase64 && (
-                    <img
-                      src={company.logoBase64}
-                      alt="Logo"
-                      className="max-h-16 mb-6 object-contain"
-                    />
-                  )}
-                  <h1 className="text-4xl font-light tracking-wide text-primary uppercase">
-                    Devis
-                  </h1>
-                  <p className="text-muted-foreground mt-2 font-mono text-sm">
-                    {previewQuote?.number}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-lg">{previewQuote?.client}</p>
-                  {previewQuote?.details?.address && (
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {previewQuote.details.address}
-                    </p>
-                  )}
-                  <p className="text-muted-foreground text-sm mt-4">
-                    Date : {date(previewQuote?.date || "")}
-                  </p>
-                </div>
-              </div>
-
-              <table className="w-full mb-8 text-sm">
-                <thead>
-                  <tr className="border-b-2 border-primary/20 text-muted-foreground text-left">
-                    <th className="py-3 font-medium">Description</th>
-                    <th className="py-3 text-right font-medium">Qté</th>
-                    <th className="py-3 text-right font-medium">Prix unitaire HT</th>
-                    <th className="py-3 text-right font-medium">Total HT</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {previewQuote?.details?.items?.map((item) => (
-                    <tr key={item.id}>
-                      <td className="py-4 font-medium">{item.label}</td>
-                      <td className="py-4 text-right text-muted-foreground">{item.qty}</td>
-                      <td className="py-4 text-right text-muted-foreground">
-                        {money(Number(item.priceHT || 0))}
-                      </td>
-                      <td className="py-4 text-right font-medium">
-                        {money(Number(item.priceHT || 0) * Number(item.qty || 0))}
-                      </td>
-                    </tr>
-                  ))}
-                  {previewQuote?.details?.upsells && previewQuote?.details?.upsells?.length > 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-2">
-                          Options supplémentaires
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                  {previewQuote?.details?.upsells?.map((item) => (
-                    <tr key={item.id} className="bg-muted/5">
-                      <td className="py-3 pl-4 text-sm">{item.label}</td>
-                      <td className="py-3 text-right text-muted-foreground text-sm">{item.qty}</td>
-                      <td className="py-3 text-right text-muted-foreground text-sm">
-                        {money(Number(item.priceHT || 0))}
-                      </td>
-                      <td className="py-3 text-right font-medium text-sm">
-                        {money(Number(item.priceHT || 0) * Number(item.qty || 0))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="flex justify-end mt-12">
-                <div className="w-72 space-y-3 text-sm">
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Total HT</span>
-                    <span className="font-medium text-foreground">
-                      {money(previewQuote?.details?.totalHT || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>TVA ({previewQuote?.details?.vatRate || 20}%)</span>
-                    <span className="font-medium text-foreground">
-                      {money(
-                        (previewQuote?.details?.totalTTC || 0) -
-                          (previewQuote?.details?.totalHT || 0),
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-lg font-bold mt-4 pt-4 border-t-2 border-primary">
-                    <span className="text-primary">Total TTC</span>
-                    <span className="text-primary">
-                      {money(previewQuote?.details?.totalTTC || previewQuote?.amount || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm pt-4">
-                    <span className="text-muted-foreground">Acompte à la signature (30%)</span>
-                    <span className="font-medium text-foreground">
-                      {money((previewQuote?.details?.totalTTC || previewQuote?.amount || 0) * 0.3)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div className="flex-1 overflow-y-auto bg-muted/20 custom-scrollbar">
+            <div style={{ padding: "32px 16px" }}>
+              {previewQuote && (
+                <ScaledDocument>
+                  <DocumentTemplate
+                    doc={quoteToDocumentData(previewQuote)}
+                    company={companyToDocCompany(company)}
+                  />
+                </ScaledDocument>
+              )}
             </div>
-          </ScrollArea>
+          </div>
           <div className="flex flex-wrap justify-end gap-3 p-4 border-t shrink-0 print:hidden">
             <Button variant="outline" onClick={() => setPreviewQuote(null)}>
               Fermer

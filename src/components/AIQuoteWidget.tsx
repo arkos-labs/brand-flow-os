@@ -439,14 +439,15 @@ export function AIQuoteWidget({ products, isOpen, onClose, onApply }: AIQuoteWid
   useEffect(() => {
     if (step !== "loading") return;
     setLoadingStep(0);
-    const t1 = setTimeout(() => setLoadingStep(1), 900);
-    const t2 = setTimeout(() => setLoadingStep(2), 1700);
+    // On divise les temps d'attente par 2.5 environ pour que ce soit plus rapide !
+    const t1 = setTimeout(() => setLoadingStep(1), 300);
+    const t2 = setTimeout(() => setLoadingStep(2), 700);
     const t3 = setTimeout(() => {
       const result = runSmartAnalysis(prompt, products, tv);
       setItems(result.items);
       setUpsells(result.upsells);
       setStep("results");
-    }, 2600);
+    }, 1200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);

@@ -128,18 +128,17 @@
 .devizia-hero {
   position: relative;
   padding: 128px 0 0;
-  background: var(--cream);
+  background: linear-gradient(
+    160deg,
+    oklch(0.52 0.2 258) 0%,
+    oklch(0.68 0.16 255) 28%,
+    oklch(0.88 0.06 255) 55%,
+    oklch(0.978 0.012 255) 80%
+  );
   color: var(--ink);
 }
 .devizia-hero__grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.17;
-  background-image:
-    linear-gradient(var(--ink) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ink) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(#000, transparent 90%);
+  display: none;
 }
 .devizia-hero__layout {
   position: relative;
@@ -184,6 +183,7 @@
   margin: 18px 0 20px;
   font-size: clamp(57px, 7vw, 92px);
   line-height: 0.84;
+  color: #fff;
 }
 .devizia-hero h1 em,
 .features-copy h2 em,
@@ -197,6 +197,7 @@
   font-size: 16px;
   line-height: 1.55;
   font-weight: 500;
+  color: oklch(0.92 0.04 255);
 }
 .devizia-hero__actions {
   display: flex;
@@ -402,7 +403,10 @@
   display: flex;
   gap: 9px;
   align-items: center;
-  animation: signal-nudge 4s steps(2, end) infinite;
+  animation: floating-card 3s ease-in-out infinite;
+  will-change: transform;
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
 }
 .floating-card--top {
   top: 6px;
@@ -411,6 +415,7 @@
 .floating-card--bottom {
   bottom: 4px;
   left: -20px;
+  animation-delay: 1.5s;
 }
 .floating-card__icon {
   display: grid;
@@ -835,19 +840,12 @@
   position: relative;
   padding: 95px 0;
   text-align: center;
-  background: var(--signal);
+  background: linear-gradient(140deg, oklch(0.18 0.05 264) 0%, oklch(0.26 0.09 258) 55%, oklch(0.22 0.07 252) 100%);
   color: #fff;
   border-top: 2px solid var(--ink);
 }
 .final-cta:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.14;
-  background-image:
-    linear-gradient(var(--ink) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ink) 1px, transparent 1px);
-  background-size: 40px 40px;
+  display: none;
 }
 .final-cta__orb {
   display: none;
@@ -910,10 +908,19 @@
 @keyframes signal-nudge {
   0%,
   100% {
-    transform: translate(0);
+    transform: translateY(0px);
   }
   50% {
-    transform: translate(3px, -3px);
+    transform: translateY(-5px);
+  }
+}
+@keyframes floating-card {
+  0%,
+  100% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
   }
 }
 
