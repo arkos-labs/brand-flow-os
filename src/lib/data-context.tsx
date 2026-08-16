@@ -722,6 +722,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }).catch(() => { /* silencieux si pas de connexion */ });
   }, []);
 
+  // ── FALLBACK POLLING ────────────────────────────────────────────────────────
+  // Au cas où le WebSocket (Realtime) est bloqué (ex: RLS, pare-feu, ou non activé),
+  // on vérifie les devis toutes les 5 secondes pour avoir un effet "instantané".
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const orgId = orgIdRef.current;
+      if (!orgId) return;
+
+      supabase
+        .from("quotes")
+        .select("payload")
+        .eq("organization_id", orgId)
+        .order("created_at", { ascending: false })
+        .then(({ data }) => {
+          if (data) {
+            const realQuotes = data.map((r) => r.payload as Quote).filter(Boolean);
+            const sortedQuotes = sortDocumentsByActivity(realQuotes);
+            
+            setQuotes((prev) => {
+              // Évite de re-rendre toute l'application s'il n'y a aucun changement
+              if (JSON.stringify(prev) === JSON.stringify(sortedQuotes)) {
+                return prev;
+              }
+              return sortedQuotes;
+            });
+          }
+        });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Check for status changes to trigger notifications
   const prevQuotesRef = useRef<Quote[]>([]);
   const isInitializedRef = useRef(false);
