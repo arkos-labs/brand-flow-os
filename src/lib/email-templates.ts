@@ -15,7 +15,11 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
 
   const totalHT = quote.details?.items.reduce((acc, item) => acc + (Number(item.priceHT) * Number(item.qty)), 0) || 0;
   const tvaAmount = quote.amount - totalHT;
-  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}`;
+  
+  const qData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(quote)))));
+  const cData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(company)))));
+  
+  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}?q=${qData}&c=${cData}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}?q=${qData}&c=${cData}`;
 
   if (templateId === "modele-relance") {
     return `

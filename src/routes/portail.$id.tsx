@@ -137,10 +137,25 @@ function SignaturePad({ onSign }: { onSign: (dataUrl: string) => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 function ClientPortalPremium() {
   const { id } = Route.useParams();
-  const { quotes, updateQuote, company } = useData();
+  const { quotes, updateQuote, company: localCompany } = useData();
   const { money, date } = useI18n();
 
-  const quote = quotes.find((q) => q.number === id);
+  // Parse public data from URL if available
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const qParam = searchParams.get('q');
+  const cParam = searchParams.get('c');
+
+  const publicQuote = qParam ? (() => {
+    try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(qParam))))); } catch (e) { return null; }
+  })() : null;
+
+  const publicCompany = cParam ? (() => {
+    try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(cParam))))); } catch (e) { return null; }
+  })() : null;
+
+  const quote = quotes.find((q) => q.number === id) || publicQuote;
+  const company = localCompany?.name ? localCompany : publicCompany;
+
   const docData = quote ? quoteToDocumentData(quote) : null;
   const docCompany = company ? companyToDocCompany(company) : null;
 
