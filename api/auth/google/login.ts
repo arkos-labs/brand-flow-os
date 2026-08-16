@@ -7,7 +7,7 @@ export default async function handler(req: Request) {
   const orgId = url.searchParams.get("orgId") || "";
 
   const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.VITE_GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = new URL("/api/auth/google/callback", url.origin).toString();
   
   if (!clientId || !redirectUri) {
     return new Response("Missing Google Client ID or Redirect URI", { status: 500 });
