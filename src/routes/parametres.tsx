@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Building2,
   MapPin,
@@ -57,7 +57,7 @@ const LEGAL_FORMS = [
   "Autre",
 ];
 
-type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs";
+type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs" | "integrations";
 
 function SectionHeader({
   icon: Icon,
@@ -171,6 +171,23 @@ function SettingsPage() {
   
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
 
+  useEffect(() => {
+    // Check if we just returned from Google OAuth
+    const params = new URLSearchParams(window.location.search);
+    const googleToken = params.get("google_token");
+    const googleError = params.get("google_error");
+    
+    if (googleToken) {
+      updateCompany({ ...company, google_refresh_token: googleToken });
+      alert("Votre compte Gmail a été connecté avec succès !");
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (googleError) {
+      alert("Erreur de connexion à Gmail. Avez-vous bien coché toutes les cases ?");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [company, updateCompany]);
+
   const handleSiretLookup = async (siret: string) => {
     const clean = siret.replace(/\D/g, "");
     if (clean.length !== 14) return;
@@ -233,6 +250,7 @@ function SettingsPage() {
     { id: "logo", icon: ImagePlus, label: "Logo" },
     { id: "docs", icon: FileText, label: lang === "fr" ? "Documents" : "Documents" },
     { id: "bank", icon: Landmark, label: lang === "fr" ? "Bancaire" : "Bank" },
+    { id: "integrations", icon: SlidersHorizontal, label: "Intégrations" },
     { id: "prefs", icon: Palette, label: t("pref.title") },
   ];
 
@@ -820,6 +838,68 @@ function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Intégrations ── */}
+          {activeSection === "integrations" && (
+            <div className="card-elevated p-6 space-y-5">
+              <h2 className="text-sm font-semibold">Intégrations & E-mail</h2>
+              <p className="text-xs text-muted-foreground">
+                Connectez votre compte Gmail pour envoyer vos devis et factures directement depuis votre propre adresse e-mail.
+              </p>
+              
+              <div className="rounded-lg border border-border p-5 bg-card flex flex-col items-start gap-4">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="h-10 w-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-lg">G</div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-foreground">Google (Gmail)</h3>
+                    <p className="text-xs text-muted-foreground">Envoyer des e-mails avec l'API officielle Google</p>
+                  </div>
+                  {company.google_refresh_token ? (
+                    <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-200">
+                      <CheckCircle2 className="w-4 h-4" /> Connecté
+                    </div>
+                  ) : (
+                    <div className="text-amber-600 text-xs font-medium border border-amber-200 bg-amber-50 px-3 py-1.5 rounded-full">
+                      Non connecté
+                    </div>
+                  )}
+                </div>
+                
+                {company.google_refresh_token ? (
+                  <div className="w-full">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Votre compte est configuré pour l'envoi d'e-mails.
+                    </p>
+                    <button 
+                      onClick={() => {
+                        if (confirm("Voulez-vous vraiment déconnecter votre compte Gmail ?")) {
+                          updateCompany({ ...company, google_refresh_token: null });
+                        }
+                      }}
+                      className="text-xs text-destructive hover:underline font-medium"
+                    >
+                      Déconnecter le compte
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      window.location.href = `/api/auth/google/login?orgId=${company.id}`;
+                    }}
+                    className="flex items-center gap-2 rounded-lg bg-[#4285F4] hover:bg-[#3367D6] text-white px-4 py-2 text-sm font-medium transition-colors"
+                  >
+                    <svg className="w-4 h-4 bg-white rounded-sm p-0.5" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Se connecter avec Google
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

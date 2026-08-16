@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useData, ClientType, QuoteItem, Upsell, Quote, Invoice } from "@/lib/data-context";
 import { InvoiceStatus } from "@/lib/demo-data";
-import { exportQuotePdf, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
+import { exportQuotePdf, generateQuotePdfBase64, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
 import { DocumentTemplate } from "@/components/DocumentTemplate";
 import { generateQuoteEmailHtml } from "@/lib/email-templates";
 import { Button } from "@/components/ui/button";
@@ -202,6 +202,7 @@ function QuotesInner() {
 
   // Email Quote State
   const [emailQuote, setEmailQuote] = useState<Quote | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailTemplateId, setEmailTemplateId] = useState<string>("modele-1");
 
   const todayStr = new Date().toISOString().split("T")[0] ?? "";
@@ -1680,20 +1681,71 @@ function QuotesInner() {
             </Button>
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => {
+              disabled={isSendingEmail}
+              onClick={async () => {
                 if (emailQuote) {
-                  updateQuote(emailQuote.number, {
-                    ...emailQuote,
-                    status: { fr: "Envoyé", en: "Sent" },
-                    sentAt: new Date().toISOString(),
-                  });
-                  alert("Mode local : le devis est marqué comme envoyé. Le véritable envoi sera activé avec le backend e-mail.");
-                  setEmailQuote(null);
+                  if (company.google_refresh_token) {
+                    setIsSendingEmail(true);
+                    try {
+                      // 1. Generate PDF
+                      const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
+                      const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
+                      
+                      // 2. Send via API
+                      const res = await fetch("/api/quotes/send", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          to: emailQuote.clientEmail || emailQuote.client, // Ensure there is an email
+                          subject: `Votre devis ${emailQuote.number} de ${company.name || "notre entreprise"}`,
+                          html,
+                          pdfBase64,
+                          pdfFilename: `Devis_${emailQuote.number}.pdf`,
+                          refreshToken: company.google_refresh_token,
+                        })
+                      });
+                      
+                      const data = await res.json();
+                      
+                      if (res.ok) {
+                        updateQuote(emailQuote.number, {
+                          ...emailQuote,
+                          status: { fr: "Envoyé", en: "Sent" },
+                          sentAt: new Date().toISOString(),
+                        });
+                        alert("Le devis a été envoyé avec succès via votre adresse Gmail !");
+                        setEmailQuote(null);
+                      } else {
+                        alert("Erreur lors de l'envoi : " + (data.message || res.statusText));
+                      }
+                    } catch (err: any) {
+                      alert("Erreur : " + err.message);
+                    } finally {
+                      setIsSendingEmail(false);
+                    }
+                  } else {
+                    alert("Mode local : le devis est marqué comme envoyé. Veuillez connecter votre compte Gmail dans les Paramètres pour un véritable envoi.");
+                    updateQuote(emailQuote.number, {
+                      ...emailQuote,
+                      status: { fr: "Envoyé", en: "Sent" },
+                      sentAt: new Date().toISOString(),
+                    });
+                    setEmailQuote(null);
+                  }
                 }
               }}
             >
-              <Send className="w-4 h-4 mr-2" />
-              Marquer comme envoyé
+              {isSendingEmail ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Envoi en cours...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Envoyer le devis
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>

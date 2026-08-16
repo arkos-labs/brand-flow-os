@@ -337,8 +337,8 @@ export type Database = {
           quote_prefix: string
           siret: string | null
           updated_at: string
-          vat_number: string | null
           website: string | null
+          google_refresh_token: string | null
         }
         Insert: {
           address_line1?: string | null
@@ -366,6 +366,7 @@ export type Database = {
           updated_at?: string
           vat_number?: string | null
           website?: string | null
+          google_refresh_token?: string | null
         }
         Update: {
           address_line1?: string | null
@@ -393,6 +394,7 @@ export type Database = {
           updated_at?: string
           vat_number?: string | null
           website?: string | null
+          google_refresh_token?: string | null
         }
         Relationships: []
       }

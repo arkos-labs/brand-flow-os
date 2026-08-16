@@ -241,6 +241,74 @@ function addDays(iso: string, days: number): string {
 // ─── API publique ──────────────────────────────────────────────────────────────
 
 /**
+ * Génère le devis en format PDF (Base64) pour l'envoi par e-mail.
+ */
+export async function generateQuotePdfBase64(quote: Quote, company: CompanySettings): Promise<string> {
+  const docData    = quoteToDocumentData(quote);
+  const docCompany = companyToDocCompany(company);
+
+  // 1. HTML
+  const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
+  const html    = renderToStaticMarkup(element);
+  
+  // 2. Brut
+  const rawPdfBlob = await generatePdfBlob(html);
+
+  // 3. XML (Optionnel, mais on peut l'inclure)
+  const vatRate  = quote.details?.vatRate ?? 20;
+  const totalHT  = quote.details?.totalHT  ?? quote.amount / (1 + vatRate / 100);
+  const totalVAT = (quote.details?.totalTTC ?? quote.amount) - totalHT;
+  const totalTTC = quote.details?.totalTTC ?? quote.amount;
+
+  const fxLines: FxLineItem[] = docData.items.map((item, i) => ({
+    lineNumber:  i + 1,
+    description: item.description,
+    qty:         item.qty,
+    unitPrice:   item.priceHT,
+    vatRate:     item.vatRate,
+    total:       item.qty * item.priceHT,
+  }));
+
+  const fxDoc: FxDocument = {
+    type: "quote",
+    number: quote.number,
+    issueDate: quote.date,
+    currency: "EUR",
+    seller: buildFxSeller(company),
+    buyer: { name: quote.client, siret: quote.details?.siret || "", address: quote.details?.address || "" },
+    lines: fxLines,
+    vatRate,
+    totalHT,
+    totalVAT,
+    totalTTC,
+    paymentTermsDays: company.paymentTermsDays,
+    lateInterestRate: company.lateInterestRate,
+    recoveryFee: company.recoveryFee,
+  };
+
+  const xml = generateFacturxXml(fxDoc);
+  let finalPdfBlob = rawPdfBlob;
+  
+  try {
+    finalPdfBlob = await embedFacturxInPdf(rawPdfBlob, xml, quote.number, quote.date);
+  } catch (err) {
+    console.error("Erreur Factur-X:", err);
+  }
+
+  // Convert blob to base64
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = (reader.result as string).split(',')[1];
+      resolve(base64data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(finalPdfBlob);
+  });
+}
+
+
+/**
  * Exporte un devis en PDF en le téléchargeant directement.
  * Embarque le XML Factur-X à l'intérieur du fichier PDF généré.
  */
