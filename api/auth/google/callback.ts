@@ -23,7 +23,7 @@ export default async function handler(req: Request) {
 
   const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.VITE_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.VITE_GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = new URL("/api/auth/google/callback", url.origin).toString();
 
   if (!clientId || !clientSecret || !redirectUri) {
     return new Response("Missing Google Client Credentials", { status: 500 });
