@@ -255,7 +255,7 @@ function ClientPortalPremium() {
     if (orgParam) {
       // Cas du client public qui signe via l'URL d'email → API sans auth
       try {
-        await fetch("/api/quotes/sign", {
+        const res = await fetch("/api/quotes/sign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -264,19 +264,30 @@ function ClientPortalPremium() {
             orgId: orgParam,
           }),
         });
-      } catch (err) {
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.error || "Failed to sign");
+        }
+      } catch (err: any) {
         console.error("Failed to sync signature", err);
+        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
+        setIsSubmitting(false);
+        return; // Stopper ici, ne pas afficher l'écran de succès
       }
     } else {
       // Cas de l'artisan connecté → mise à jour directe Supabase (déclenche le Realtime)
       try {
-        await updateQuote(quote.id, {
-          status: "accepted",
-          signed_at: signedAt,
-          signature_data: signaturePayload,
+        await updateQuote(quote.number, {
+          ...quote,
+          status: { fr: "Signé", en: "Signed" },
+          signedAt,
+          signatureData: signaturePayload,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to update quote via Supabase", err);
+        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur locale"));
+        setIsSubmitting(false);
+        return;
       }
     }
 
@@ -296,7 +307,7 @@ function ClientPortalPremium() {
     if (orgParam) {
       // Client public → API sans auth
       try {
-        await fetch("/api/quotes/refuse", {
+        const res = await fetch("/api/quotes/refuse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -306,19 +317,27 @@ function ClientPortalPremium() {
             refusedAt,
           }),
         });
-      } catch (err) {
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.error || "Failed to refuse");
+        }
+      } catch (err: any) {
         console.error("Failed to sync refusal", err);
+        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
+        return;
       }
     } else {
       // Artisan connecté → Supabase direct (déclenche le Realtime)
       try {
-        await updateQuote(quote.id, {
-          status: "refused",
-          refused_at: refusedAt,
-          refuse_reason: refuseReason || null,
+        await updateQuote(quote.number, {
+          ...quote,
+          status: { fr: "Refusé", en: "Refused" },
+          refusedAt,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to update quote via Supabase", err);
+        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur locale"));
+        return;
       }
     }
 

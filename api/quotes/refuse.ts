@@ -48,8 +48,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from("quotes")
       .update({
         status: "refused",
-        refused_at: refusedAt ?? new Date().toISOString(),
-        refuse_reason: reason ?? null,
         payload,
       })
       .eq("number", quoteNumber)

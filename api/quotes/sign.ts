@@ -54,8 +54,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from("quotes")
       .update({
         status: "accepted",
-        signed_at: signatureData.signedAt ?? new Date().toISOString(),
-        signature_data: signatureData,
         payload,
       })
       .eq("number", quoteNumber)
