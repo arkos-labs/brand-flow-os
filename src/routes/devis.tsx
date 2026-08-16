@@ -1691,7 +1691,7 @@ function QuotesInner() {
                       const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
                       const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId);
                       
-                      const artisanEmail = user?.email || company?.email;
+                      const artisanEmail = company?.email;
                       
                       // 2. Send via API
                       const res = await fetch("/api/quotes/send", {

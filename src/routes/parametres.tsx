@@ -865,7 +865,7 @@ function SettingsPage() {
                 
                 <div className="w-full">
                   <p className="text-xs text-muted-foreground mb-3">
-                    Vous n'avez rien à configurer. Lorsque vos clients répondent à vos devis, la réponse arrive directement sur votre adresse e-mail ({user?.email || company.email}).
+                    Vous n'avez rien à configurer. Lorsque vos clients répondent à vos devis, la réponse arrive directement sur votre adresse e-mail ({company.email}).
                   </p>
                 </div>
               </div>
