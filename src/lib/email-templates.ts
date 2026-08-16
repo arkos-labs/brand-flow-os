@@ -1,6 +1,6 @@
 import { Quote, CompanySettings } from "./data-context";
 
-export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, templateId: string = "modele-1", baseUrl: string = ""): string {
+export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, templateId: string = "modele-1", baseUrl: string = "", orgId: string = ""): string {
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
   };
@@ -19,7 +19,7 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
   const qData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(quote)))));
   const cData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(company)))));
   
-  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}?q=${qData}&c=${cData}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}?q=${qData}&c=${cData}`;
+  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}?q=${qData}&c=${cData}&org=${orgId}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}?q=${qData}&c=${cData}&org=${orgId}`;
 
   if (templateId === "modele-relance") {
     return `

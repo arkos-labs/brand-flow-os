@@ -7,6 +7,7 @@ import { InvoiceStatus } from "@/lib/demo-data";
 import { exportQuotePdf, generateQuotePdfBase64, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
 import { DocumentTemplate } from "@/components/DocumentTemplate";
 import { generateQuoteEmailHtml } from "@/lib/email-templates";
+import { getMyOrgId } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { searchCompanyBySiret } from "@/lib/siret";
 import {
@@ -1726,7 +1727,8 @@ function QuotesInner() {
                 try {
                   // 1. Generate PDF
                   const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
-                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId, window.location.origin);
+                  const currentOrgId = await getMyOrgId() || "";
+                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId, window.location.origin, currentOrgId);
 
                   const artisanEmail = company?.email;
 

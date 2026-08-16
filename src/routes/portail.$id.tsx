@@ -144,6 +144,7 @@ function ClientPortalPremium() {
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const qParam = searchParams.get('q');
   const cParam = searchParams.get('c');
+  const orgParam = searchParams.get('org');
 
   const publicQuote = qParam ? (() => {
     try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(qParam))))); } catch (e) { return null; }
@@ -160,12 +161,12 @@ function ClientPortalPremium() {
   const docCompany = company ? companyToDocCompany(company) : null;
 
   // Un devis est "signé" du point de vue client uniquement s'il porte le statut Signé
-  const isSigned = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé";
+  const isSigned = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé" || quote?.status?.fr === "Payé";
   const isRefused = quote?.status?.fr === "Refusé";
 
-  // Initialise l'écran selon le statut actuel (mais ne bascule JAMAIS automatiquement
-  // sur "signed" — cela doit être déclenché uniquement par le clic du client)
+  // Initialise l'écran selon le statut actuel
   const [step, setStep] = useState<"view" | "signed" | "refused">(() => {
+    if (isSigned) return "signed";
     if (isRefused) return "refused";
     return "view";
   });
@@ -177,6 +178,7 @@ function ClientPortalPremium() {
   const [signatureData, setSignatureData] = useState("");
   const [refuseReason, setRefuseReason] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const now = new Date();
   const timestamp = `${now.toLocaleDateString("fr-FR")} ${now.toLocaleTimeString("fr-FR")}`;
@@ -201,19 +203,45 @@ function ClientPortalPremium() {
     setExporting(false);
   };
 
-  const handleSign = () => {
+  const handleSign = async () => {
+    setIsSubmitting(true);
     const signedAt = new Date().toISOString();
-    updateQuote(quote.number, {
-      ...quote,
-      status: { fr: "Signé", en: "Signed" },
+    
+    const signaturePayload = {
+      signerName: typedName.trim() || quote.client,
       signedAt,
-      signatureData: {
-        signerName: typedName.trim() || quote.client,
+      consent: agreed,
+      image: signatureMode === "draw" ? signatureData : undefined,
+    };
+
+    if (orgParam) {
+      // Cas du client public qui signe via l'URL d'email
+      try {
+        await fetch("/api/quotes/sign", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quoteNumber: quote.number,
+            signatureData: signaturePayload,
+            orgId: orgParam,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to sync signature", err);
+      }
+    } else {
+      // Cas de l'artisan qui signe lui-même depuis son tableau de bord
+      updateQuote(quote.number, {
+        ...quote,
+        status: { fr: "Signé", en: "Signed" },
         signedAt,
-        consent: agreed,
-        image: signatureMode === "draw" ? signatureData : undefined,
-      },
-    });
+        signatureData: signaturePayload,
+      });
+    }
+
+    setIsSubmitting(false);
     setIsSignOpen(false);
     sessionStorage.setItem(`seen_${quote.number}`, "true");
     setStep("signed");
@@ -485,12 +513,13 @@ function ClientPortalPremium() {
               onClick={handleSign}
               disabled={
                 !agreed ||
-                (signatureMode === "draw" ? !signatureData : !typedName)
+                (signatureMode === "draw" ? !signatureData : !typedName) ||
+                isSubmitting
               }
               className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold gap-2 text-sm shadow-lg shadow-slate-900/20 disabled:opacity-40"
             >
-              <CheckCircle2 className="h-4 w-4" />
-              Confirmer ma signature
+              <CheckCircle2 className={cn("h-4 w-4", isSubmitting && "animate-spin")} />
+              {isSubmitting ? "Enregistrement..." : "Confirmer ma signature"}
             </Button>
           </div>
         </DialogContent>

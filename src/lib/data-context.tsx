@@ -663,6 +663,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setClients(remote.clients);
         localStorage.setItem("invoicepro_clients", JSON.stringify(remote.clients));
       }
+
+      // Realtime subscription for instant signature updates
+      supabase
+        .channel("public:quotes")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "quotes",
+            filter: `organization_id=eq.${orgId}`,
+          },
+          (payload) => {
+            if (payload.new && payload.new.payload) {
+              const updatedQuote = payload.new.payload as Quote;
+              setQuotes((prev) => {
+                const newQuotes = prev.map((q) => (q.number === updatedQuote.number ? updatedQuote : q));
+                return sortDocumentsByActivity(newQuotes);
+              });
+            }
+          }
+        )
+        .subscribe();
+
     }).catch(() => { /* silencieux si pas de connexion */ });
   }, []);
 
