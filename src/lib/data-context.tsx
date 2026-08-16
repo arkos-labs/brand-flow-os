@@ -218,6 +218,13 @@ export type QuoteDetails = {
   totalTTC: number;
 };
 
+/** Trace d'un email envoyé (devis, facture, relance…) */
+export type EmailSend = {
+  date: string;        // ISO
+  to: string;          // destinataire
+  label: string;       // "Envoi initial", "Relance J+7", "Renvoi", etc.
+};
+
 export type Quote = {
   number: string;
   client: string;
@@ -239,6 +246,8 @@ export type Quote = {
   };
   details?: QuoteDetails;
   invoicedLineIds?: string[];
+  /** Historique complet de tous les emails envoyés */
+  emailsSent?: EmailSend[];
 };
 
 export type Invoice = {
@@ -261,6 +270,9 @@ export type Invoice = {
   sourceSubscriptionId?: string;
   items?: import("./invoice-from-quote").InvoiceLine[];
   reminders?: { date: string; type: "J+7" | "J+15" | "J+30" }[];
+  /** Historique complet de tous les emails envoyés */
+  emailsSent?: EmailSend[];
+  clientEmail?: string;
 };
 
 /** Les listes de documents sont toujours rangées par dernière activité :

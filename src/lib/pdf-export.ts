@@ -427,6 +427,68 @@ export async function exportInvoicePdf(invoice: Invoice, company: CompanySetting
   }
 }
 
+/**
+ * Génère une facture en PDF et retourne le contenu encodé en base64 (pour envoi email).
+ */
+export async function generateInvoicePdfBase64(invoice: Invoice, company: CompanySettings): Promise<string> {
+  const docData    = invoiceToDocumentData(invoice);
+  const docCompany = companyToDocCompany(company);
+
+  const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
+  const html    = renderToStaticMarkup(element);
+  const rawPdfBlob = await generatePdfBlob(html);
+
+  const vatRate  = 20;
+  const totalTTC = invoice.amount;
+  const totalHT  = Math.round((totalTTC / (1 + vatRate / 100)) * 100) / 100;
+  const totalVAT = totalTTC - totalHT;
+
+  const fxLines: FxLineItem[] = docData.items.map((item, i) => ({
+    lineNumber:  i + 1,
+    description: item.description,
+    qty:         item.qty,
+    unitPrice:   item.priceHT,
+    vatRate:     item.vatRate,
+    total:       item.qty * item.priceHT,
+  }));
+
+  const fxDoc: FxDocument = {
+    type: "invoice",
+    number: invoice.number,
+    issueDate: invoice.date,
+    dueDate: invoice.due,
+    currency: "EUR",
+    seller: buildFxSeller(company),
+    buyer: { name: invoice.client },
+    lines: fxLines,
+    vatRate,
+    totalHT,
+    totalVAT,
+    totalTTC,
+    paymentTermsDays: company.paymentTermsDays,
+    lateInterestRate: company.lateInterestRate,
+    recoveryFee: company.recoveryFee,
+  };
+
+  const xml = generateFacturxXml(fxDoc);
+  let finalPdfBlob = rawPdfBlob;
+  try {
+    finalPdfBlob = await embedFacturxInPdf(rawPdfBlob, xml, invoice.number, invoice.date);
+  } catch (err) {
+    console.error("Erreur Factur-X:", err);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = (reader.result as string).split(',')[1];
+      resolve(base64data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(finalPdfBlob);
+  });
+}
+
 // ─── Helpers Factur-X ─────────────────────────────────────────────────────────
 
 function buildFxSeller(c: CompanySettings): FxDocument["seller"] {

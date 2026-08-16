@@ -155,18 +155,24 @@ function ClientPortalPremium() {
   })() : null;
 
   const [liveQuote, setLiveQuote] = useState<Quote | null>(null);
+  // Mémorise localement si le client vient de signer dans cette session
+  const [localSigned, setLocalSigned] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return !!sessionStorage.getItem(`quote_signed_${id}`);
+  });
+
+  const fetchLiveQuote = async () => {
+    if (!orgParam || !id) return;
+    try {
+      const r = await fetch(`/api/quotes/get?number=${encodeURIComponent(id)}&org=${encodeURIComponent(orgParam)}`);
+      if (!r.ok) return;
+      const data = await r.json();
+      if (data.quote) setLiveQuote(data.quote);
+    } catch { /* silencieux */ }
+  };
 
   useEffect(() => {
-    if (orgParam && id) {
-      fetch(`/api/quotes/get?number=${id}&org=${orgParam}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.quote) {
-            setLiveQuote(data.quote);
-          }
-        })
-        .catch(console.error);
-    }
+    fetchLiveQuote();
   }, [id, orgParam]);
 
   const quote = quotes.find((q) => q.number === id) || liveQuote || publicQuote;
@@ -175,8 +181,9 @@ function ClientPortalPremium() {
   const docData = quote ? quoteToDocumentData(quote) : null;
   const docCompany = company ? companyToDocCompany(company) : null;
 
-  // Un devis est "signé" du point de vue client uniquement s'il porte le statut Signé
-  const isSigned = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé" || quote?.status?.fr === "Payé";
+  // Un devis est "signé" soit via Supabase, soit localement (session courante)
+  const isSignedRemote = quote?.status?.fr === "Signé" || quote?.status?.fr === "Facturé" || quote?.status?.fr === "Payé";
+  const isSigned = isSignedRemote || localSigned;
   const isRefused = quote?.status?.fr === "Refusé";
 
   // Initialise l'écran selon le statut actuel
@@ -259,8 +266,12 @@ function ClientPortalPremium() {
 
     setIsSubmitting(false);
     setIsSignOpen(false);
-    sessionStorage.setItem(`seen_${quote.number}`, "true");
+    // Mémoriser la signature localement pour éviter le re-affichage des boutons
+    sessionStorage.setItem(`quote_signed_${quote.number}`, "true");
+    setLocalSigned(true);
     setStep("signed");
+    // Re-fetcher le devis pour avoir le statut à jour depuis Supabase
+    setTimeout(() => fetchLiveQuote(), 1000);
   };
 
   const handleRefuse = () => {
@@ -297,7 +308,7 @@ function ClientPortalPremium() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => { sessionStorage.setItem(`seen_${quote.number}`, "true"); setStep("view"); }}
+              onClick={() => setStep("view")}
               className="w-full py-5 rounded-xl"
             >
               Consulter le devis

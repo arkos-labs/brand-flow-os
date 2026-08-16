@@ -1284,7 +1284,20 @@ function QuotesInner() {
                   <p className="font-mono text-[11px] text-muted-foreground">
                     {q.number} · {date(q.date)}
                   </p>
-                  {q.sentAt && <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyé le {date(q.sentAt)}</p>}
+                  {q.emailsSent && q.emailsSent.length > 0 ? (
+                    <div className="mt-1 space-y-0.5">
+                      {q.emailsSent.map((s, i) => (
+                        <p key={i} className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
+                          <span className="font-medium text-primary/80">{s.label}</span>
+                          <span>→ {s.to}</span>
+                          <span className="text-muted-foreground/60">· {date(s.date)}</span>
+                        </p>
+                      ))}
+                    </div>
+                  ) : q.sentAt ? (
+                    <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyé le {date(q.sentAt)}</p>
+                  ) : null}
                 </div>
               </div>
 
@@ -1767,13 +1780,24 @@ function QuotesInner() {
                   const data = await res.json();
 
                   if (res.ok) {
+                    const now = new Date().toISOString();
+                    const isResend = !!emailQuote.sentAt;
+                    const newSend = {
+                      date: now,
+                      to: sendToEmail,
+                      label: emailTemplateId === "modele-relance"
+                        ? "Relance"
+                        : emailTemplateId === "modele-merci"
+                        ? "Confirmation signature"
+                        : isResend ? "Renvoi" : "Envoi initial",
+                    };
                     updateQuote(emailQuote.number, {
                       ...emailQuote,
                       clientEmail: sendToEmail,
                       status: { fr: "Envoyé", en: "Sent" },
-                      sentAt: new Date().toISOString(),
+                      sentAt: emailQuote.sentAt || now,
+                      emailsSent: [...(emailQuote.emailsSent || []), newSend],
                     });
-                    alert(`✅ Devis envoyé avec succès à ${sendToEmail} !`);
                     setEmailQuote(null);
                   } else {
                     alert(`❌ Erreur lors de l'envoi :\n\n${data.message || res.statusText}`);

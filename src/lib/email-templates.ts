@@ -1,4 +1,4 @@
-import { Quote, CompanySettings } from "./data-context";
+import { Quote, Invoice, CompanySettings } from "./data-context";
 
 export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, templateId: string = "modele-1", baseUrl: string = "", orgId: string = ""): string {
   const formatMoney = (amount: number) => {
@@ -147,4 +147,107 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
 </body>
 </html>
   `;
+}
+
+export function generateInvoiceEmailHtml(
+  invoice: Invoice,
+  company: CompanySettings,
+  templateId: string = "modele-1",
+): string {
+  const formatMoney = (amount: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+  const totalHT = invoice.totalHT ?? Math.round((invoice.amount / 1.2) * 100) / 100;
+  const totalVAT = invoice.totalVAT ?? (invoice.amount - totalHT);
+  const isLate = invoice.status === "late" || invoice.status === "overdue";
+
+  if (templateId === "modele-relance") {
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8">
+<style>
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; background-color: #f8f9fa; padding: 20px; margin: 0; }
+  .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border: 1px solid #e2e8f0; border-radius: 12px; border-top: 4px solid #ef4444; }
+  .btn { display: inline-block; background-color: #ef4444; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; font-size: 15px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    ${company.logoBase64 ? `<div style="margin-bottom: 30px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 50px;" /></div>` : ''}
+    <div style="font-size: 20px; font-weight: bold; color: #0f172a; margin-bottom: 20px;">⚠️ Relance — Facture ${invoice.number} impayée</div>
+    <p>Bonjour <strong>${invoice.client}</strong>,</p>
+    <p>Sauf erreur de notre part, la facture <strong>${invoice.number}</strong> d'un montant de <strong>${formatMoney(invoice.amount)} TTC</strong>, échue le <strong>${formatDate(invoice.due)}</strong>, n'a pas encore été réglée.</p>
+    <p>Nous vous invitons à régulariser cette situation dans les meilleurs délais. La facture est jointe à cet email.</p>
+    <p>Si le paiement a déjà été effectué, merci d'ignorer ce message ou de nous en informer.</p>
+    <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+      Cordialement,<br><strong>${company.name || "L'équipe"}</strong><br>${company.phone || ""}
+    </p>
+  </div>
+</body>
+</html>`;
+  }
+
+  // MODELE STANDARD
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8">
+<style>
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #334155; line-height: 1.6; background-color: #f8f9fa; padding: 20px; margin: 0; }
+  .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border: 1px solid #e2e8f0; border-radius: 12px; border-top: 4px solid #0f172a; }
+  .summary-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+  .iban-box { background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 20px 0; }
+</style>
+</head>
+<body>
+  <div class="container">
+    ${company.logoBase64 ? `<div style="margin-bottom: 35px;"><img src="${company.logoBase64}" alt="Logo" style="max-height: 55px;" /></div>` : ''}
+    <div style="font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 20px;">Votre facture ${invoice.number}</div>
+    <p>Bonjour <strong>${invoice.client}</strong>,</p>
+    <p>Veuillez trouver ci-joint votre facture pour les prestations réalisées. Retrouvez le détail complet dans le document PDF en pièce jointe.</p>
+
+    <div class="summary-box">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="color: #64748b; font-size: 14px; padding-bottom: 8px;">Date de facturation</td>
+          <td style="text-align: right; font-weight: bold; color: #0f172a; padding-bottom: 8px;">${formatDate(invoice.date)}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 14px; padding-bottom: 8px;">Date d'échéance</td>
+          <td style="text-align: right; font-weight: bold; color: ${isLate ? '#ef4444' : '#0f172a'}; padding-bottom: 8px;">${formatDate(invoice.due)}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">Montant HT</td>
+          <td style="text-align: right; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">${formatMoney(totalHT)}</td>
+        </tr>
+        <tr>
+          <td style="color: #64748b; font-size: 14px; padding-top: 12px;">TVA (20%)</td>
+          <td style="text-align: right; color: #64748b; padding-top: 12px;">${formatMoney(totalVAT)}</td>
+        </tr>
+        <tr>
+          <td style="color: #0f172a; font-size: 18px; font-weight: bold; padding-top: 12px;">TOTAL TTC</td>
+          <td style="text-align: right; font-weight: bold; font-size: 20px; color: #0ea5e9; padding-top: 12px;">${formatMoney(invoice.amount)}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${(company.iban || company.bankName) ? `
+    <div class="iban-box">
+      <p style="font-weight: bold; color: #15803d; margin: 0 0 8px 0; font-size: 14px;">💳 Coordonnées bancaires pour le règlement</p>
+      ${company.bankName ? `<p style="margin: 4px 0; font-size: 13px; color: #374151;"><strong>Banque :</strong> ${company.bankName}</p>` : ''}
+      ${company.iban ? `<p style="margin: 4px 0; font-size: 13px; color: #374151; font-family: monospace;"><strong>IBAN :</strong> ${company.iban}</p>` : ''}
+      ${company.bic ? `<p style="margin: 4px 0; font-size: 13px; color: #374151;"><strong>BIC :</strong> ${company.bic}</p>` : ''}
+    </div>` : ''}
+
+    <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;">
+      Cordialement,<br>
+      <strong style="color: #334155;">${company.name || "L'équipe"}</strong><br>
+      ${company.phone ? `${company.phone}<br>` : ''}
+      ${company.email ? company.email : ''}
+    </p>
+  </div>
+</body>
+</html>`;
 }

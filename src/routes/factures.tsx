@@ -32,7 +32,8 @@ import {
 import { recordInvoicePayment, type PaymentMethod } from "@/lib/document-workflow";
 import { type InvoiceStatus } from "@/lib/demo-data";
 import { searchCompanyBySiret } from "@/lib/siret";
-import { exportInvoicePdf } from "@/lib/pdf-export";
+import { exportInvoicePdf, generateInvoicePdfBase64 } from "@/lib/pdf-export";
+import { generateInvoiceEmailHtml } from "@/lib/email-templates";
 import { generateAccountingExportCSV, downloadCSV } from "@/lib/export-compta";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -279,6 +280,76 @@ function Invoices() {
   const [reminderInvoice, setReminderInvoice] = useState<Invoice | null>(null);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
 
+  // Email send modal
+  const [emailInvoice, setEmailInvoice] = useState<Invoice | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailTemplateId, setEmailTemplateId] = useState("modele-1");
+  const [sendToEmail, setSendToEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+
+  const openEmailDialog = (inv: Invoice) => {
+    const client = clients.find((c) => c.id === inv.clientId || c.name === inv.client);
+    setSendToEmail(client?.email || inv.clientEmail || "");
+    setEmailTemplateId("modele-1");
+    setEmailError(null);
+    setEmailSuccess(false);
+    setEmailInvoice(inv);
+  };
+
+  const handleSendInvoiceEmail = async () => {
+    if (!emailInvoice) return;
+    setEmailError(null);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!sendToEmail || !emailRegex.test(sendToEmail)) {
+      setEmailError("Veuillez saisir une adresse email valide.");
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const pdfBase64 = await generateInvoicePdfBase64(emailInvoice, company);
+      const html = generateInvoiceEmailHtml(emailInvoice, company, emailTemplateId);
+      const res = await fetch("/api/quotes/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: sendToEmail,
+          subject: `Votre facture ${emailInvoice.number} — ${company.name || "notre entreprise"}`,
+          html,
+          pdfBase64,
+          pdfFilename: `Facture_${emailInvoice.number}.pdf`,
+          artisanEmail: company.email,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailError(data.message || "Erreur lors de l'envoi.");
+      } else {
+        // Marquer comme envoyée + enregistrer dans l'historique
+        const now = new Date().toISOString();
+        const isResend = !!emailInvoice.sentAt;
+        const newSend = {
+          date: now,
+          to: sendToEmail,
+          label: emailTemplateId === "modele-relance" ? "Relance impayée" : isResend ? "Renvoi" : "Envoi initial",
+        };
+        updateInvoice(emailInvoice.number, {
+          ...emailInvoice,
+          clientEmail: sendToEmail,
+          status: emailInvoice.status === "draft" ? "sent" : emailInvoice.status,
+          sentAt: emailInvoice.sentAt || now,
+          emailsSent: [...(emailInvoice.emailsSent || []), newSend],
+        });
+        setEmailSuccess(true);
+        setTimeout(() => setEmailInvoice(null), 2000);
+      }
+    } catch {
+      setEmailError("Erreur inattendue. Vérifiez votre connexion.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   // Confirm paid modal
   const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("virement");
@@ -454,8 +525,18 @@ function Invoices() {
   const handleSendReminder = (invoiceNumber: string, type: "J+7" | "J+15" | "J+30") => {
     const inv = invoices.find((i) => i.number === invoiceNumber);
     if (inv) {
-      const updatedReminders = [...(inv.reminders || []), { date: new Date().toISOString(), type }];
-      updateInvoice(invoiceNumber, { ...inv, reminders: updatedReminders });
+      const now = new Date().toISOString();
+      const updatedReminders = [...(inv.reminders || []), { date: now, type }];
+      const newSend = {
+        date: now,
+        to: inv.clientEmail || inv.client,
+        label: `Relance ${type}`,
+      };
+      updateInvoice(invoiceNumber, {
+        ...inv,
+        reminders: updatedReminders,
+        emailsSent: [...(inv.emailsSent || []), newSend],
+      });
     }
   };
 
@@ -984,7 +1065,19 @@ function Invoices() {
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground">
                       <p>{date(inv.date)}</p>
-                      {inv.sentAt && <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyée le {date(inv.sentAt)}</p>}
+                      {inv.emailsSent && inv.emailsSent.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {inv.emailsSent.map((s, i) => (
+                            <p key={i} className="text-[10px] flex items-center gap-1 flex-wrap">
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
+                              <span className="font-medium text-primary/80">{s.label}</span>
+                              <span className="text-muted-foreground/60">· {date(s.date)}</span>
+                            </p>
+                          ))}
+                        </div>
+                      ) : inv.sentAt ? (
+                        <p className="mt-0.5 text-[11px] font-medium text-primary">Envoyée le {date(inv.sentAt)}</p>
+                      ) : null}
                     </td>
                     <td className="px-5 py-3.5">
                       <span
@@ -1062,14 +1155,14 @@ function Invoices() {
                             <Bell className="h-3.5 w-3.5" />
                           </button>
                         )}
-                        {inv.status === "draft" && (
+                        {(inv.status === "draft" || inv.status === "sent") && (
                           <button
-                            title="Envoyer la facture"
-                            onClick={() => updateInvoice(inv.number, { ...inv, status: "sent", sentAt: new Date().toISOString() })}
+                            title="Envoyer la facture par email"
+                            onClick={() => openEmailDialog(inv)}
                             className="flex h-8 items-center justify-center gap-1.5 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-2.5 text-xs font-bold text-white shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-primary/90 hover:shadow-none"
                           >
                             <Send className="h-3.5 w-3.5" />
-                            Envoyer
+                            {inv.status === "sent" ? "Renvoyer" : "Envoyer"}
                           </button>
                         )}
                         {(inv.status === "sent" || inv.status === "late") && (
@@ -1182,13 +1275,102 @@ function Invoices() {
         </DialogContent>
       </Dialog>
 
-      {/* ReminderModal (Bug 3 corrigé) */}
+      {/* ReminderModal */}
       <ReminderModal
         invoice={reminderInvoice}
         isOpen={isReminderOpen}
         onClose={() => setIsReminderOpen(false)}
         onSend={handleSendReminder}
       />
+
+      {/* ── Modal Envoi Facture par Email ───────────────────────────────── */}
+      <Dialog open={!!emailInvoice} onOpenChange={(open) => !open && setEmailInvoice(null)}>
+        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b bg-muted/30">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold">
+                Envoyer la facture {emailInvoice?.number}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Modèle :</span>
+              <select
+                value={emailTemplateId}
+                onChange={(e) => setEmailTemplateId(e.target.value)}
+                className="rounded border border-border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="modele-1">Standard</option>
+                <option value="modele-relance">Relance impayée</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 px-4 pt-3 pb-2 border-b bg-muted/10 text-sm">
+            <div className="flex items-center gap-2 flex-wrap">
+              <strong className="shrink-0">À :</strong>
+              <input
+                type="email"
+                value={sendToEmail}
+                onChange={(e) => { setSendToEmail(e.target.value); setEmailError(null); }}
+                placeholder="email@client.fr"
+                className={`flex-1 min-w-0 rounded border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary ${
+                  sendToEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sendToEmail)
+                    ? "border-red-400 bg-red-50 text-red-700"
+                    : "border-border bg-background"
+                }`}
+              />
+              {!sendToEmail && <span className="text-xs text-red-500 shrink-0">⚠ Email manquant</span>}
+            </div>
+            <div>
+              <strong>Sujet :</strong> Votre facture {emailInvoice?.number} — {company.name || "notre entreprise"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              📎 Pièce jointe : Facture_{emailInvoice?.number}.pdf (PDF Factur-X)
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              key={`${emailTemplateId}-${emailInvoice?.number}`}
+              className="flex-1 w-full h-full bg-white"
+              srcDoc={emailInvoice ? generateInvoiceEmailHtml(emailInvoice, company, emailTemplateId) : ""}
+              title="Prévisualisation de l'e-mail"
+            />
+          </div>
+
+          <div className="p-4 border-t flex items-center justify-between gap-3">
+            {emailError && (
+              <p className="text-sm text-red-600 flex-1">{emailError}</p>
+            )}
+            {emailSuccess && (
+              <p className="text-sm text-emerald-600 flex-1 font-medium">✓ Facture envoyée avec succès !</p>
+            )}
+            {!emailError && !emailSuccess && <div className="flex-1" />}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEmailInvoice(null)}>
+                Annuler
+              </Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isSendingEmail || !sendToEmail}
+                onClick={handleSendInvoiceEmail}
+              >
+                {isSendingEmail ? (
+                  <>
+                    <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin mr-2" />
+                    Envoi en cours…
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer la facture
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
