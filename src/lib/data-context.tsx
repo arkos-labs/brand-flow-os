@@ -89,7 +89,7 @@ async function upsertClient(client: Client, orgId: string) {
   }, { onConflict: "id" });
   if (error) {
     console.error("UPSERT CLIENT ERROR:", error);
-    toast.error("Erreur lors de la sauvegarde du client : " + error.message);
+    alert("ERREUR CRITIQUE DE SAUVEGARDE CLIENT :\n" + error.message + "\n\nPrenez une photo de ce message et envoyez-le moi !");
   }
 }
 
