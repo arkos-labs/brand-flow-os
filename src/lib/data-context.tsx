@@ -614,15 +614,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Organisation Supabase de l'utilisateur connecté
   const orgIdRef = useRef<string | null>(null);
+  // Promesse résolue dès que l'orgId a été récupéré (ou qu'on sait qu'il n'y en a pas).
+  // Sert à mettre en attente les écritures (addClient, addQuote…) déclenchées AVANT
+  // que getMyOrgId() ait fini de répondre, au lieu de les perdre silencieusement
+  // (c'était la cause du bug "le client créé disparaît au refresh").
+  const orgReadyResolveRef = useRef<(orgId: string | null) => void>(() => {});
+  const orgReadyRef = useRef<Promise<string | null>>(
+    new Promise<string | null>((resolve) => {
+      orgReadyResolveRef.current = resolve;
+    })
+  );
 
   // Charger depuis Supabase uniquement
   useEffect(() => {
     setLoaded(true); // Permet de débloquer le rendu de l'UI même sans données
 
     getMyOrgId().then(async (orgId) => {
-      if (!orgId) return;
       orgIdRef.current = orgId;
-      
+      orgReadyResolveRef.current(orgId);
+      if (!orgId) return;
+
       const remote = await loadOrgData(orgId);
       if (!remote) return;
       
@@ -810,26 +821,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (prev.some((q) => q.number === quote.number)) return prev;
       return sortDocumentsByActivity([...prev, quote]);
     });
-    if (orgIdRef.current) upsertQuote(quote, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertQuote(quote, orgId).catch(console.warn);
+    });
   };
   const updateQuote = (number: string, updated: Quote) => {
     setQuotes((prev) => sortDocumentsByActivity(prev.map((q) => (q.number === number ? updated : q))));
-    if (orgIdRef.current) upsertQuote(updated, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertQuote(updated, orgId).catch(console.warn);
+    });
   };
   const deleteQuote = (number: string) => {
     setQuotes((prev) => prev.filter((quote) => quote.number !== number));
-    if (orgIdRef.current) deleteQuoteFromDb(number, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) deleteQuoteFromDb(number, orgId).catch(console.warn);
+    });
   };
   const addInvoice = (invoice: Invoice) => {
     setInvoices((prev) => {
       if (prev.some((inv) => inv.number === invoice.number)) return prev;
       return sortDocumentsByActivity([...prev, invoice]);
     });
-    if (orgIdRef.current) upsertInvoice(invoice, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertInvoice(invoice, orgId).catch(console.warn);
+    });
   };
   const updateInvoice = (number: string, updated: Invoice) => {
     setInvoices((prev) => sortDocumentsByActivity(prev.map((inv) => (inv.number === number ? updated : inv))));
-    if (orgIdRef.current) upsertInvoice(updated, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertInvoice(updated, orgId).catch(console.warn);
+    });
   };
   const addUpsell = (upsell: Upsell) => {
     setUpsells((prev) => [...prev, upsell]);
@@ -853,14 +874,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addClient = (c: Client) => {
     setClients((prev) => [c, ...prev]);
-    if (orgIdRef.current) upsertClient(c, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertClient(c, orgId).catch(console.warn);
+    });
   };
   const updateClient = (id: string, updated: Client) => {
     setClients((prev) => prev.map((c) => (c.id === id ? updated : c)));
-    if (orgIdRef.current) upsertClient(updated, orgIdRef.current).catch(console.warn);
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) upsertClient(updated, orgId).catch(console.warn);
+    });
   };
-  const deleteClient = (id: string) =>
+  const deleteClient = (id: string) => {
     setClients((prev) => prev.filter((c) => c.id !== id));
+    orgReadyRef.current.then((orgId) => {
+      if (orgId) supabase.from("clients").delete().eq("id", id).eq("organization_id", orgId).then(({ error }) => {
+        if (error) console.error("DELETE CLIENT ERROR:", error);
+      });
+    });
+  };
 
   // ── Marchés ────────────────────────────────────────────────────────────────
   const addMarche = (m: Omit<Marche, "id" | "createdAt">) => {
