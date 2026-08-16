@@ -91,10 +91,15 @@ async function loadOrgData(orgId: string): Promise<{ quotes: Quote[]; invoices: 
     supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("clients").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
   ]);
-  if (qRes.error || iRes.error || cRes.error) return null;
-  const quotes = (qRes.data ?? []).map((r) => r.payload as Quote).filter(Boolean);
-  const invoices = (iRes.data ?? []).map((r) => r.payload as Invoice).filter(Boolean);
-  const clients = (cRes.data ?? []).map((r) => r.payload as Client).filter(Boolean);
+  
+  if (qRes.error) console.error("Error fetching quotes:", qRes.error);
+  if (iRes.error) console.error("Error fetching invoices:", iRes.error);
+  if (cRes.error) console.error("Error fetching clients:", cRes.error);
+  
+  const quotes = qRes.data ? qRes.data.map((r) => r.payload as Quote).filter(Boolean) : [];
+  const invoices = iRes.data ? iRes.data.map((r) => r.payload as Invoice).filter(Boolean) : [];
+  const clients = cRes.data ? cRes.data.map((r) => r.payload as Client).filter(Boolean) : [];
+  
   return { quotes, invoices, clients };
 }
 
