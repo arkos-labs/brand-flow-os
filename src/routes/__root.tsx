@@ -17,6 +17,7 @@ import { LanguageProvider } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
 import { SupabaseDataProvider, useSupabaseData } from "@/lib/supabase-context";
 import { ThemeProvider } from "@/lib/theme";
+import { Toaster } from "@/components/ui/sonner";
 
 // Routes publiques (pas besoin d'être connecté)
 const PUBLIC_ROUTES = new Set([
@@ -210,6 +211,7 @@ function RootComponent() {
                 <AppShell>
                   <Outlet />
                 </AppShell>
+                <Toaster position="top-right" richColors />
               </AuthGuard>
             </DataProvider>
           </SupabaseDataProvider>

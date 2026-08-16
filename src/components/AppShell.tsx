@@ -268,6 +268,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => { setMobileOpen(false); }, [locationPath]);
 
+  // Request Notification permission for push notifications
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      const timer = setTimeout(() => {
+        Notification.requestPermission().catch(() => {});
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   // Public routes don't show the admin shell (login, landing, pricing, etc.)
   if (PUBLIC_PATHS.includes(location.pathname) || location.pathname.startsWith("/portail")) {
     return <>{children}</>;

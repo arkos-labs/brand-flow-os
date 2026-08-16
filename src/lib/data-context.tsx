@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
+import { toast } from "sonner";
 import {
   quotes as initialQuotes,
   invoices as initialInvoices,
@@ -716,6 +717,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     }).catch(() => { /* silencieux si pas de connexion */ });
   }, []);
+
+  // Check for status changes to trigger notifications
+  const prevQuotesRef = useRef<Quote[]>([]);
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // If not initialized, don't trigger notifications on initial load
+    if (!isInitializedRef.current) {
+      if (quotes.length > 0 || loaded) {
+        isInitializedRef.current = true;
+        prevQuotesRef.current = quotes;
+      }
+      return;
+    }
+
+    // After initialization, check if any quote changed to "Signé"
+    quotes.forEach((q) => {
+      const prev = prevQuotesRef.current.find((p) => p.number === q.number);
+      if (prev && prev.status.fr !== "Signé" && q.status.fr === "Signé") {
+        toast.success(`Le devis ${q.number} a été signé par ${q.client} ! 🎉`, {
+          duration: 10000,
+        });
+        
+        // System notification fallback if permitted
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Devis signé ! 🎉", {
+            body: `Le client ${q.client} vient de signer le devis ${q.number}.`
+          });
+        }
+      }
+    });
+
+    prevQuotesRef.current = quotes;
+  }, [quotes, loaded]);
 
   useEffect(() => {
     if (loaded) localStorage.setItem("invoicepro_quotes_v4", JSON.stringify(quotes));
