@@ -36,7 +36,7 @@ function invoiceStatusToDb(s: string): string {
 }
 
 async function upsertQuote(quote: Quote, orgId: string) {
-  await supabase.from("quotes").upsert({
+  const { error } = await supabase.from("quotes").upsert({
     organization_id: orgId,
     number: quote.number,
     client_name: quote.client,
@@ -48,10 +48,14 @@ async function upsertQuote(quote: Quote, orgId: string) {
     total_ttc: quote.details?.totalTTC ?? quote.amount,
     payload: quote,
   }, { onConflict: "organization_id,number" });
+  if (error) {
+    console.error("UPSERT QUOTE ERROR:", error);
+    toast.error("Erreur de synchro Devis : " + error.message);
+  }
 }
 
 async function upsertInvoice(invoice: Invoice, orgId: string) {
-  await supabase.from("invoices").upsert({
+  const { error } = await supabase.from("invoices").upsert({
     organization_id: orgId,
     number: invoice.number,
     client_name: invoice.client,
@@ -64,10 +68,14 @@ async function upsertInvoice(invoice: Invoice, orgId: string) {
     amount_paid: invoice.paidAmount ?? 0,
     payload: invoice,
   }, { onConflict: "organization_id,number" });
+  if (error) {
+    console.error("UPSERT INVOICE ERROR:", error);
+    toast.error("Erreur de synchro Facture : " + error.message);
+  }
 }
 
 async function upsertClient(client: Client, orgId: string) {
-  await supabase.from("clients").upsert({
+  const { error } = await supabase.from("clients").upsert({
     id: client.id,
     organization_id: orgId,
     is_company: client.type === "pro",
@@ -79,6 +87,10 @@ async function upsertClient(client: Client, orgId: string) {
     phone: client.phone ?? null,
     payload: client,
   }, { onConflict: "id" });
+  if (error) {
+    console.error("UPSERT CLIENT ERROR:", error);
+    toast.error("Erreur lors de la sauvegarde du client : " + error.message);
+  }
 }
 
 async function deleteQuoteFromDb(number: string, orgId: string) {
