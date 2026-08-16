@@ -154,7 +154,22 @@ function ClientPortalPremium() {
     try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(cParam))))); } catch (e) { return null; }
   })() : null;
 
-  const quote = quotes.find((q) => q.number === id) || publicQuote;
+  const [liveQuote, setLiveQuote] = useState<Quote | null>(null);
+
+  useEffect(() => {
+    if (orgParam && id) {
+      fetch(`/api/quotes/get?number=${id}&org=${orgParam}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.quote) {
+            setLiveQuote(data.quote);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [id, orgParam]);
+
+  const quote = quotes.find((q) => q.number === id) || liveQuote || publicQuote;
   const company = localCompany?.name ? localCompany : publicCompany;
 
   const docData = quote ? quoteToDocumentData(quote) : null;
@@ -165,11 +180,12 @@ function ClientPortalPremium() {
   const isRefused = quote?.status?.fr === "Refusé";
 
   // Initialise l'écran selon le statut actuel
-  const [step, setStep] = useState<"view" | "signed" | "refused">(() => {
-    if (isSigned) return "signed";
-    if (isRefused) return "refused";
-    return "view";
-  });
+  const [step, setStep] = useState<"view" | "signed" | "refused">("view");
+
+  useEffect(() => {
+    if (isSigned) setStep("signed");
+    else if (isRefused) setStep("refused");
+  }, [isSigned, isRefused]);
   const [isSignOpen, setIsSignOpen] = useState(false);
   const [isRefuseOpen, setIsRefuseOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);

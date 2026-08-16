@@ -792,7 +792,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [company.invoicePrefix, company.nextInvoiceNumber, company.paymentTermsDays, invoices, loaded]);
 
   const addQuote = (quote: Quote) => {
-    setQuotes((prev) => sortDocumentsByActivity([...prev, quote]));
+    setQuotes((prev) => {
+      if (prev.some((q) => q.number === quote.number)) return prev;
+      return sortDocumentsByActivity([...prev, quote]);
+    });
     if (orgIdRef.current) upsertQuote(quote, orgIdRef.current).catch(console.warn);
   };
   const updateQuote = (number: string, updated: Quote) => {
@@ -804,7 +807,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (orgIdRef.current) deleteQuoteFromDb(number, orgIdRef.current).catch(console.warn);
   };
   const addInvoice = (invoice: Invoice) => {
-    setInvoices((prev) => sortDocumentsByActivity([...prev, invoice]));
+    setInvoices((prev) => {
+      if (prev.some((inv) => inv.number === invoice.number)) return prev;
+      return sortDocumentsByActivity([...prev, invoice]);
+    });
     if (orgIdRef.current) upsertInvoice(invoice, orgIdRef.current).catch(console.warn);
   };
   const updateInvoice = (number: string, updated: Invoice) => {
