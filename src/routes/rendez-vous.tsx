@@ -25,8 +25,8 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  Calendar,
   CalendarCheck2,
-  CalendarPlus,
   Video,
   ExternalLink,
   MapPin,
@@ -70,6 +70,18 @@ function formatDuration(start: string, end: string) {
   return m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 }
 
+// Les descriptions Google Calendar (notamment celles des "Créneaux de
+// rendez-vous") contiennent souvent du HTML brut (balises <a>, entités
+// comme &#39; pour l'apostrophe…). On les nettoie pour n'afficher que du
+// texte lisible, sans aucune balise ni caractère d'échappement parasite.
+function cleanDescription(raw: string): string {
+  if (typeof window === "undefined") return raw;
+  const div = document.createElement("div");
+  div.innerHTML = raw.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
+  const text = div.textContent || div.innerText || "";
+  return text.replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // Carte compacte affichant TOUTES les infos d'un rendez-vous, directement
 // dans la case du jour du calendrier (pas de clic nécessaire).
 function EventCell({ event }: { event: CalendarEvent }) {
@@ -93,16 +105,6 @@ function EventCell({ event }: { event: CalendarEvent }) {
     >
       <div className="flex items-start justify-between gap-1">
         <span className="font-semibold text-foreground">{event.name}</span>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium",
-            event.status === "confirmed"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-amber-100 text-amber-700",
-          )}
-        >
-          {event.status === "confirmed" ? "Confirmé" : "Annulé"}
-        </span>
       </div>
 
       <span className="text-muted-foreground">
@@ -131,7 +133,7 @@ function EventCell({ event }: { event: CalendarEvent }) {
       {event.description && (
         <div className="flex items-start gap-1 text-foreground">
           <FileText className="mt-0.5 h-2.5 w-2.5 shrink-0 text-muted-foreground" />
-          <span className="whitespace-pre-wrap break-words text-muted-foreground">{event.description}</span>
+          <span className="whitespace-pre-wrap break-words text-muted-foreground">{cleanDescription(event.description)}</span>
         </div>
       )}
 
@@ -273,7 +275,7 @@ function RendezVousPage() {
           ) : (
             <Button asChild>
               <a href={connectHref} aria-disabled={!orgId}>
-                <CalendarPlus className="mr-2 h-4 w-4" />
+                <Calendar className="mr-2 h-4 w-4" />
                 Connecter Google Calendar
               </a>
             </Button>
@@ -366,7 +368,7 @@ function RendezVousPage() {
             </div>
             <Button asChild className="mt-2">
               <a href={connectHref}>
-                <CalendarPlus className="mr-2 h-4 w-4" />
+                <Calendar className="mr-2 h-4 w-4" />
                 Connecter mon compte
               </a>
             </Button>
