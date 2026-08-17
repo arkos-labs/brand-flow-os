@@ -434,8 +434,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               "invoicepro_products",
               "invoicepro_company_v1",
               "invoicepro_upsells",
-              "invoicepro_marches",
-              "invoicepro_situations",
               "invoicepro_expenses",
               "invoicepro_subscriptions",
               "clearquote_onboarding_done",

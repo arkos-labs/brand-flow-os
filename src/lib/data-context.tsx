@@ -97,7 +97,7 @@ async function deleteQuoteFromDb(number: string, orgId: string) {
   await supabase.from("quotes").delete().eq("organization_id", orgId).eq("number", number);
 }
 
-// ─── Sync : Catalogue / Paramètres / Dépenses / Abonnements / Marchés / Situations ──
+// ─── Sync : Catalogue / Paramètres / Dépenses / Abonnements ──
 // Même pattern que clients/devis/factures : l'objet applicatif complet est stocké
 // tel quel dans une colonne `payload` jsonb, pour éviter d'avoir à faire correspondre
 // chaque champ à une colonne SQL dédiée.

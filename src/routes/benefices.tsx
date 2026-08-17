@@ -51,7 +51,7 @@ export const Route = createFileRoute("/benefices")({
             {
               "@type": "Question",
               "name": "ClearQuote convient-il aux artisans du BTP ?",
-              "acceptedAnswer": { "@type": "Answer", "text": "Oui. ClearQuote est particulièrement adapté aux artisans BTP : TVA à 10% sur travaux de rénovation, situations de travaux (facturation par avancement), acomptes et soldes. La numérotation est conforme aux exigences de l'URSSAF." },
+              "acceptedAnswer": { "@type": "Answer", "text": "Oui. ClearQuote est particulièrement adapté aux artisans BTP : TVA à 10% sur travaux de rénovation, acomptes et soldes. La numérotation est conforme aux exigences de l'URSSAF." },
             },
             {
               "@type": "Question",
@@ -130,7 +130,7 @@ const TESTIMONIALS = [
   {
     name: "Entreprise Lefebvre",
     role: "Plomberie-Chauffage — Lille",
-    text: "On fait des situations de travaux sur des chantiers importants. ClearQuote gère ça parfaitement, avec la bonne TVA à 10% et les acomptes. Un gain de temps énorme.",
+    text: "On facture par acomptes sur des chantiers importants. ClearQuote gère ça parfaitement, avec la bonne TVA à 10%. Un gain de temps énorme.",
     stars: 5,
   },
 ];
@@ -138,7 +138,7 @@ const TESTIMONIALS = [
 const FAQ = [
   {
     q: "ClearQuote convient-il aux artisans du BTP ?",
-    a: "Oui. ClearQuote est particulièrement adapté aux artisans BTP : TVA à 10% sur travaux de rénovation, situations de travaux (facturation par avancement), acomptes et soldes. La numérotation est conforme aux exigences de l'URSSAF.",
+    a: "Oui. ClearQuote est particulièrement adapté aux artisans BTP : TVA à 10% sur travaux de rénovation, acomptes et soldes. La numérotation est conforme aux exigences de l'URSSAF.",
   },
   {
     q: "Est-ce que ClearQuote remplace un expert-comptable ?",
