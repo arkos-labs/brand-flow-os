@@ -163,6 +163,10 @@ function ClientPortalPremium() {
   })() : null;
 
   const [liveQuote, setLiveQuote] = useState<Quote | null>(null);
+  // Entreprise renvoyée par l'API en même temps que le devis — sert de
+  // filet de sécurité quand le lien a été copié tel quel (sans q=/c=), pour
+  // éviter que la page plante faute de données entreprise.
+  const [liveCompany, setLiveCompany] = useState<Record<string, unknown> | null>(null);
   // Mémorise localement si le client vient de signer dans cette session
   const [localSigned, setLocalSigned] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -178,6 +182,7 @@ function ClientPortalPremium() {
       if (!r.ok) return;
       const data = await r.json();
       if (data.quote) setLiveQuote(data.quote);
+      if (data.company) setLiveCompany(data.company);
     } catch { /* silencieux */ }
   };
 
@@ -189,7 +194,12 @@ function ClientPortalPremium() {
   // (fallback sur le numéro pour compatibilité avec d'anciens liens déjà
   // envoyés avant ce correctif de sécurité).
   const quote = quotes.find((q) => q.publicToken === id) || quotes.find((q) => q.number === id) || liveQuote || publicQuote;
-  const company = localCompany?.name ? localCompany : publicCompany;
+  // Toujours un objet valide (jamais null) : entreprise de l'artisan connecté,
+  // sinon celle encodée dans l'URL, sinon celle renvoyée par l'API via le
+  // token, sinon un objet vide — pour ne jamais planter sur `company.xxx`
+  // pendant le chargement ou si aucune des sources n'a de données.
+  const company: { name?: string; email?: string; logoBase64?: string } =
+    (localCompany?.name ? localCompany : null) ?? publicCompany ?? liveCompany ?? {};
 
   const docData = quote ? quoteToDocumentData(quote) : null;
   const docCompany = company ? companyToDocCompany(company) : null;
