@@ -644,7 +644,7 @@ function ClientsPage() {
                             <ActionIcon
                               title="Copier le lien client"
                               onClick={async () => {
-                                const url = `${window.location.origin}/portail/${q.number}`;
+                                const url = `${window.location.origin}/portail/${q.publicToken || q.number}`;
                                 try {
                                   await navigator.clipboard.writeText(url);
                                   setActionNotice(`Lien client de ${q.number} copié.`);

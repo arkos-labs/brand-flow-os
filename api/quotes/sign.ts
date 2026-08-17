@@ -6,9 +6,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { quoteNumber, signatureData, orgId } = req.body;
+  const { token, signatureData } = req.body;
 
-  if (!quoteNumber || !signatureData || !orgId) {
+  if (!token || !signatureData) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -25,18 +25,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // ── 1. Récupérer le devis + l'email de l'organisation ─────────────────────
+    // ── 1. Récupérer le devis via son token public (UUID aléatoire, impossible
+    //       à deviner) — jamais via son numéro + organization_id ────────────────
     const { data: quote, error: fetchError } = await supabaseAdmin
       .from("quotes")
-      .select("payload, number, total_ttc")
-      .eq("number", quoteNumber)
-      .eq("organization_id", orgId)
+      .select("id, number, organization_id, payload, total_ttc")
+      .eq("payload->>publicToken", token)
       .single();
 
     if (fetchError || !quote) {
       console.error("Failed to fetch quote:", fetchError);
       return res.status(404).json({ error: "Quote not found" });
     }
+
+    const quoteNumber = quote.number;
+    const orgId = quote.organization_id;
 
     const { data: org } = await supabaseAdmin
       .from("organizations")
@@ -56,8 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "accepted",
         payload,
       })
-      .eq("number", quoteNumber)
-      .eq("organization_id", orgId);
+      .eq("id", quote.id);
 
     if (updateError) {
       console.error("Failed to update quote:", updateError);

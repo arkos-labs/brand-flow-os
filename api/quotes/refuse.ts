@@ -6,9 +6,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { quoteNumber, orgId, reason, refusedAt } = req.body;
+  const { token, reason, refusedAt } = req.body;
 
-  if (!quoteNumber || !orgId) {
+  if (!token) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -25,12 +25,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Vérifier que le devis appartient bien à cette organisation
+    // Le devis est identifié UNIQUEMENT par son token public (UUID aléatoire,
+    // impossible à deviner) — jamais par son numéro + organization_id, qui
+    // étaient tous les deux devinables/visibles dans un lien déjà envoyé.
     const { data: quote, error: fetchError } = await supabaseAdmin
       .from("quotes")
-      .select("id, payload")
-      .eq("number", quoteNumber)
-      .eq("organization_id", orgId)
+      .select("id, number, payload")
+      .eq("payload->>publicToken", token)
       .single();
 
     if (fetchError || !quote) {
@@ -50,8 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "refused",
         payload,
       })
-      .eq("number", quoteNumber)
-      .eq("organization_id", orgId);
+      .eq("id", quote.id);
 
     if (updateError) {
       console.error("Failed to update quote:", updateError);

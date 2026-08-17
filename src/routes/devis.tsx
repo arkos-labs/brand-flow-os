@@ -1371,7 +1371,7 @@ function QuotesInner() {
                     <button
                       title="Copier le lien portail client"
                       onClick={() => {
-                        const url = `${window.location.origin}/portail/${q.number}`;
+                        const url = `${window.location.origin}/portail/${q.publicToken || q.number}`;
                         navigator.clipboard.writeText(url);
                         alert("Lien copié : " + url);
                       }}

@@ -170,9 +170,11 @@ function ClientPortalPremium() {
   });
 
   const fetchLiveQuote = async () => {
-    if (!orgParam || !id) return;
+    if (!id) return;
     try {
-      const r = await fetch(`/api/quotes/get?number=${encodeURIComponent(id)}&org=${encodeURIComponent(orgParam)}`);
+      // `id` est le token public du devis (UUID aléatoire, impossible à
+      // deviner) — jamais son numéro, qui est séquentiel et donc devinable.
+      const r = await fetch(`/api/quotes/get?token=${encodeURIComponent(id)}`);
       if (!r.ok) return;
       const data = await r.json();
       if (data.quote) setLiveQuote(data.quote);
@@ -181,9 +183,12 @@ function ClientPortalPremium() {
 
   useEffect(() => {
     fetchLiveQuote();
-  }, [id, orgParam]);
+  }, [id]);
 
-  const quote = quotes.find((q) => q.number === id) || liveQuote || publicQuote;
+  // Pour l'artisan connecté : on retrouve le devis via son token public
+  // (fallback sur le numéro pour compatibilité avec d'anciens liens déjà
+  // envoyés avant ce correctif de sécurité).
+  const quote = quotes.find((q) => q.publicToken === id) || quotes.find((q) => q.number === id) || liveQuote || publicQuote;
   const company = localCompany?.name ? localCompany : publicCompany;
 
   const docData = quote ? quoteToDocumentData(quote) : null;
@@ -253,15 +258,16 @@ function ClientPortalPremium() {
     };
 
     if (orgParam) {
-      // Cas du client public qui signe via l'URL d'email → API sans auth
+      // Cas du client public qui signe via l'URL d'email → API sans auth.
+      // Identification UNIQUEMENT par le token public du devis (UUID
+      // aléatoire) — jamais par son numéro + organization_id.
       try {
         const res = await fetch("/api/quotes/sign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            quoteNumber: quote.number,
+            token: quote.publicToken || id,
             signatureData: signaturePayload,
-            orgId: orgParam,
           }),
         });
         if (!res.ok) {
@@ -305,14 +311,15 @@ function ClientPortalPremium() {
     const refusedAt = new Date().toISOString();
 
     if (orgParam) {
-      // Client public → API sans auth
+      // Client public → API sans auth. Identification UNIQUEMENT par le
+      // token public du devis (UUID aléatoire) — jamais par son numéro +
+      // organization_id.
       try {
         const res = await fetch("/api/quotes/refuse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            quoteNumber: quote.number,
-            orgId: orgParam,
+            token: quote.publicToken || id,
             reason: refuseReason || null,
             refusedAt,
           }),

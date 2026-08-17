@@ -97,22 +97,153 @@ async function deleteQuoteFromDb(number: string, orgId: string) {
   await supabase.from("quotes").delete().eq("organization_id", orgId).eq("number", number);
 }
 
-async function loadOrgData(orgId: string): Promise<{ quotes: Quote[]; invoices: Invoice[]; clients: Client[] } | null> {
-  const [qRes, iRes, cRes] = await Promise.all([
+// ─── Sync : Catalogue / Paramètres / Dépenses / Abonnements / Marchés / Situations ──
+// Même pattern que clients/devis/factures : l'objet applicatif complet est stocké
+// tel quel dans une colonne `payload` jsonb, pour éviter d'avoir à faire correspondre
+// chaque champ à une colonne SQL dédiée.
+
+async function upsertProduct(product: Product, orgId: string) {
+  const { error } = await supabase.from("items_catalog").upsert({
+    id: product.id,
+    organization_id: orgId,
+    title: product.label?.fr || product.label?.en || product.ref || "Sans nom",
+    reference: product.ref ?? null,
+    unit_price_ht: product.priceHT,
+    vat_rate: product.vatRate,
+    is_active: product.active ?? true,
+    payload: product,
+  }, { onConflict: "id" });
+  if (error) console.error("UPSERT PRODUCT ERROR:", error);
+}
+
+async function deleteProductFromDb(id: string) {
+  const { error } = await supabase.from("items_catalog").delete().eq("id", id);
+  if (error) console.error("DELETE PRODUCT ERROR:", error);
+}
+
+async function upsertCompany(company: CompanySettings, orgId: string) {
+  const { error } = await supabase.from("organizations").update({
+    name: company.name || "Mon entreprise",
+    legal_form: company.legalForm ?? null,
+    siret: company.siret ?? null,
+    vat_number: company.vatNumber ?? null,
+    address_line1: company.address ?? null,
+    postal_code: company.postalCode ?? null,
+    city: company.city ?? null,
+    country: company.country ?? null,
+    phone: company.phone ?? null,
+    email: company.email ?? null,
+    website: company.website ?? null,
+    iban: company.iban ?? null,
+    bic: company.bic ?? null,
+    quote_prefix: company.quotePrefix || "DV",
+    invoice_prefix: company.invoicePrefix || "FA",
+    default_payment_days: company.paymentTermsDays || 30,
+    payload: company,
+  }).eq("id", orgId);
+  if (error) console.error("UPSERT COMPANY ERROR:", error);
+}
+
+async function upsertExpense(expense: Expense, orgId: string) {
+  const { error } = await supabase.from("expenses").upsert({
+    id: expense.id,
+    organization_id: orgId,
+    payload: expense,
+  }, { onConflict: "id" });
+  if (error) console.error("UPSERT EXPENSE ERROR:", error);
+}
+
+async function deleteExpenseFromDb(id: string) {
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  if (error) console.error("DELETE EXPENSE ERROR:", error);
+}
+
+async function upsertSubscription(subscription: Subscription, orgId: string) {
+  const { error } = await supabase.from("subscriptions").upsert({
+    id: subscription.id,
+    organization_id: orgId,
+    payload: subscription,
+  }, { onConflict: "id" });
+  if (error) console.error("UPSERT SUBSCRIPTION ERROR:", error);
+}
+
+async function deleteSubscriptionFromDb(id: string) {
+  const { error } = await supabase.from("subscriptions").delete().eq("id", id);
+  if (error) console.error("DELETE SUBSCRIPTION ERROR:", error);
+}
+
+async function upsertMarche(marche: Marche, orgId: string) {
+  const { error } = await supabase.from("marches").upsert({
+    id: marche.id,
+    organization_id: orgId,
+    payload: marche,
+  }, { onConflict: "id" });
+  if (error) console.error("UPSERT MARCHE ERROR:", error);
+}
+
+async function deleteMarcheFromDb(id: string) {
+  const { error } = await supabase.from("marches").delete().eq("id", id);
+  if (error) console.error("DELETE MARCHE ERROR:", error);
+}
+
+async function upsertSituation(situation: Situation, orgId: string) {
+  const { error } = await supabase.from("situations").upsert({
+    id: situation.id,
+    organization_id: orgId,
+    marche_id: situation.marcheId ?? null,
+    payload: situation,
+  }, { onConflict: "id" });
+  if (error) console.error("UPSERT SITUATION ERROR:", error);
+}
+
+async function deleteSituationFromDb(id: string) {
+  const { error } = await supabase.from("situations").delete().eq("id", id);
+  if (error) console.error("DELETE SITUATION ERROR:", error);
+}
+
+async function loadOrgData(orgId: string): Promise<{
+  quotes: Quote[];
+  invoices: Invoice[];
+  clients: Client[];
+  products: Product[];
+  company: CompanySettings | null;
+  expenses: Expense[];
+  subscriptions: Subscription[];
+  marches: Marche[];
+  situations: Situation[];
+} | null> {
+  const [qRes, iRes, cRes, pRes, orgRes, eRes, sRes, mRes, sitRes] = await Promise.all([
     supabase.from("quotes").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("clients").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("items_catalog").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("organizations").select("payload").eq("id", orgId).single(),
+    supabase.from("expenses").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("subscriptions").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("marches").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
+    supabase.from("situations").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
   ]);
-  
+
   if (qRes.error) console.error("Error fetching quotes:", qRes.error);
   if (iRes.error) console.error("Error fetching invoices:", iRes.error);
   if (cRes.error) console.error("Error fetching clients:", cRes.error);
-  
+  if (pRes.error) console.error("Error fetching products:", pRes.error);
+  if (eRes.error) console.error("Error fetching expenses:", eRes.error);
+  if (sRes.error) console.error("Error fetching subscriptions:", sRes.error);
+  if (mRes.error) console.error("Error fetching marches:", mRes.error);
+  if (sitRes.error) console.error("Error fetching situations:", sitRes.error);
+
   const quotes = qRes.data ? qRes.data.map((r) => r.payload as Quote).filter(Boolean) : [];
   const invoices = iRes.data ? iRes.data.map((r) => r.payload as Invoice).filter(Boolean) : [];
   const clients = cRes.data ? cRes.data.map((r) => r.payload as Client).filter(Boolean) : [];
-  
-  return { quotes, invoices, clients };
+  const products = pRes.data ? pRes.data.map((r) => r.payload as Product).filter(Boolean) : [];
+  const company = (orgRes.data?.payload as CompanySettings) ?? null;
+  const expenses = eRes.data ? eRes.data.map((r) => r.payload as Expense).filter(Boolean) : [];
+  const subscriptions = sRes.data ? sRes.data.map((r) => r.payload as Subscription).filter(Boolean) : [];
+  const marches = mRes.data ? mRes.data.map((r) => r.payload as Marche).filter(Boolean) : [];
+  const situations = sitRes.data ? sitRes.data.map((r) => r.payload as Situation).filter(Boolean) : [];
+
+  return { quotes, invoices, clients, products, company, expenses, subscriptions, marches, situations };
 }
 
 export type Product = DemoProduct;
@@ -245,6 +376,13 @@ export type EmailSend = {
 
 export type Quote = {
   number: string;
+  /**
+   * Identifiant public aléatoire (UUID), utilisé pour le lien du portail client
+   * (`/portail/$id`) et les endpoints publics `/api/quotes/*`, à la place du
+   * numéro de devis qui est séquentiel et donc devinable. Ne JAMAIS utiliser
+   * `number` pour identifier un devis dans un contexte public/non authentifié.
+   */
+  publicToken?: string;
   client: string;
   clientId?: string;
   clientEmail?: string;
@@ -652,6 +790,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setQuotes(sortDocumentsByActivity(remote.quotes));
       setInvoices(sortDocumentsByActivity(remote.invoices));
       setClients(remote.clients);
+      setProducts(remote.products);
+      if (remote.company) setCompany((prev) => ({ ...prev, ...remote.company }));
+      setExpenses(remote.expenses);
+      setSubscriptions(remote.subscriptions);
+      setMarches(remote.marches);
+      setSituations(remote.situations);
 
       // Realtime subscription for instant signature updates
       supabase
@@ -829,12 +973,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [company.invoicePrefix, company.nextInvoiceNumber, company.paymentTermsDays, invoices, loaded]);
 
   const addQuote = (quote: Quote) => {
+    // Génère un token public non devinable pour le lien du portail client,
+    // au lieu de s'appuyer sur le numéro de devis (séquentiel, devinable).
+    const withToken: Quote = quote.publicToken ? quote : { ...quote, publicToken: crypto.randomUUID() };
     setQuotes((prev) => {
-      if (prev.some((q) => q.number === quote.number)) return prev;
-      return sortDocumentsByActivity([...prev, quote]);
+      if (prev.some((q) => q.number === withToken.number)) return prev;
+      return sortDocumentsByActivity([...prev, withToken]);
     });
     orgReadyRef.current!.then((orgId) => {
-      if (orgId) upsertQuote(quote, orgId).catch(console.warn);
+      if (orgId) upsertQuote(withToken, orgId).catch(console.warn);
     });
   };
   const updateQuote = (number: string, updated: Quote) => {
@@ -870,18 +1017,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addProduct = (p: Product) => {
     setProducts((prev) => [...prev, p]);
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertProduct(p, orgId).catch(console.warn);
+    });
   };
 
   const updateProduct = (id: string, updated: Product) => {
     setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertProduct(updated, orgId).catch(console.warn);
+    });
   };
 
   const deleteProduct = (id: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) deleteProductFromDb(id).catch(console.warn);
+    });
   };
 
   const updateCompany = (settings: Partial<CompanySettings>) => {
-    setCompany((prev) => ({ ...prev, ...settings }));
+    setCompany((prev) => {
+      const next = { ...prev, ...settings };
+      orgReadyRef.current!.then((orgId) => {
+        if (orgId) upsertCompany(next, orgId).catch(console.warn);
+      });
+      return next;
+    });
   };
 
   const addClient = (c: Client) => {
@@ -909,21 +1071,48 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addMarche = (m: Omit<Marche, "id" | "createdAt">) => {
     const newMarche: Marche = { ...m, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     setMarches((prev) => [newMarche, ...prev]);
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertMarche(newMarche, orgId).catch(console.warn);
+    });
   };
   const updateMarche = (id: string, partial: Partial<Marche>) =>
-    setMarches((prev) => prev.map((m) => (m.id === id ? { ...m, ...partial } : m)));
-  const deleteMarche = (id: string) =>
+    setMarches((prev) => prev.map((m) => {
+      if (m.id !== id) return m;
+      const next = { ...m, ...partial };
+      orgReadyRef.current!.then((orgId) => {
+        if (orgId) upsertMarche(next, orgId).catch(console.warn);
+      });
+      return next;
+    }));
+  const deleteMarche = (id: string) => {
     setMarches((prev) => prev.filter((m) => m.id !== id));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) deleteMarcheFromDb(id).catch(console.warn);
+    });
+  };
 
   const addSituation = (s: Omit<Situation, "id">) => {
     const newSit: Situation = { ...s, id: crypto.randomUUID() };
     setSituations((prev) => [...prev, newSit]);
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertSituation(newSit, orgId).catch(console.warn);
+    });
   };
   const updateSituation = (id: string, partial: Partial<Situation>) => {
-    setSituations((prev) => prev.map((s) => (s.id === id ? { ...s, ...partial } : s)));
+    setSituations((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      const next = { ...s, ...partial };
+      orgReadyRef.current!.then((orgId) => {
+        if (orgId) upsertSituation(next, orgId).catch(console.warn);
+      });
+      return next;
+    }));
   };
   const deleteSituation = (id: string) => {
     setSituations((prev) => prev.filter((s) => s.id !== id));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) deleteSituationFromDb(id).catch(console.warn);
+    });
   };
 
   // Expenses
@@ -934,14 +1123,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setExpenses((prev) => [newExpense, ...prev]);
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertExpense(newExpense, orgId).catch(console.warn);
+    });
   };
 
   const updateExpense = (id: string, partial: Partial<Expense>) => {
-    setExpenses((prev) => prev.map((exp) => (exp.id === id ? { ...exp, ...partial } : exp)));
+    setExpenses((prev) => prev.map((exp) => {
+      if (exp.id !== id) return exp;
+      const next = { ...exp, ...partial };
+      orgReadyRef.current!.then((orgId) => {
+        if (orgId) upsertExpense(next, orgId).catch(console.warn);
+      });
+      return next;
+    }));
   };
 
   const deleteExpense = (id: string) => {
     setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) deleteExpenseFromDb(id).catch(console.warn);
+    });
   };
 
   // Subscriptions
@@ -952,14 +1154,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setSubscriptions((prev) => [newSub, ...prev]);
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) upsertSubscription(newSub, orgId).catch(console.warn);
+    });
   };
 
   const updateSubscription = (id: string, partial: Partial<Subscription>) => {
-    setSubscriptions((prev) => prev.map((sub) => (sub.id === id ? { ...sub, ...partial } : sub)));
+    setSubscriptions((prev) => prev.map((sub) => {
+      if (sub.id !== id) return sub;
+      const next = { ...sub, ...partial };
+      orgReadyRef.current!.then((orgId) => {
+        if (orgId) upsertSubscription(next, orgId).catch(console.warn);
+      });
+      return next;
+    }));
   };
 
   const deleteSubscription = (id: string) => {
     setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
+    orgReadyRef.current!.then((orgId) => {
+      if (orgId) deleteSubscriptionFromDb(id).catch(console.warn);
+    });
   };
 
   // Ne jamais bloquer le rendu du Provider : si les données ne sont pas encore

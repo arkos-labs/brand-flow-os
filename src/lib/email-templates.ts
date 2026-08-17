@@ -19,7 +19,10 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
   const qData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(quote)))));
   const cData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(company)))));
   
-  const portalUrl = baseUrl ? `${baseUrl}/portail/${quote.number}?q=${qData}&c=${cData}&org=${orgId}` : `https://brand-flow-os-opal.vercel.app/portail/${quote.number}?q=${qData}&c=${cData}&org=${orgId}`;
+  // Le lien utilise le token public du devis (UUID aléatoire, impossible à
+  // deviner) plutôt que son numéro (séquentiel, devinable) — voir /api/quotes/*.
+  const portalId = quote.publicToken || quote.number;
+  const portalUrl = baseUrl ? `${baseUrl}/portail/${portalId}?q=${qData}&c=${cData}&org=${orgId}` : `https://brand-flow-os-opal.vercel.app/portail/${portalId}?q=${qData}&c=${cData}&org=${orgId}`;
 
   if (templateId === "modele-relance") {
     return `

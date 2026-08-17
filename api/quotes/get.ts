@@ -6,9 +6,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { number, org } = req.query;
+  const { token } = req.query;
 
-  if (!number || !org) {
+  if (!token || typeof token !== "string") {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -28,11 +28,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
+    // Le devis est identifié UNIQUEMENT par son token public (UUID aléatoire,
+    // impossible à deviner) — jamais par son numéro, qui est séquentiel.
     const { data: quote, error: fetchError } = await supabaseAdmin
       .from("quotes")
       .select("payload")
-      .eq("number", number)
-      .eq("organization_id", org)
+      .eq("payload->>publicToken", token)
       .single();
 
     if (fetchError || !quote) {
