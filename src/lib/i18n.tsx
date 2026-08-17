@@ -22,7 +22,7 @@ export const dict = {
   "nav.section.tools": { fr: "Outils connectés", en: "Connected tools" },
   "nav.appointments": { fr: "Rendez-vous", en: "Appointments" },
   "app.rendezvous.title": { fr: "Rendez-vous", en: "Appointments" },
-  "app.rendezvous.subtitle": { fr: "Gérez vos appels de découverte et réunions synchronisés depuis Calendly.", en: "Manage your discovery calls and meetings synced from Calendly." },
+  "app.rendezvous.subtitle": { fr: "Gérez vos appels de découverte et réunions synchronisés depuis Google Calendar.", en: "Manage your discovery calls and meetings synced from Google Calendar." },
   "demo.badge": { fr: "Démo — données fictives", en: "Demo — sample data" },
 
   "dash.title": { fr: "Tableau de bord", en: "Dashboard" },

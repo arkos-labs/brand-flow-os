@@ -5,7 +5,18 @@ import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { getMyOrgId } from "@/lib/supabase";
-import { Calendar, Clock, User, Video, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  Calendar,
+  Clock,
+  Video,
+  ExternalLink,
+  Loader2,
+  AlertCircle,
+  CalendarCheck2,
+  CalendarPlus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/rendez-vous")({
   component: RendezVousPage,
@@ -27,6 +38,30 @@ type GoogleCalendar = {
   name: string;
   primary: boolean;
 };
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => (w[0] ?? "").toUpperCase())
+    .join("");
+}
+
+function avatarColor(name: string): string {
+  const colors = [
+    "bg-blue-500",
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-rose-500",
+    "bg-cyan-500",
+    "bg-blue-700",
+    "bg-teal-500",
+  ];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+  return colors[h % colors.length] ?? colors[0]!;
+}
 
 function formatDuration(start: string, end: string) {
   const ms = new Date(end).getTime() - new Date(start).getTime();
@@ -104,18 +139,18 @@ function RendezVousPage() {
   const appointments = (data || []).map((event) => ({
     id: event.id,
     name: event.attendeeName || event.name,
-    email: event.attendeeEmail || "Pas d'invité",
+    subtitle: event.attendeeName ? event.name : event.attendeeEmail || "Pas d'invité",
+    email: event.attendeeEmail,
     date: new Date(event.startTime).toLocaleDateString("fr-FR", {
+      weekday: "short",
       day: "2-digit",
-      month: "long",
-      year: "numeric",
+      month: "short",
     }),
     time: new Date(event.startTime).toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     }),
     duration: formatDuration(event.startTime, event.endTime),
-    type: event.name,
     status: event.status === "confirmed" ? "Confirmé" : "Annulé",
     link: event.location,
   }));
@@ -125,44 +160,42 @@ function RendezVousPage() {
     : "#";
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-4xl">
       <PageHeader
         title={t("app.rendezvous.title" as Key)}
         subtitle={t("app.rendezvous.subtitle" as Key)}
         action={
           isConnected ? (
-            <span className="flex h-9 items-center gap-2 rounded-[var(--shape-control)] border-2 border-success/30 bg-success/10 px-4 text-sm font-semibold text-success">
-              <Calendar className="h-4 w-4" />
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <CalendarCheck2 className="h-3.5 w-3.5" />
               Google Calendar connecté
             </span>
           ) : (
-            <a
-              href={connectHref}
-              aria-disabled={!orgId}
-              className="flex h-9 items-center gap-2 rounded-[var(--shape-control)] bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
-            >
-              <Calendar className="h-4 w-4" />
-              Connecter Google Calendar
-            </a>
+            <Button asChild>
+              <a href={connectHref} aria-disabled={!orgId}>
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Connecter Google Calendar
+              </a>
+            </Button>
           )
         }
       />
 
       {connectError && (
-        <div className="mt-4 flex items-center gap-2 rounded-[var(--shape-control)] border-2 border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           La connexion à Google Calendar a échoué. Merci de réessayer.
         </div>
       )}
 
       {!isConnected && (
-        <div className="mt-4 rounded-[var(--shape-control)] border-2 border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+        <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           Astuce : créez vos types de rendez-vous (diagnostic, devis, intervention…) gratuitement dans{" "}
           <a
             href="https://calendar.google.com/calendar/u/0/appointments"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-primary hover:underline"
+            className="font-medium text-primary hover:underline"
           >
             Google Calendar → Créneaux de rendez-vous
           </a>
@@ -171,15 +204,15 @@ function RendezVousPage() {
       )}
 
       {isConnected && calendars && calendars.length > 1 && (
-        <div className="mt-4 flex items-center gap-3 rounded-[var(--shape-control)] border-2 border-navy/20 bg-card px-4 py-3">
-          <label htmlFor="calendar-select" className="shrink-0 text-sm font-semibold text-foreground">
-            Calendrier affiché :
+        <div className="mt-4 flex items-center gap-3">
+          <label htmlFor="calendar-select" className="shrink-0 text-sm font-medium text-foreground">
+            Calendrier :
           </label>
           <select
             id="calendar-select"
             value={selectedCalendarId}
             onChange={(e) => updateCompany({ ...company, google_calendar_id: e.target.value })}
-            className="h-9 flex-1 rounded-[var(--shape-control)] border-2 border-navy/20 bg-background px-3 text-sm font-medium text-foreground focus:border-primary focus:outline-none"
+            className="h-9 flex-1 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             {calendars.map((cal) => (
               <option key={cal.id} value={cal.id}>
@@ -190,90 +223,107 @@ function RendezVousPage() {
         </div>
       )}
 
-      <div className="mt-8 flex flex-col gap-4">
+      <div className="mt-6 flex flex-col gap-2">
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center rounded-[var(--shape-control)] border-2 border-dashed border-navy/20 bg-card py-16 px-4 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Calendar className="h-8 w-8" />
+          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Calendar className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">Aucun rendez-vous synchronisé</h3>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Vous n'avez pas de rendez-vous actuellement. Connectez votre compte Google Calendar pour que vos prochains événements s'affichent directement ici.
-            </p>
-            <a
-              href={connectHref}
-              className="mt-6 flex h-10 items-center gap-2 rounded-[var(--shape-control)] bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
-            >
-              <Calendar className="h-4 w-4" />
-              Connecter mon compte
-            </a>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Aucun rendez-vous synchronisé</h3>
+              <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                Connectez votre compte Google Calendar pour que vos prochains rendez-vous s'affichent directement ici.
+              </p>
+            </div>
+            <Button asChild className="mt-2">
+              <a href={connectHref}>
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Connecter mon compte
+              </a>
+            </Button>
           </div>
         ) : isLoading || isLoadingCalendars ? (
-          <div className="flex flex-col items-center justify-center rounded-[var(--shape-control)] border-2 border-dashed border-navy/20 bg-card py-16 px-4 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">Chargement de vos rendez-vous Google Calendar…</p>
+          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Chargement de vos rendez-vous…</p>
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center rounded-[var(--shape-control)] border-2 border-dashed border-destructive/30 bg-card py-16 px-4 text-center">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-            <p className="mt-4 text-sm text-muted-foreground">
+          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            <p className="max-w-sm text-sm text-muted-foreground">
               Impossible de récupérer vos rendez-vous ({(error as Error)?.message}).
             </p>
             {(error as Error)?.message === "invalid_grant" && (
-              <a
-                href={connectHref}
-                className="mt-4 flex h-9 items-center gap-2 rounded-[var(--shape-control)] bg-primary px-4 text-sm font-semibold text-primary-foreground"
-              >
-                Reconnecter Google Calendar
-              </a>
+              <Button asChild size="sm">
+                <a href={connectHref}>Reconnecter Google Calendar</a>
+              </Button>
             )}
           </div>
         ) : appointments.length > 0 ? (
           appointments.map((apt) => (
-            <div key={apt.id} className="flex flex-col gap-4 rounded-[var(--shape-control)] border-2 border-navy/20 bg-card p-5 shadow-offset-sm transition-all hover:border-primary lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4 lg:items-center">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--shape-control)] bg-primary/10 text-primary">
-                  <User className="h-6 w-6" />
+            <div
+              key={apt.id}
+              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/40"
+            >
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white",
+                  avatarColor(apt.name),
+                )}
+              >
+                {initials(apt.name) || "?"}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium text-foreground">{apt.name}</p>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      apt.status === "Confirmé"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-700",
+                    )}
+                  >
+                    {apt.status}
+                  </span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{apt.name}</h3>
-                  <p className="text-sm text-muted-foreground">{apt.email}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-medium text-muted-foreground">
-                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {apt.date} à {apt.time}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {apt.duration}</span>
-                    <span className="rounded border border-border bg-secondary/50 px-2 py-0.5 text-secondary-foreground">{apt.type}</span>
-                  </div>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{apt.subtitle}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> {apt.date} à {apt.time}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> {apt.duration}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-start gap-2 lg:items-end">
-                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${apt.status === "Confirmé" ? "border-success/30 bg-success/10 text-success" : "border-warning/30 bg-warning/10 text-warning"}`}>
-                  {apt.status}
-                </span>
-                {apt.link ? (
-                  <a href={apt.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-                    <Video className="h-4 w-4" />
-                    Rejoindre l'appel
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                    <Video className="h-4 w-4" />
-                    Lien non disponible
-                  </span>
-                )}
-              </div>
+              {apt.link ? (
+                <a
+                  href={apt.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <Video className="h-3.5 w-3.5" />
+                  Rejoindre
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : null}
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-[var(--shape-control)] border-2 border-dashed border-navy/20 bg-card py-16 px-4 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Calendar className="h-8 w-8" />
+          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Calendar className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">Aucun rendez-vous à venir</h3>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Votre compte Google Calendar est connecté mais aucun événement n'est planifié pour le moment.
-            </p>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Aucun rendez-vous à venir</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Votre compte est connecté mais aucun événement n'est planifié pour le moment.
+              </p>
+            </div>
           </div>
         )}
       </div>
