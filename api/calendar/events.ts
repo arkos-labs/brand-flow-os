@@ -70,10 +70,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name: event.summary || "Rendez-vous",
           attendeeName: attendee?.displayName || null,
           attendeeEmail: attendee?.email || null,
+          attendeePhone: attendee?.additionalGuests ? null : null,
           startTime: event.start.dateTime,
           endTime: event.end.dateTime,
           status: event.status, // "confirmed" | "cancelled" | "tentative"
-          location: event.hangoutLink || event.location || event.htmlLink || null,
+          // Lien visio (Google Meet ou autre) séparé de l'adresse physique.
+          meetLink: event.hangoutLink || null,
+          // Adresse / lieu textuel (ex: adresse du client pour une intervention à domicile).
+          address: event.location || null,
+          // Détails complets du RDV (souvent remplis automatiquement par les
+          // "Créneaux de rendez-vous" Google Calendar : prestation, options, prix…).
+          description: event.description || null,
+          // Lien vers l'événement dans Google Calendar (pour partager / voir plus de détails).
+          htmlLink: event.htmlLink || null,
+          organizer: event.organizer?.email || null,
+          created: event.created || null,
         };
       });
 

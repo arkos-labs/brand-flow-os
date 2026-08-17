@@ -7,7 +7,6 @@ import {
   endOfMonth,
   endOfWeek,
   format,
-  isSameDay,
   isSameMonth,
   isToday,
   startOfMonth,
@@ -31,6 +30,10 @@ import {
   Video,
   ExternalLink,
   Clock,
+  MapPin,
+  FileText,
+  Link as LinkIcon,
+  Check,
   X,
 } from "lucide-react";
 
@@ -46,7 +49,11 @@ type CalendarEvent = {
   startTime: string;
   endTime: string;
   status: string;
-  location: string | null;
+  meetLink: string | null;
+  address: string | null;
+  description: string | null;
+  htmlLink: string | null;
+  organizer: string | null;
 };
 
 type GoogleCalendar = {
@@ -71,6 +78,7 @@ function RendezVousPage() {
   const [connectError, setConnectError] = useState<string | null>(null);
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     getMyOrgId().then(setOrgId);
@@ -157,6 +165,14 @@ function RendezVousPage() {
     : "#";
 
   const weekDayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+  const handleCopyLink = () => {
+    if (!selectedEvent?.htmlLink) return;
+    navigator.clipboard.writeText(selectedEvent.htmlLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -360,34 +376,34 @@ function RendezVousPage() {
         )}
       </div>
 
-      {/* Détail d'un rendez-vous */}
+      {/* Détail d'un rendez-vous — toutes les infos disponibles côté Google Calendar */}
       {selectedEvent && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setSelectedEvent(null)}
         >
           <div
-            className="card-elevated w-full max-w-sm p-5"
+            className="card-elevated flex w-full max-w-md flex-col gap-4 p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="flex items-start gap-2.5">
                 <span
                   className={cn(
-                    "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
-                    selectedEvent.status === "confirmed"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-amber-100 text-amber-700",
+                    "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                    selectedEvent.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
                   )}
-                >
-                  {selectedEvent.status === "confirmed" ? "Confirmé" : "Annulé"}
-                </span>
-                <h3 className="mt-2 text-base font-semibold text-foreground">
-                  {selectedEvent.attendeeName || selectedEvent.name}
-                </h3>
-                {selectedEvent.attendeeName && (
-                  <p className="text-sm text-muted-foreground">{selectedEvent.name}</p>
-                )}
+                />
+                <div>
+                  <h3 className="text-base font-semibold leading-snug text-foreground">
+                    {selectedEvent.name}
+                  </h3>
+                  <p className="mt-0.5 text-sm capitalize text-muted-foreground">
+                    {format(new Date(selectedEvent.startTime), "EEEE d MMMM", { locale: fr })} · De{" "}
+                    {format(new Date(selectedEvent.startTime), "HH:mm")} à{" "}
+                    {format(new Date(selectedEvent.endTime), "HH:mm")}
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -398,31 +414,67 @@ function RendezVousPage() {
               </button>
             </div>
 
-            <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="flex items-center gap-2 capitalize">
-                {format(new Date(selectedEvent.startTime), "EEEE d MMMM yyyy", { locale: fr })}
-              </span>
-              <span className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {format(new Date(selectedEvent.startTime), "HH:mm")} ·{" "}
-                {formatDuration(selectedEvent.startTime, selectedEvent.endTime)}
-              </span>
-              {selectedEvent.attendeeEmail && (
-                <span className="flex items-center gap-2">{selectedEvent.attendeeEmail}</span>
+            <span
+              className={cn(
+                "w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                selectedEvent.status === "confirmed"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-amber-100 text-amber-700",
               )}
-            </div>
+            >
+              {selectedEvent.status === "confirmed" ? "Confirmé" : "Annulé"}
+            </span>
 
-            {selectedEvent.location && (
+            {(selectedEvent.attendeeName || selectedEvent.attendeeEmail) && (
+              <div className="flex items-start gap-2.5 text-sm text-foreground">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                  {(selectedEvent.attendeeName || selectedEvent.attendeeEmail || "?")[0]?.toUpperCase()}
+                </span>
+                <div>
+                  {selectedEvent.attendeeName && <p className="font-medium">{selectedEvent.attendeeName}</p>}
+                  {selectedEvent.attendeeEmail && (
+                    <p className="text-muted-foreground">{selectedEvent.attendeeEmail}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {selectedEvent.meetLink && (
               <a
-                href={selectedEvent.location}
+                href={selectedEvent.meetLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                className="flex w-fit items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
               >
                 <Video className="h-4 w-4" />
                 Rejoindre l'appel
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
+            )}
+
+            {selectedEvent.htmlLink && (
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex w-fit items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <LinkIcon className="h-4 w-4" />}
+                {copied ? "Lien copié" : "Copier le lien de l'événement"}
+              </button>
+            )}
+
+            {selectedEvent.address && (
+              <div className="flex items-start gap-2.5 text-sm text-foreground">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <span>{selectedEvent.address}</span>
+              </div>
+            )}
+
+            {selectedEvent.description && (
+              <div className="flex items-start gap-2.5 text-sm text-foreground">
+                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <p className="whitespace-pre-wrap text-muted-foreground">{selectedEvent.description}</p>
+              </div>
             )}
           </div>
         </div>
