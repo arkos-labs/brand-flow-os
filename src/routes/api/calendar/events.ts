@@ -35,12 +35,17 @@ async function refreshGoogleToken(refreshToken: string) {
 export const Route = createFileRoute('/api/calendar/events')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const url = new URL(request.url)
-        const refreshToken = url.searchParams.get('refresh_token')
+      POST: async ({ request }) => {
+        // Le refresh token voyage dans le corps de la requête, jamais dans
+        // l'URL (query string) — évite qu'il finisse dans les logs serveur,
+        // l'historique du navigateur ou les headers Referer.
+        const body = await request.json().catch(() => ({}))
+        const refreshToken =
+          typeof body.refresh_token === 'string' ? body.refresh_token : null
         // Permet de choisir un calendrier précis (équipe, agenda partagé…).
         // Par défaut : calendrier principal du compte connecté.
-        const calendarId = url.searchParams.get('calendar_id') || 'primary'
+        const calendarId =
+          typeof body.calendar_id === 'string' ? body.calendar_id : 'primary'
 
         if (!refreshToken) {
           return new Response(

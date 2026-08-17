@@ -27,8 +27,15 @@ async function refreshGoogleToken(refreshToken: string) {
 // Liste tous les calendriers auxquels le compte Google connecté a accès
 // (perso, pro, calendriers d'équipe partagés avec lui, etc.)
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const refreshToken =
-    typeof req.query.refresh_token === "string" ? req.query.refresh_token : null;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Le refresh token voyage dans le corps de la requête, jamais dans l'URL
+  // (query string) — évite qu'il finisse dans les logs serveur, l'historique
+  // du navigateur ou les headers Referer.
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const refreshToken = typeof body.refresh_token === "string" ? body.refresh_token : null;
 
   if (!refreshToken) {
     return res.status(400).json({ error: "missing_refresh_token" });

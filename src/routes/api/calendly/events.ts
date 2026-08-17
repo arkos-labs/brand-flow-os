@@ -28,9 +28,13 @@ async function refreshCalendlyToken(refreshToken: string) {
 }
 
 export const APIRoute = createAPIFileRoute('/api/calendly/events')({
-  GET: async ({ request }) => {
-    const url = new URL(request.url)
-    const refreshToken = url.searchParams.get('refresh_token')
+  POST: async ({ request }) => {
+    // Le refresh token voyage dans le corps de la requête, jamais dans
+    // l'URL (query string) — évite qu'il finisse dans les logs serveur,
+    // l'historique du navigateur ou les headers Referer.
+    const body = await request.json().catch(() => ({}))
+    const refreshToken =
+      typeof body.refresh_token === 'string' ? body.refresh_token : null
 
     if (!refreshToken) {
       return new Response(

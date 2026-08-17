@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, AlertCircle, CheckCircle } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -34,7 +34,6 @@ function InscriptionPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [devLoading, setDevLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
 
@@ -103,35 +102,6 @@ function InscriptionPage() {
       setError("Une erreur inattendue s'est produite. Réessayez.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDevAccess() {
-    setDevLoading(true);
-    setError(null);
-    try {
-      // Dev access: sign in with the demo account or create one
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: "demo@clearquote.fr",
-        password: "demo123456",
-      });
-      if (signInError) {
-        // Try to create the demo account
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: "demo@clearquote.fr",
-          password: "demo123456",
-        });
-        if (signUpError) {
-          // Fallback: just navigate anyway for local dev
-          navigate({ to: "/tableau-de-bord" });
-          return;
-        }
-      }
-      navigate({ to: "/tableau-de-bord" });
-    } catch {
-      navigate({ to: "/tableau-de-bord" });
-    } finally {
-      setDevLoading(false);
     }
   }
 
@@ -311,28 +281,6 @@ function InscriptionPage() {
               )}
             </Button>
           </form>
-
-          <div className="flex items-center gap-3 my-6">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground font-medium">ou</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <button
-            onClick={handleDevAccess}
-            disabled={devLoading}
-            className="w-full flex items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-3 text-sm font-semibold text-amber-700 dark:text-amber-400 transition-all hover:bg-amber-100/80 dark:hover:bg-amber-950/40 hover:border-amber-500 disabled:opacity-60"
-          >
-            {devLoading ? (
-              <span className="h-4 w-4 rounded-full border-2 border-amber-400/40 border-t-amber-500 animate-spin" />
-            ) : (
-              <Zap className="h-4 w-4" />
-            )}
-            {t("auth.dev_access")}
-          </button>
-          <p className="text-center text-[11px] text-muted-foreground/60 mt-2">
-            {t("auth.dev_mode")}
-          </p>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
             {t("auth.signup.has_account")}{" "}

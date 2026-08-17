@@ -203,9 +203,13 @@ function RendezVousPage() {
   const { data: calendars } = useQuery({
     queryKey: ["calendar-list", company.google_refresh_token],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/calendar/list?refresh_token=${encodeURIComponent(company.google_refresh_token!)}`,
-      );
+      // Le refresh token passe dans le corps de la requête POST, jamais
+      // dans l'URL — évite qu'il finisse dans les logs / l'historique.
+      const res = await fetch("/api/calendar/list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: company.google_refresh_token }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Erreur inconnue");
       return json.calendars as GoogleCalendar[];
@@ -222,9 +226,16 @@ function RendezVousPage() {
   } = useQuery({
     queryKey: ["calendar-events", company.google_refresh_token, selectedCalendarId],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/calendar/events?refresh_token=${encodeURIComponent(company.google_refresh_token!)}&calendar_id=${encodeURIComponent(selectedCalendarId)}`,
-      );
+      // Le refresh token passe dans le corps de la requête POST, jamais
+      // dans l'URL — évite qu'il finisse dans les logs / l'historique.
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refresh_token: company.google_refresh_token,
+          calendar_id: selectedCalendarId,
+        }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Erreur inconnue");
       return json.events as CalendarEvent[];

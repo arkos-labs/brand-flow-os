@@ -28,12 +28,18 @@ async function refreshGoogleToken(refreshToken: string) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const refreshToken =
-    typeof req.query.refresh_token === "string" ? req.query.refresh_token : null;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Le refresh token voyage dans le corps de la requête, jamais dans l'URL
+  // (query string) — évite qu'il finisse dans les logs serveur, l'historique
+  // du navigateur ou les headers Referer.
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const refreshToken = typeof body.refresh_token === "string" ? body.refresh_token : null;
   // Permet de choisir un calendrier précis (équipe, agenda partagé…).
   // Par défaut : calendrier principal du compte connecté.
-  const calendarId =
-    typeof req.query.calendar_id === "string" ? req.query.calendar_id : "primary";
+  const calendarId = typeof body.calendar_id === "string" ? body.calendar_id : "primary";
 
   if (!refreshToken) {
     return res.status(400).json({ error: "missing_refresh_token" });
