@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   addMonths,
@@ -7,7 +7,6 @@ import {
   endOfMonth,
   endOfWeek,
   format,
-  isSameDay,
   isSameMonth,
   isToday,
   startOfMonth,
@@ -30,7 +29,6 @@ import {
   CalendarPlus,
   Video,
   ExternalLink,
-  Clock,
   MapPin,
   FileText,
   Link as LinkIcon,
@@ -72,10 +70,13 @@ function formatDuration(start: string, end: string) {
   return m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 }
 
-function EventDetailCard({ event }: { event: CalendarEvent }) {
+// Carte compacte affichant TOUTES les infos d'un rendez-vous, directement
+// dans la case du jour du calendrier (pas de clic nécessaire).
+function EventCell({ event }: { event: CalendarEvent }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopyLink = () => {
+  const handleCopyLink = (e: MouseEvent) => {
+    e.stopPropagation();
     if (!event.htmlLink) return;
     navigator.clipboard.writeText(event.htmlLink).then(() => {
       setCopied(true);
@@ -84,87 +85,83 @@ function EventDetailCard({ event }: { event: CalendarEvent }) {
   };
 
   return (
-    <div className="flex gap-3 rounded-xl border border-border bg-card p-4">
-      <span
-        className={cn(
-          "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
-          event.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
-        )}
-      />
-      <div className="flex flex-1 flex-col gap-2.5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-semibold leading-snug text-foreground">{event.name}</h3>
-            <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-              {format(new Date(event.startTime), "EEEE d MMMM", { locale: fr })} · De{" "}
-              {format(new Date(event.startTime), "HH:mm")} à {format(new Date(event.endTime), "HH:mm")} (
-              {formatDuration(event.startTime, event.endTime)})
-            </p>
-          </div>
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium",
-              event.status === "confirmed"
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-amber-100 text-amber-700",
-            )}
-          >
-            {event.status === "confirmed" ? "Confirmé" : "Annulé"}
+    <div
+      className={cn(
+        "flex flex-col gap-1 rounded-md border-l-4 bg-card px-2 py-1.5 text-[10.5px] leading-tight shadow-sm",
+        event.status === "confirmed" ? "border-blue-500" : "border-amber-600",
+      )}
+    >
+      <div className="flex items-start justify-between gap-1">
+        <span className="font-semibold text-foreground">{event.name}</span>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium",
+            event.status === "confirmed"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-amber-100 text-amber-700",
+          )}
+        >
+          {event.status === "confirmed" ? "Confirmé" : "Annulé"}
+        </span>
+      </div>
+
+      <span className="text-muted-foreground">
+        {format(new Date(event.startTime), "HH:mm")}–{format(new Date(event.endTime), "HH:mm")} (
+        {formatDuration(event.startTime, event.endTime)})
+      </span>
+
+      {(event.attendeeName || event.attendeeEmail) && (
+        <div className="flex items-start gap-1 text-foreground">
+          <User className="mt-0.5 h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+          <span className="break-words">
+            {event.attendeeName}
+            {event.attendeeName && event.attendeeEmail ? " · " : ""}
+            {event.attendeeEmail}
           </span>
         </div>
+      )}
 
-        {(event.attendeeName || event.attendeeEmail) && (
-          <div className="flex items-start gap-2 text-xs text-foreground">
-            <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span>
-              {event.attendeeName}
-              {event.attendeeName && event.attendeeEmail ? " · " : ""}
-              {event.attendeeEmail}
-            </span>
-          </div>
-        )}
+      {event.address && (
+        <div className="flex items-start gap-1 text-foreground">
+          <MapPin className="mt-0.5 h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+          <span className="break-words">{event.address}</span>
+        </div>
+      )}
 
-        {event.address && (
-          <div className="flex items-start gap-2 text-xs text-foreground">
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span>{event.address}</span>
-          </div>
-        )}
+      {event.description && (
+        <div className="flex items-start gap-1 text-foreground">
+          <FileText className="mt-0.5 h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+          <span className="whitespace-pre-wrap break-words text-muted-foreground">{event.description}</span>
+        </div>
+      )}
 
-        {event.description && (
-          <div className="flex items-start gap-2 text-xs text-foreground">
-            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <p className="whitespace-pre-wrap text-muted-foreground">{event.description}</p>
-          </div>
-        )}
-
-        {(event.meetLink || event.htmlLink) && (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {event.meetLink && (
-              <a
-                href={event.meetLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/5"
-              >
-                <Video className="h-3.5 w-3.5" />
-                Rejoindre l'appel
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
-            {event.htmlLink && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/5"
-              >
-                {copied ? <Check className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
-                {copied ? "Lien copié" : "Copier le lien"}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      {(event.meetLink || event.htmlLink) && (
+        <div className="flex flex-wrap items-center gap-1 pt-0.5">
+          {event.meetLink && (
+            <a
+              href={event.meetLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[9.5px] font-medium text-primary hover:bg-primary/5"
+            >
+              <Video className="h-2.5 w-2.5" />
+              Rejoindre
+              <ExternalLink className="h-2 w-2" />
+            </a>
+          )}
+          {event.htmlLink && (
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[9.5px] font-medium text-primary hover:bg-primary/5"
+            >
+              {copied ? <Check className="h-2.5 w-2.5" /> : <LinkIcon className="h-2.5 w-2.5" />}
+              {copied ? "Copié" : "Copier lien"}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -256,14 +253,6 @@ function RendezVousPage() {
     return map;
   }, [events]);
 
-  // Rendez-vous du mois affiché, avec toutes leurs infos — affichés directement,
-  // sans avoir à cliquer pour les ouvrir.
-  const monthEvents = useMemo(() => {
-    return events
-      .filter((e) => isSameMonth(new Date(e.startTime), visibleMonth))
-      .sort((a, b) => a.startTime.localeCompare(b.startTime));
-  }, [events, visibleMonth]);
-
   const connectHref = orgId
     ? `/api/auth/google/login?orgId=${orgId}&returnTo=/rendez-vous`
     : "#";
@@ -271,7 +260,7 @@ function RendezVousPage() {
   const weekDayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       <PageHeader
         title={t("app.rendezvous.title" as Key)}
         subtitle={t("app.rendezvous.subtitle" as Key)}
@@ -410,7 +399,7 @@ function RendezVousPage() {
               ))}
             </div>
 
-            {/* Grille du mois — aperçu visuel uniquement, le détail complet est listé juste en dessous */}
+            {/* Grille du mois — chaque case affiche directement toutes les infos des RDV du jour */}
             <div className="grid grid-cols-7">
               {days.map((day) => {
                 const key = format(day, "yyyy-MM-dd");
@@ -422,7 +411,7 @@ function RendezVousPage() {
                   <div
                     key={key}
                     className={cn(
-                      "flex min-h-[90px] flex-col gap-1 border-b border-r border-border p-1.5 last:border-r-0",
+                      "flex min-h-[110px] flex-col gap-1.5 border-b border-r border-border p-1.5 last:border-r-0",
                       !inMonth && "bg-muted/10",
                     )}
                   >
@@ -439,28 +428,10 @@ function RendezVousPage() {
                       {format(day, "d")}
                     </span>
 
-                    <div className="flex flex-col gap-1">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <span
-                          key={event.id}
-                          className={cn(
-                            "truncate rounded px-1.5 py-1 text-left text-[10px] font-medium leading-tight text-white",
-                            event.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
-                          )}
-                        >
-                          <span className="block truncate font-semibold">
-                            {event.attendeeName || event.name}
-                          </span>
-                          <span className="block truncate opacity-90">
-                            {format(new Date(event.startTime), "HH:mm")}
-                          </span>
-                        </span>
+                    <div className="flex flex-col gap-1.5">
+                      {dayEvents.map((event) => (
+                        <EventCell key={event.id} event={event} />
                       ))}
-                      {dayEvents.length > 3 && (
-                        <span className="px-1.5 text-[10px] font-medium text-muted-foreground">
-                          +{dayEvents.length - 3} autre{dayEvents.length - 3 > 1 ? "s" : ""}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
@@ -469,22 +440,6 @@ function RendezVousPage() {
           </>
         )}
       </div>
-
-      {/* Détail complet de chaque rendez-vous du mois — tout est visible directement, sans avoir à cliquer */}
-      {isConnected && !isLoading && !isError && (
-        <div className="mt-6 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            Détail des rendez-vous — {format(visibleMonth, "MMMM yyyy", { locale: fr })}
-          </h2>
-          {monthEvents.length > 0 ? (
-            monthEvents.map((event) => <EventDetailCard key={event.id} event={event} />)
-          ) : (
-            <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-              Aucun rendez-vous ce mois-ci.
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
