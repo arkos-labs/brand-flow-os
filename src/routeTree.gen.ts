@@ -39,6 +39,10 @@ import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
+import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
+import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
+import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
+import { Route as ApiAuthGoogleLoginRouteImport } from './routes/api/auth/google/login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +194,26 @@ const PortailIdRoute = PortailIdRouteImport.update({
   path: '/portail/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCalendarEventsRoute = ApiCalendarEventsRouteImport.update({
+  id: '/api/calendar/events',
+  path: '/api/calendar/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCalendarListRoute = ApiCalendarListRouteImport.update({
+  id: '/api/calendar/list',
+  path: '/api/calendar/list',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
+  id: '/api/auth/google/callback',
+  path: '/api/auth/google/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleLoginRoute = ApiAuthGoogleLoginRouteImport.update({
+  id: '/api/auth/google/login',
+  path: '/api/auth/google/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -222,6 +246,10 @@ export interface FileRoutesByFullPath {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/calendar/events': typeof ApiCalendarEventsRoute
+  '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -254,6 +282,10 @@ export interface FileRoutesByTo {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/calendar/events': typeof ApiCalendarEventsRoute
+  '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -287,6 +319,10 @@ export interface FileRoutesById {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/calendar/events': typeof ApiCalendarEventsRoute
+  '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -321,6 +357,10 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/calendar/events'
+    | '/api/calendar/list'
+    | '/api/auth/google/callback'
+    | '/api/auth/google/login'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -353,6 +393,10 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/calendar/events'
+    | '/api/calendar/list'
+    | '/api/auth/google/callback'
+    | '/api/auth/google/login'
   id:
     | '__root__'
     | '/'
@@ -385,6 +429,10 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/calendar/events'
+    | '/api/calendar/list'
+    | '/api/auth/google/callback'
+    | '/api/auth/google/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -418,6 +466,10 @@ export interface RootRouteChildren {
   TarifsRoute: typeof TarifsRoute
   TresorerieRoute: typeof TresorerieRoute
   PortailIdRoute: typeof PortailIdRoute
+  ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
+  ApiCalendarListRoute: typeof ApiCalendarListRoute
+  ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
+  ApiAuthGoogleLoginRoute: typeof ApiAuthGoogleLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -632,6 +684,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortailIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/calendar/events': {
+      id: '/api/calendar/events'
+      path: '/api/calendar/events'
+      fullPath: '/api/calendar/events'
+      preLoaderRoute: typeof ApiCalendarEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/calendar/list': {
+      id: '/api/calendar/list'
+      path: '/api/calendar/list'
+      fullPath: '/api/calendar/list'
+      preLoaderRoute: typeof ApiCalendarListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/google/callback': {
+      id: '/api/auth/google/callback'
+      path: '/api/auth/google/callback'
+      fullPath: '/api/auth/google/callback'
+      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/google/login': {
+      id: '/api/auth/google/login'
+      path: '/api/auth/google/login'
+      fullPath: '/api/auth/google/login'
+      preLoaderRoute: typeof ApiAuthGoogleLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -666,6 +746,10 @@ const rootRouteChildren: RootRouteChildren = {
   TarifsRoute: TarifsRoute,
   TresorerieRoute: TresorerieRoute,
   PortailIdRoute: PortailIdRoute,
+  ApiCalendarEventsRoute: ApiCalendarEventsRoute,
+  ApiCalendarListRoute: ApiCalendarListRoute,
+  ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
+  ApiAuthGoogleLoginRoute: ApiAuthGoogleLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
