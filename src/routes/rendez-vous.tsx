@@ -7,6 +7,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  isSameDay,
   isSameMonth,
   isToday,
   startOfMonth,
@@ -34,7 +35,7 @@ import {
   FileText,
   Link as LinkIcon,
   Check,
-  X,
+  User,
 } from "lucide-react";
 
 export const Route = createFileRoute("/rendez-vous")({
@@ -71,14 +72,109 @@ function formatDuration(start: string, end: string) {
   return m > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 }
 
+function EventDetailCard({ event }: { event: CalendarEvent }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    if (!event.htmlLink) return;
+    navigator.clipboard.writeText(event.htmlLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="flex gap-3 rounded-xl border border-border bg-card p-4">
+      <span
+        className={cn(
+          "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+          event.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
+        )}
+      />
+      <div className="flex flex-1 flex-col gap-2.5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold leading-snug text-foreground">{event.name}</h3>
+            <p className="mt-0.5 text-xs capitalize text-muted-foreground">
+              {format(new Date(event.startTime), "EEEE d MMMM", { locale: fr })} · De{" "}
+              {format(new Date(event.startTime), "HH:mm")} à {format(new Date(event.endTime), "HH:mm")} (
+              {formatDuration(event.startTime, event.endTime)})
+            </p>
+          </div>
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium",
+              event.status === "confirmed"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-amber-100 text-amber-700",
+            )}
+          >
+            {event.status === "confirmed" ? "Confirmé" : "Annulé"}
+          </span>
+        </div>
+
+        {(event.attendeeName || event.attendeeEmail) && (
+          <div className="flex items-start gap-2 text-xs text-foreground">
+            <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span>
+              {event.attendeeName}
+              {event.attendeeName && event.attendeeEmail ? " · " : ""}
+              {event.attendeeEmail}
+            </span>
+          </div>
+        )}
+
+        {event.address && (
+          <div className="flex items-start gap-2 text-xs text-foreground">
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span>{event.address}</span>
+          </div>
+        )}
+
+        {event.description && (
+          <div className="flex items-start gap-2 text-xs text-foreground">
+            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <p className="whitespace-pre-wrap text-muted-foreground">{event.description}</p>
+          </div>
+        )}
+
+        {(event.meetLink || event.htmlLink) && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {event.meetLink && (
+              <a
+                href={event.meetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+              >
+                <Video className="h-3.5 w-3.5" />
+                Rejoindre l'appel
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+            {event.htmlLink && (
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
+                {copied ? "Lien copié" : "Copier le lien"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RendezVousPage() {
   const { t } = useI18n();
   const { company, updateCompany } = useData();
   const [orgId, setOrgId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     getMyOrgId().then(setOrgId);
@@ -160,19 +256,19 @@ function RendezVousPage() {
     return map;
   }, [events]);
 
+  // Rendez-vous du mois affiché, avec toutes leurs infos — affichés directement,
+  // sans avoir à cliquer pour les ouvrir.
+  const monthEvents = useMemo(() => {
+    return events
+      .filter((e) => isSameMonth(new Date(e.startTime), visibleMonth))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [events, visibleMonth]);
+
   const connectHref = orgId
     ? `/api/auth/google/login?orgId=${orgId}&returnTo=/rendez-vous`
     : "#";
 
   const weekDayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-  const handleCopyLink = () => {
-    if (!selectedEvent?.htmlLink) return;
-    navigator.clipboard.writeText(selectedEvent.htmlLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -314,7 +410,7 @@ function RendezVousPage() {
               ))}
             </div>
 
-            {/* Grille du mois */}
+            {/* Grille du mois — aperçu visuel uniquement, le détail complet est listé juste en dessous */}
             <div className="grid grid-cols-7">
               {days.map((day) => {
                 const key = format(day, "yyyy-MM-dd");
@@ -326,7 +422,7 @@ function RendezVousPage() {
                   <div
                     key={key}
                     className={cn(
-                      "flex min-h-[110px] flex-col gap-1 border-b border-r border-border p-1.5 last:border-r-0",
+                      "flex min-h-[90px] flex-col gap-1 border-b border-r border-border p-1.5 last:border-r-0",
                       !inMonth && "bg-muted/10",
                     )}
                   >
@@ -345,22 +441,20 @@ function RendezVousPage() {
 
                     <div className="flex flex-col gap-1">
                       {dayEvents.slice(0, 3).map((event) => (
-                        <button
+                        <span
                           key={event.id}
-                          type="button"
-                          onClick={() => setSelectedEvent(event)}
                           className={cn(
-                            "truncate rounded px-1.5 py-1 text-left text-[10px] font-medium leading-tight text-white transition-opacity hover:opacity-90",
+                            "truncate rounded px-1.5 py-1 text-left text-[10px] font-medium leading-tight text-white",
                             event.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
                           )}
                         >
-                          <div className="truncate font-semibold">
+                          <span className="block truncate font-semibold">
                             {event.attendeeName || event.name}
-                          </div>
-                          <div className="truncate opacity-90">
+                          </span>
+                          <span className="block truncate opacity-90">
                             {format(new Date(event.startTime), "HH:mm")}
-                          </div>
-                        </button>
+                          </span>
+                        </span>
                       ))}
                       {dayEvents.length > 3 && (
                         <span className="px-1.5 text-[10px] font-medium text-muted-foreground">
@@ -376,107 +470,19 @@ function RendezVousPage() {
         )}
       </div>
 
-      {/* Détail d'un rendez-vous — toutes les infos disponibles côté Google Calendar */}
-      {selectedEvent && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setSelectedEvent(null)}
-        >
-          <div
-            className="card-elevated flex w-full max-w-md flex-col gap-4 p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-2.5">
-                <span
-                  className={cn(
-                    "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
-                    selectedEvent.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
-                  )}
-                />
-                <div>
-                  <h3 className="text-base font-semibold leading-snug text-foreground">
-                    {selectedEvent.name}
-                  </h3>
-                  <p className="mt-0.5 text-sm capitalize text-muted-foreground">
-                    {format(new Date(selectedEvent.startTime), "EEEE d MMMM", { locale: fr })} · De{" "}
-                    {format(new Date(selectedEvent.startTime), "HH:mm")} à{" "}
-                    {format(new Date(selectedEvent.endTime), "HH:mm")}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedEvent(null)}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted/50"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <span
-              className={cn(
-                "w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                selectedEvent.status === "confirmed"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-amber-100 text-amber-700",
-              )}
-            >
-              {selectedEvent.status === "confirmed" ? "Confirmé" : "Annulé"}
-            </span>
-
-            {(selectedEvent.attendeeName || selectedEvent.attendeeEmail) && (
-              <div className="flex items-start gap-2.5 text-sm text-foreground">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                  {(selectedEvent.attendeeName || selectedEvent.attendeeEmail || "?")[0]?.toUpperCase()}
-                </span>
-                <div>
-                  {selectedEvent.attendeeName && <p className="font-medium">{selectedEvent.attendeeName}</p>}
-                  {selectedEvent.attendeeEmail && (
-                    <p className="text-muted-foreground">{selectedEvent.attendeeEmail}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {selectedEvent.meetLink && (
-              <a
-                href={selectedEvent.meetLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-fit items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
-              >
-                <Video className="h-4 w-4" />
-                Rejoindre l'appel
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
-
-            {selectedEvent.htmlLink && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="flex w-fit items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <LinkIcon className="h-4 w-4" />}
-                {copied ? "Lien copié" : "Copier le lien de l'événement"}
-              </button>
-            )}
-
-            {selectedEvent.address && (
-              <div className="flex items-start gap-2.5 text-sm text-foreground">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <span>{selectedEvent.address}</span>
-              </div>
-            )}
-
-            {selectedEvent.description && (
-              <div className="flex items-start gap-2.5 text-sm text-foreground">
-                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <p className="whitespace-pre-wrap text-muted-foreground">{selectedEvent.description}</p>
-              </div>
-            )}
-          </div>
+      {/* Détail complet de chaque rendez-vous du mois — tout est visible directement, sans avoir à cliquer */}
+      {isConnected && !isLoading && !isError && (
+        <div className="mt-6 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            Détail des rendez-vous — {format(visibleMonth, "MMMM yyyy", { locale: fr })}
+          </h2>
+          {monthEvents.length > 0 ? (
+            monthEvents.map((event) => <EventDetailCard key={event.id} event={event} />)
+          ) : (
+            <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+              Aucun rendez-vous ce mois-ci.
+            </p>
+          )}
         </div>
       )}
     </div>
