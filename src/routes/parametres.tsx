@@ -643,23 +643,6 @@ function SettingsPage() {
                     </select>
                   </FieldRow>
 
-                  <div className="col-span-2 mt-4 pt-4 border-t border-border/50">
-                    <FieldRow 
-                      label={lang === "fr" ? "Factures de situation (BTP)" : "Progress billings (Construction)"} 
-                      hint={lang === "fr" ? "Active le menu pour facturer selon l'avancement d'un chantier" : "Enable menu to invoice by progress"}
-                    >
-                      <div className="flex items-center gap-3 h-9">
-                        <Checkbox
-                          id="enable-situations"
-                          checked={!!form.enableSituations}
-                          onCheckedChange={(c) => set("enableSituations", !!c)}
-                        />
-                        <label htmlFor="enable-situations" className="text-sm font-medium cursor-pointer">
-                          {lang === "fr" ? "Activer les situations de travaux" : "Enable progress billings"}
-                        </label>
-                      </div>
-                    </FieldRow>
-                  </div>
                 </div>
               </div>
 

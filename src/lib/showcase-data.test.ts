@@ -40,7 +40,5 @@ assert.ok(paidInvoice?.paidAt, "une facture payée doit avoir une date de paieme
 assert.equal(paidInvoice?.paidAmount, paidInvoice?.amount);
 
 assert.equal(data.subscriptions.length, 0);
-assert.equal(data.marches.length, 0);
-assert.equal(data.situations.length, 0);
 assert.equal(data.nextQuoteNumber, data.quotes.length + 1);
 assert.equal(data.nextInvoiceNumber, data.invoices.length + 1);

@@ -58,7 +58,6 @@ const groups: {
     items: [
       { to: "/factures", label: "nav.invoices", icon: ReceiptEuro },
       { to: "/abonnements", label: "nav.subscriptions" as Key, icon: Repeat },
-      { to: "/situations", label: "nav.situations", icon: Layers },
       { to: "/paiements", label: "nav.payments", icon: CheckSquare },
       { to: "/depenses", label: "nav.expenses" as Key, icon: CreditCard },
       { to: "/tresorerie", label: "nav.cashflow", icon: TrendingUp },
@@ -283,13 +282,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  const filteredGroups = groups.map(g => ({
-    ...g,
-    items: g.items.filter(item => {
-      if (item.to === "/situations" && !company.enableSituations) return false;
-      return true;
-    })
-  }));
+  const filteredGroups = groups;
 
   // ── Compute notification counts ──────────────────────────────────────────
   const lateInvoiceCount = invoices.filter((i) => i.status === "late").length;

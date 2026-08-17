@@ -160,7 +160,10 @@ function Catalogue() {
 
   function saveForm() {
     if (modal === "new") {
-      const newId = `p${Date.now()}`;
+      // La colonne items_catalog.id est un UUID côté base — un id du type
+      // "p<timestamp>" faisait échouer silencieusement l'écriture Supabase
+      // (le produit disparaissait au refresh, même bug que les clients).
+      const newId = crypto.randomUUID();
       const newRef = form.ref.trim() || `REF-${String(items.length + 1).padStart(3, "0")}`;
       addProduct({ id: newId, ...form, ref: newRef } as Product);
     } else if (modal === "edit" && editTarget) {

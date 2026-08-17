@@ -113,12 +113,18 @@ async function upsertProduct(product: Product, orgId: string) {
     is_active: product.active ?? true,
     payload: product,
   }, { onConflict: "id" });
-  if (error) console.error("UPSERT PRODUCT ERROR:", error);
+  if (error) {
+    console.error("UPSERT PRODUCT ERROR:", error);
+    toast.error("Erreur de synchro Produit : " + error.message);
+  }
 }
 
 async function deleteProductFromDb(id: string) {
   const { error } = await supabase.from("items_catalog").delete().eq("id", id);
-  if (error) console.error("DELETE PRODUCT ERROR:", error);
+  if (error) {
+    console.error("DELETE PRODUCT ERROR:", error);
+    toast.error("Erreur de suppression Produit : " + error.message);
+  }
 }
 
 async function upsertCompany(company: CompanySettings, orgId: string) {
@@ -141,7 +147,10 @@ async function upsertCompany(company: CompanySettings, orgId: string) {
     default_payment_days: company.paymentTermsDays || 30,
     payload: company,
   }).eq("id", orgId);
-  if (error) console.error("UPSERT COMPANY ERROR:", error);
+  if (error) {
+    console.error("UPSERT COMPANY ERROR:", error);
+    toast.error("Erreur de synchro Paramètres entreprise : " + error.message);
+  }
 }
 
 async function upsertExpense(expense: Expense, orgId: string) {
@@ -150,12 +159,18 @@ async function upsertExpense(expense: Expense, orgId: string) {
     organization_id: orgId,
     payload: expense,
   }, { onConflict: "id" });
-  if (error) console.error("UPSERT EXPENSE ERROR:", error);
+  if (error) {
+    console.error("UPSERT EXPENSE ERROR:", error);
+    toast.error("Erreur de synchro Dépense : " + error.message);
+  }
 }
 
 async function deleteExpenseFromDb(id: string) {
   const { error } = await supabase.from("expenses").delete().eq("id", id);
-  if (error) console.error("DELETE EXPENSE ERROR:", error);
+  if (error) {
+    console.error("DELETE EXPENSE ERROR:", error);
+    toast.error("Erreur de suppression Dépense : " + error.message);
+  }
 }
 
 async function upsertSubscription(subscription: Subscription, orgId: string) {
@@ -164,41 +179,18 @@ async function upsertSubscription(subscription: Subscription, orgId: string) {
     organization_id: orgId,
     payload: subscription,
   }, { onConflict: "id" });
-  if (error) console.error("UPSERT SUBSCRIPTION ERROR:", error);
+  if (error) {
+    console.error("UPSERT SUBSCRIPTION ERROR:", error);
+    toast.error("Erreur de synchro Abonnement : " + error.message);
+  }
 }
 
 async function deleteSubscriptionFromDb(id: string) {
   const { error } = await supabase.from("subscriptions").delete().eq("id", id);
-  if (error) console.error("DELETE SUBSCRIPTION ERROR:", error);
-}
-
-async function upsertMarche(marche: Marche, orgId: string) {
-  const { error } = await supabase.from("marches").upsert({
-    id: marche.id,
-    organization_id: orgId,
-    payload: marche,
-  }, { onConflict: "id" });
-  if (error) console.error("UPSERT MARCHE ERROR:", error);
-}
-
-async function deleteMarcheFromDb(id: string) {
-  const { error } = await supabase.from("marches").delete().eq("id", id);
-  if (error) console.error("DELETE MARCHE ERROR:", error);
-}
-
-async function upsertSituation(situation: Situation, orgId: string) {
-  const { error } = await supabase.from("situations").upsert({
-    id: situation.id,
-    organization_id: orgId,
-    marche_id: situation.marcheId ?? null,
-    payload: situation,
-  }, { onConflict: "id" });
-  if (error) console.error("UPSERT SITUATION ERROR:", error);
-}
-
-async function deleteSituationFromDb(id: string) {
-  const { error } = await supabase.from("situations").delete().eq("id", id);
-  if (error) console.error("DELETE SITUATION ERROR:", error);
+  if (error) {
+    console.error("DELETE SUBSCRIPTION ERROR:", error);
+    toast.error("Erreur de suppression Abonnement : " + error.message);
+  }
 }
 
 async function loadOrgData(orgId: string): Promise<{
@@ -209,10 +201,8 @@ async function loadOrgData(orgId: string): Promise<{
   company: CompanySettings | null;
   expenses: Expense[];
   subscriptions: Subscription[];
-  marches: Marche[];
-  situations: Situation[];
 } | null> {
-  const [qRes, iRes, cRes, pRes, orgRes, eRes, sRes, mRes, sitRes] = await Promise.all([
+  const [qRes, iRes, cRes, pRes, orgRes, eRes, sRes] = await Promise.all([
     supabase.from("quotes").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("invoices").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("clients").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
@@ -220,8 +210,6 @@ async function loadOrgData(orgId: string): Promise<{
     supabase.from("organizations").select("payload").eq("id", orgId).single(),
     supabase.from("expenses").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
     supabase.from("subscriptions").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
-    supabase.from("marches").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
-    supabase.from("situations").select("payload").eq("organization_id", orgId).order("created_at", { ascending: false }),
   ]);
 
   if (qRes.error) console.error("Error fetching quotes:", qRes.error);
@@ -230,8 +218,6 @@ async function loadOrgData(orgId: string): Promise<{
   if (pRes.error) console.error("Error fetching products:", pRes.error);
   if (eRes.error) console.error("Error fetching expenses:", eRes.error);
   if (sRes.error) console.error("Error fetching subscriptions:", sRes.error);
-  if (mRes.error) console.error("Error fetching marches:", mRes.error);
-  if (sitRes.error) console.error("Error fetching situations:", sitRes.error);
 
   const quotes = qRes.data ? qRes.data.map((r) => r.payload as Quote).filter(Boolean) : [];
   const invoices = iRes.data ? iRes.data.map((r) => r.payload as Invoice).filter(Boolean) : [];
@@ -240,10 +226,8 @@ async function loadOrgData(orgId: string): Promise<{
   const company = (orgRes.data?.payload as CompanySettings) ?? null;
   const expenses = eRes.data ? eRes.data.map((r) => r.payload as Expense).filter(Boolean) : [];
   const subscriptions = sRes.data ? sRes.data.map((r) => r.payload as Subscription).filter(Boolean) : [];
-  const marches = mRes.data ? mRes.data.map((r) => r.payload as Marche).filter(Boolean) : [];
-  const situations = sitRes.data ? sitRes.data.map((r) => r.payload as Situation).filter(Boolean) : [];
 
-  return { quotes, invoices, clients, products, company, expenses, subscriptions, marches, situations };
+  return { quotes, invoices, clients, products, company, expenses, subscriptions };
 }
 
 export type Product = DemoProduct;
@@ -281,7 +265,6 @@ export type CompanySettings = {
   defaultQuoteTemplate?: "classic" | "modern" | "minimal" | "elegant" | "bold";
   defaultInvoiceTemplate?: "classic" | "modern" | "minimal" | "elegant" | "bold";
   defaultEmailTemplate?: "modele-1" | "modele-2" | "modele-3" | "modele-4" | "modele-5";
-  enableSituations?: boolean;
   primaryColor?: string;
 };
 
@@ -486,144 +469,6 @@ export type Subscription = {
   createdAt: string;
 };
 
-// ── Situations de travaux (BTP) ───────────────────────────────────────────────
-
-export type MarcheStatus = "actif" | "solde" | "arrete";
-
-export type Marche = {
-  id: string;
-  number: string;            // MC-YYYY-NNN
-  client: string;
-  title: string;             // Intitulé du marché
-  totalHT: number;           // Montant global HT du marché
-  vatRate: number;           // TVA applicable : 20, 10, 5.5, 0
-  retenuGarantie: number;    // % retenue de garantie (typiquement 5)
-  startDate: string;         // YYYY-MM-DD
-  endDate?: string;
-  status: MarcheStatus;
-  notes?: string;
-  createdAt: string;
-};
-
-export type SituationStatus = "brouillon" | "envoyee" | "payee";
-
-export type Situation = {
-  id: string;
-  marcheId: string;
-  number: number;              // Numéro séquentiel (1, 2, 3…)
-  label: string;               // "Situation 1", "Solde", etc.
-  date: string;                // YYYY-MM-DD
-  avancementCumule: number;    // % cumulé à l'issue de cette situation
-  avancementSituation: number; // Delta % (cette situation uniquement)
-  montantHT: number;           // Montant HT de la situation (delta)
-  retenueGarantie: number;     // € retenus (RG)
-  vatAmount: number;           // TVA
-  montantTTC: number;          // TTC avant RG
-  netAPayer: number;           // TTC - RG
-  status: SituationStatus;
-  invoiceNumber?: string;      // N° facture liée (une fois générée)
-};
-
-// ── Données de démo ───────────────────────────────────────────────────────────
-
-const initialMarches: Marche[] = [
-  {
-    id: "mc-001",
-    number: "MC-2026-001",
-    client: "Maison Dupont",
-    title: "Rénovation complète salle de bain + WC",
-    totalHT: 42000,
-    vatRate: 10,
-    retenuGarantie: 5,
-    startDate: "2026-03-01",
-    status: "actif",
-    createdAt: "2026-03-01",
-  },
-  {
-    id: "mc-002",
-    number: "MC-2026-002",
-    client: "Résidence Les Pins",
-    title: "Électricité générale — mise aux normes C15-100",
-    totalHT: 28500,
-    vatRate: 20,
-    retenuGarantie: 5,
-    startDate: "2026-04-15",
-    status: "actif",
-    createdAt: "2026-04-15",
-  },
-  {
-    id: "mc-003",
-    number: "MC-2026-003",
-    client: "Appartement Lehmann",
-    title: "Isolation thermique par l'extérieur (ITE)",
-    totalHT: 15200,
-    vatRate: 5.5,
-    retenuGarantie: 5,
-    startDate: "2026-01-10",
-    endDate: "2026-05-30",
-    status: "solde",
-    createdAt: "2026-01-10",
-  },
-];
-
-// Helpers de calcul
-function calcSituation(
-  marche: Marche,
-  avancementCumule: number,
-  prevCumule: number,
-): Pick<Situation, "avancementSituation" | "montantHT" | "retenueGarantie" | "vatAmount" | "montantTTC" | "netAPayer"> {
-  const avancementSituation = avancementCumule - prevCumule;
-  const montantHT = (avancementSituation / 100) * marche.totalHT;
-  const retenueGarantie = montantHT * (marche.retenuGarantie / 100);
-  const vatAmount = montantHT * (marche.vatRate / 100);
-  const montantTTC = montantHT + vatAmount;
-  const netAPayer = montantTTC - retenueGarantie;
-  return { avancementSituation, montantHT, retenueGarantie, vatAmount, montantTTC, netAPayer };
-}
-
-const sit1mc1 = calcSituation(initialMarches[0]!, 30, 0);
-const sit2mc1 = calcSituation(initialMarches[0]!, 70, 30);
-const sit1mc2 = calcSituation(initialMarches[1]!, 30, 0);
-const sit1mc3 = calcSituation(initialMarches[2]!, 40, 0);
-const sit2mc3 = calcSituation(initialMarches[2]!, 75, 40);
-const sit3mc3 = calcSituation(initialMarches[2]!, 100, 75);
-
-const initialSituations: Situation[] = [
-  // MC-2026-001 — Maison Dupont
-  {
-    id: "sit-001", marcheId: "mc-001", number: 1, label: "Situation n°1",
-    date: "2026-04-01", avancementCumule: 30, ...sit1mc1,
-    status: "payee", invoiceNumber: "FA-2026-0012",
-  },
-  {
-    id: "sit-002", marcheId: "mc-001", number: 2, label: "Situation n°2",
-    date: "2026-06-15", avancementCumule: 70, ...sit2mc1,
-    status: "envoyee",
-  },
-  // MC-2026-002 — Résidence Les Pins
-  {
-    id: "sit-003", marcheId: "mc-002", number: 1, label: "Situation n°1",
-    date: "2026-05-20", avancementCumule: 30, ...sit1mc2,
-    status: "payee", invoiceNumber: "FA-2026-0014",
-  },
-  // MC-2026-003 — Appartement Lehmann (soldé)
-  {
-    id: "sit-004", marcheId: "mc-003", number: 1, label: "Situation n°1",
-    date: "2026-02-10", avancementCumule: 40, ...sit1mc3,
-    status: "payee", invoiceNumber: "FA-2026-0007",
-  },
-  {
-    id: "sit-005", marcheId: "mc-003", number: 2, label: "Situation n°2",
-    date: "2026-04-05", avancementCumule: 75, ...sit2mc3,
-    status: "payee", invoiceNumber: "FA-2026-0009",
-  },
-  {
-    id: "sit-006", marcheId: "mc-003", number: 3, label: "Situation de solde",
-    date: "2026-05-28", avancementCumule: 100, ...sit3mc3,
-    status: "payee", invoiceNumber: "FA-2026-0011",
-  },
-];
-
 export type DataContextType = {
   quotes: Quote[];
   addQuote: (quote: Quote) => void;
@@ -644,17 +489,7 @@ export type DataContextType = {
   addClient: (c: Client) => void;
   updateClient: (id: string, c: Client) => void;
   deleteClient: (id: string) => void;
-  // Situations de travaux BTP
-  marches: Marche[];
-  addMarche: (m: Omit<Marche, "id" | "createdAt">) => void;
-  updateMarche: (id: string, partial: Partial<Marche>) => void;
-  deleteMarche: (id: string) => void;
 
-  situations: Situation[];
-  addSituation: (s: Omit<Situation, "id">) => void;
-  updateSituation: (id: string, partial: Partial<Situation>) => void;
-  deleteSituation: (id: string) => void;
-  
   expenses: Expense[];
   addExpense: (e: Omit<Expense, "id" | "createdAt">) => void;
   updateExpense: (id: string, partial: Partial<Expense>) => void;
@@ -745,8 +580,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [clients, setClients] = useState<Client[]>([]);
   const [upsells, setUpsells] = useState<Upsell[]>([]);
-  const [marches, setMarches] = useState<Marche[]>([]);
-  const [situations, setSituations] = useState<Situation[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
@@ -794,8 +627,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (remote.company) setCompany((prev) => ({ ...prev, ...remote.company }));
       setExpenses(remote.expenses);
       setSubscriptions(remote.subscriptions);
-      setMarches(remote.marches);
-      setSituations(remote.situations);
 
       // Realtime subscription for instant signature updates
       supabase
@@ -917,12 +748,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     let hasChanges = false;
     const today = new Date().toISOString().split("T")[0] ?? "";
     
+    // Factures générées ce passage, à synchroniser vers Supabase une fois le
+    // nouvel état local calculé (sinon elles restent en mémoire uniquement et
+    // disparaissent au refresh — c'était la cause de la facture "fantôme"
+    // visible en UI mais absente de la table `invoices`).
+    const generatedInvoices: Invoice[] = [];
+
     setSubscriptions(prev => {
       let updatedSubs = [...prev];
       const newInvoices = [...invoices];
       const num = company.nextInvoiceNumber || 1;
       let nextNumber = num;
-      
+
       updatedSubs = updatedSubs.map(sub => {
         if (sub.status !== "active" || sub.nextBillingDate > today) return sub;
 
@@ -937,7 +774,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             const due = new Date(`${billingDate}T12:00:00`);
             due.setDate(due.getDate() + (company.paymentTermsDays || 30));
             const billingYear = new Date(`${billingDate}T12:00:00`).getFullYear();
-            newInvoices.unshift({
+            const newInvoice: Invoice = {
               number: `${company.invoicePrefix || "FA"}-${billingYear}-${String(nextNumber).padStart(4, "0")}`,
               client: sub.client,
               date: billingDate,
@@ -947,7 +784,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
               totalVAT,
               status: "draft",
               sourceSubscriptionId: sub.id,
-            });
+            };
+            newInvoices.unshift(newInvoice);
+            generatedInvoices.push(newInvoice);
             nextNumber++;
           }
 
@@ -962,7 +801,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         hasChanges = true;
         return { ...sub, nextBillingDate: billingDate };
       });
-      
+
       if (hasChanges) {
         setInvoices(newInvoices);
         setCompany(prev => ({ ...prev, nextInvoiceNumber: nextNumber }));
@@ -970,6 +809,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       return prev;
     });
+
+    if (generatedInvoices.length > 0) {
+      orgReadyRef.current!.then((orgId) => {
+        if (!orgId) return;
+        generatedInvoices.forEach((inv) => {
+          upsertInvoice(inv, orgId).catch(console.warn);
+        });
+      });
+    }
   }, [company.invoicePrefix, company.nextInvoiceNumber, company.paymentTermsDays, invoices, loaded]);
 
   const addQuote = (quote: Quote) => {
@@ -1062,56 +910,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setClients((prev) => prev.filter((c) => c.id !== id));
     orgReadyRef.current!.then((orgId) => {
       if (orgId) supabase.from("clients").delete().eq("id", id).eq("organization_id", orgId).then(({ error }) => {
-        if (error) console.error("DELETE CLIENT ERROR:", error);
+        if (error) {
+          console.error("DELETE CLIENT ERROR:", error);
+          toast.error("Erreur de suppression Client : " + error.message);
+        }
       });
-    });
-  };
-
-  // ── Marchés ────────────────────────────────────────────────────────────────
-  const addMarche = (m: Omit<Marche, "id" | "createdAt">) => {
-    const newMarche: Marche = { ...m, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    setMarches((prev) => [newMarche, ...prev]);
-    orgReadyRef.current!.then((orgId) => {
-      if (orgId) upsertMarche(newMarche, orgId).catch(console.warn);
-    });
-  };
-  const updateMarche = (id: string, partial: Partial<Marche>) =>
-    setMarches((prev) => prev.map((m) => {
-      if (m.id !== id) return m;
-      const next = { ...m, ...partial };
-      orgReadyRef.current!.then((orgId) => {
-        if (orgId) upsertMarche(next, orgId).catch(console.warn);
-      });
-      return next;
-    }));
-  const deleteMarche = (id: string) => {
-    setMarches((prev) => prev.filter((m) => m.id !== id));
-    orgReadyRef.current!.then((orgId) => {
-      if (orgId) deleteMarcheFromDb(id).catch(console.warn);
-    });
-  };
-
-  const addSituation = (s: Omit<Situation, "id">) => {
-    const newSit: Situation = { ...s, id: crypto.randomUUID() };
-    setSituations((prev) => [...prev, newSit]);
-    orgReadyRef.current!.then((orgId) => {
-      if (orgId) upsertSituation(newSit, orgId).catch(console.warn);
-    });
-  };
-  const updateSituation = (id: string, partial: Partial<Situation>) => {
-    setSituations((prev) => prev.map((s) => {
-      if (s.id !== id) return s;
-      const next = { ...s, ...partial };
-      orgReadyRef.current!.then((orgId) => {
-        if (orgId) upsertSituation(next, orgId).catch(console.warn);
-      });
-      return next;
-    }));
-  };
-  const deleteSituation = (id: string) => {
-    setSituations((prev) => prev.filter((s) => s.id !== id));
-    orgReadyRef.current!.then((orgId) => {
-      if (orgId) deleteSituationFromDb(id).catch(console.warn);
     });
   };
 
@@ -1203,14 +1006,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addClient,
         updateClient,
         deleteClient,
-        marches,
-        addMarche,
-        updateMarche,
-        deleteMarche,
-        situations,
-        addSituation,
-        updateSituation,
-        deleteSituation,
         expenses,
         addExpense,
         updateExpense,

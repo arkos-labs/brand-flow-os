@@ -35,7 +35,6 @@ import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as PlanSiteRouteImport } from './routes/plan-site'
 import { Route as RendezVousRouteImport } from './routes/rendez-vous'
-import { Route as SituationsRouteImport } from './routes/situations'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TresorerieRouteImport } from './routes/tresorerie'
@@ -171,11 +170,6 @@ const RendezVousRoute = RendezVousRouteImport.update({
   path: '/rendez-vous',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SituationsRoute = SituationsRouteImport.update({
-  id: '/situations',
-  path: '/situations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TableauDeBordRoute = TableauDeBordRouteImport.update({
   id: '/tableau-de-bord',
   path: '/tableau-de-bord',
@@ -224,7 +218,6 @@ export interface FileRoutesByFullPath {
   '/pipeline': typeof PipelineRoute
   '/plan-site': typeof PlanSiteRoute
   '/rendez-vous': typeof RendezVousRoute
-  '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
@@ -257,7 +250,6 @@ export interface FileRoutesByTo {
   '/pipeline': typeof PipelineRoute
   '/plan-site': typeof PlanSiteRoute
   '/rendez-vous': typeof RendezVousRoute
-  '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
@@ -291,7 +283,6 @@ export interface FileRoutesById {
   '/pipeline': typeof PipelineRoute
   '/plan-site': typeof PlanSiteRoute
   '/rendez-vous': typeof RendezVousRoute
-  '/situations': typeof SituationsRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
@@ -326,7 +317,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/plan-site'
     | '/rendez-vous'
-    | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
     | '/tresorerie'
@@ -359,7 +349,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/plan-site'
     | '/rendez-vous'
-    | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
     | '/tresorerie'
@@ -392,7 +381,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/plan-site'
     | '/rendez-vous'
-    | '/situations'
     | '/tableau-de-bord'
     | '/tarifs'
     | '/tresorerie'
@@ -426,7 +414,6 @@ export interface RootRouteChildren {
   PipelineRoute: typeof PipelineRoute
   PlanSiteRoute: typeof PlanSiteRoute
   RendezVousRoute: typeof RendezVousRoute
-  SituationsRoute: typeof SituationsRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
   TarifsRoute: typeof TarifsRoute
   TresorerieRoute: typeof TresorerieRoute
@@ -617,13 +604,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RendezVousRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/situations': {
-      id: '/situations'
-      path: '/situations'
-      fullPath: '/situations'
-      preLoaderRoute: typeof SituationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/tableau-de-bord': {
       id: '/tableau-de-bord'
       path: '/tableau-de-bord'
@@ -682,7 +662,6 @@ const rootRouteChildren: RootRouteChildren = {
   PipelineRoute: PipelineRoute,
   PlanSiteRoute: PlanSiteRoute,
   RendezVousRoute: RendezVousRoute,
-  SituationsRoute: SituationsRoute,
   TableauDeBordRoute: TableauDeBordRoute,
   TarifsRoute: TarifsRoute,
   TresorerieRoute: TresorerieRoute,
