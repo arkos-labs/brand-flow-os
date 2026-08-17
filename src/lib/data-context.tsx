@@ -618,12 +618,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Sert à mettre en attente les écritures (addClient, addQuote…) déclenchées AVANT
   // que getMyOrgId() ait fini de répondre, au lieu de les perdre silencieusement
   // (c'était la cause du bug "le client créé disparaît au refresh").
+  //
+  // IMPORTANT : on initialise ces refs avec un lazy-init gardé par un test sur
+  // `.current === null`, PAS avec `useRef(new Promise(...))` directement.
+  // `useRef(x)` évalue `x` à CHAQUE rendu (React ignore juste le résultat après
+  // le premier montage) — donc `new Promise(...)` recréait une promesse à
+  // chaque re-render, réassignant `orgReadyResolveRef.current` vers le
+  // resolver de cette NOUVELLE promesse jetée, différente de celle réellement
+  // stockée dans `orgReadyRef.current` et attendue partout ailleurs. Résultat :
+  // la promesse effectivement utilisée n'était jamais résolue dès qu'un
+  // re-render survenait avant la réponse de getMyOrgId(), donc plus AUCUNE
+  // écriture (client, devis, facture) n'atteignait Supabase, silencieusement.
   const orgReadyResolveRef = useRef<(orgId: string | null) => void>(() => {});
-  const orgReadyRef = useRef<Promise<string | null>>(
-    new Promise<string | null>((resolve) => {
+  const orgReadyRef = useRef<Promise<string | null> | null>(null);
+  if (orgReadyRef.current === null) {
+    orgReadyRef.current = new Promise<string | null>((resolve) => {
       orgReadyResolveRef.current = resolve;
-    })
-  );
+    });
+  }
 
   // Charger depuis Supabase uniquement
   useEffect(() => {
@@ -821,19 +833,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (prev.some((q) => q.number === quote.number)) return prev;
       return sortDocumentsByActivity([...prev, quote]);
     });
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertQuote(quote, orgId).catch(console.warn);
     });
   };
   const updateQuote = (number: string, updated: Quote) => {
     setQuotes((prev) => sortDocumentsByActivity(prev.map((q) => (q.number === number ? updated : q))));
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertQuote(updated, orgId).catch(console.warn);
     });
   };
   const deleteQuote = (number: string) => {
     setQuotes((prev) => prev.filter((quote) => quote.number !== number));
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) deleteQuoteFromDb(number, orgId).catch(console.warn);
     });
   };
@@ -842,13 +854,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (prev.some((inv) => inv.number === invoice.number)) return prev;
       return sortDocumentsByActivity([...prev, invoice]);
     });
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertInvoice(invoice, orgId).catch(console.warn);
     });
   };
   const updateInvoice = (number: string, updated: Invoice) => {
     setInvoices((prev) => sortDocumentsByActivity(prev.map((inv) => (inv.number === number ? updated : inv))));
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertInvoice(updated, orgId).catch(console.warn);
     });
   };
@@ -874,19 +886,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addClient = (c: Client) => {
     setClients((prev) => [c, ...prev]);
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertClient(c, orgId).catch(console.warn);
     });
   };
   const updateClient = (id: string, updated: Client) => {
     setClients((prev) => prev.map((c) => (c.id === id ? updated : c)));
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) upsertClient(updated, orgId).catch(console.warn);
     });
   };
   const deleteClient = (id: string) => {
     setClients((prev) => prev.filter((c) => c.id !== id));
-    orgReadyRef.current.then((orgId) => {
+    orgReadyRef.current!.then((orgId) => {
       if (orgId) supabase.from("clients").delete().eq("id", id).eq("organization_id", orgId).then(({ error }) => {
         if (error) console.error("DELETE CLIENT ERROR:", error);
       });
