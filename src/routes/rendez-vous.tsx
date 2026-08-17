@@ -1,6 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from "date-fns";
+import { fr } from "date-fns/locale";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
@@ -8,14 +22,16 @@ import { getMyOrgId } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  Calendar,
-  Clock,
-  Video,
-  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   AlertCircle,
   CalendarCheck2,
   CalendarPlus,
+  Video,
+  ExternalLink,
+  Clock,
+  X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/rendez-vous")({
@@ -39,30 +55,6 @@ type GoogleCalendar = {
   primary: boolean;
 };
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => (w[0] ?? "").toUpperCase())
-    .join("");
-}
-
-function avatarColor(name: string): string {
-  const colors = [
-    "bg-blue-500",
-    "bg-emerald-500",
-    "bg-sky-500",
-    "bg-rose-500",
-    "bg-cyan-500",
-    "bg-blue-700",
-    "bg-teal-500",
-  ];
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
-  return colors[h % colors.length] ?? colors[0]!;
-}
-
 function formatDuration(start: string, end: string) {
   const ms = new Date(end).getTime() - new Date(start).getTime();
   const minutes = Math.round(ms / 60000);
@@ -77,6 +69,8 @@ function RendezVousPage() {
   const { company, updateCompany } = useData();
   const [orgId, setOrgId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState(() => new Date());
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   useEffect(() => {
     getMyOrgId().then(setOrgId);
@@ -103,7 +97,7 @@ function RendezVousPage() {
   const selectedCalendarId = company.google_calendar_id || "primary";
 
   // Liste des calendriers accessibles (perso, équipes partagées…)
-  const { data: calendars, isLoading: isLoadingCalendars } = useQuery({
+  const { data: calendars } = useQuery({
     queryKey: ["calendar-list", company.google_refresh_token],
     queryFn: async () => {
       const res = await fetch(
@@ -136,31 +130,36 @@ function RendezVousPage() {
     staleTime: 60_000,
   });
 
-  const appointments = (data || []).map((event) => ({
-    id: event.id,
-    name: event.attendeeName || event.name,
-    subtitle: event.attendeeName ? event.name : event.attendeeEmail || "Pas d'invité",
-    email: event.attendeeEmail,
-    date: new Date(event.startTime).toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    }),
-    time: new Date(event.startTime).toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    duration: formatDuration(event.startTime, event.endTime),
-    status: event.status === "confirmed" ? "Confirmé" : "Annulé",
-    link: event.location,
-  }));
+  const events = data || [];
+
+  // Grille du mois affiché : du lundi de la 1ère semaine au dimanche de la dernière.
+  const days = useMemo(() => {
+    const start = startOfWeek(startOfMonth(visibleMonth), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(visibleMonth), { weekStartsOn: 1 });
+    return eachDayOfInterval({ start, end });
+  }, [visibleMonth]);
+
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const event of events) {
+      const key = format(new Date(event.startTime), "yyyy-MM-dd");
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(event);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }
+    return map;
+  }, [events]);
 
   const connectHref = orgId
     ? `/api/auth/google/login?orgId=${orgId}&returnTo=/rendez-vous`
     : "#";
 
+  const weekDayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-6xl">
       <PageHeader
         title={t("app.rendezvous.title" as Key)}
         subtitle={t("app.rendezvous.subtitle" as Key)}
@@ -203,36 +202,65 @@ function RendezVousPage() {
         </div>
       )}
 
-      {isConnected && calendars && calendars.length > 1 && (
-        <div className="mt-4 flex items-center gap-3">
-          <label htmlFor="calendar-select" className="shrink-0 text-sm font-medium text-foreground">
-            Calendrier :
-          </label>
-          <select
-            id="calendar-select"
-            value={selectedCalendarId}
-            onChange={(e) => updateCompany({ ...company, google_calendar_id: e.target.value })}
-            className="h-9 flex-1 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            {calendars.map((cal) => (
-              <option key={cal.id} value={cal.id}>
-                {cal.name}{cal.primary ? " (principal)" : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="card-elevated mt-6 overflow-hidden">
+        {/* Barre de navigation du mois */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold capitalize text-foreground">
+              {format(visibleMonth, "MMMM yyyy", { locale: fr })}
+            </h2>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setVisibleMonth((m) => subMonths(m, 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/50"
+                aria-label="Mois précédent"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisibleMonth((m) => addMonths(m, 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/50"
+                aria-label="Mois suivant"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setVisibleMonth(new Date())}
+              className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/50"
+            >
+              Aujourd'hui
+            </button>
+          </div>
 
-      <div className="mt-6 flex flex-col gap-2">
+          {isConnected && calendars && calendars.length > 1 && (
+            <select
+              value={selectedCalendarId}
+              onChange={(e) => updateCompany({ ...company, google_calendar_id: e.target.value })}
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              {calendars.map((cal) => (
+                <option key={cal.id} value={cal.id}>
+                  {cal.name}{cal.primary ? " (principal)" : ""}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* États non connecté / chargement / erreur */}
         {!isConnected ? (
-          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <Calendar className="h-6 w-6 text-muted-foreground" />
+              <CalendarCheck2 className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>
               <h3 className="text-base font-semibold text-foreground">Aucun rendez-vous synchronisé</h3>
               <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Connectez votre compte Google Calendar pour que vos prochains rendez-vous s'affichent directement ici.
+                Connectez votre compte Google Calendar pour voir vos rendez-vous dans ce calendrier.
               </p>
             </div>
             <Button asChild className="mt-2">
@@ -242,13 +270,13 @@ function RendezVousPage() {
               </a>
             </Button>
           </div>
-        ) : isLoading || isLoadingCalendars ? (
-          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+        ) : isLoading ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Chargement de vos rendez-vous…</p>
           </div>
         ) : isError ? (
-          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
             <AlertCircle className="h-6 w-6 text-destructive" />
             <p className="max-w-sm text-sm text-muted-foreground">
               Impossible de récupérer vos rendez-vous ({(error as Error)?.message}).
@@ -259,74 +287,146 @@ function RendezVousPage() {
               </Button>
             )}
           </div>
-        ) : appointments.length > 0 ? (
-          appointments.map((apt) => (
-            <div
-              key={apt.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/40"
-            >
-              <div
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white",
-                  avatarColor(apt.name),
-                )}
-              >
-                {initials(apt.name) || "?"}
-              </div>
+        ) : (
+          <>
+            {/* En-têtes des jours de la semaine */}
+            <div className="grid grid-cols-7 border-b border-border bg-muted/20 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {weekDayLabels.map((d) => (
+                <div key={d} className="py-2">
+                  {d}
+                </div>
+              ))}
+            </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium text-foreground">{apt.name}</p>
-                  <span
+            {/* Grille du mois */}
+            <div className="grid grid-cols-7">
+              {days.map((day) => {
+                const key = format(day, "yyyy-MM-dd");
+                const dayEvents = eventsByDay.get(key) || [];
+                const inMonth = isSameMonth(day, visibleMonth);
+                const today = isToday(day);
+
+                return (
+                  <div
+                    key={key}
                     className={cn(
-                      "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
-                      apt.status === "Confirmé"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-700",
+                      "flex min-h-[110px] flex-col gap-1 border-b border-r border-border p-1.5 last:border-r-0",
+                      !inMonth && "bg-muted/10",
                     )}
                   >
-                    {apt.status}
-                  </span>
-                </div>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{apt.subtitle}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> {apt.date} à {apt.time}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {apt.duration}
-                  </span>
-                </div>
-              </div>
+                    <span
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                        today
+                          ? "bg-primary text-primary-foreground"
+                          : inMonth
+                            ? "text-foreground"
+                            : "text-muted-foreground/50",
+                      )}
+                    >
+                      {format(day, "d")}
+                    </span>
 
-              {apt.link ? (
-                <a
-                  href={apt.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                >
-                  <Video className="h-3.5 w-3.5" />
-                  Rejoindre
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              ) : null}
+                    <div className="flex flex-col gap-1">
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <button
+                          key={event.id}
+                          type="button"
+                          onClick={() => setSelectedEvent(event)}
+                          className={cn(
+                            "truncate rounded px-1.5 py-1 text-left text-[10px] font-medium leading-tight text-white transition-opacity hover:opacity-90",
+                            event.status === "confirmed" ? "bg-blue-500" : "bg-amber-600",
+                          )}
+                        >
+                          <div className="truncate font-semibold">
+                            {event.attendeeName || event.name}
+                          </div>
+                          <div className="truncate opacity-90">
+                            {format(new Date(event.startTime), "HH:mm")}
+                          </div>
+                        </button>
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <span className="px-1.5 text-[10px] font-medium text-muted-foreground">
+                          +{dayEvents.length - 3} autre{dayEvents.length - 3 > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))
-        ) : (
-          <div className="card-elevated flex flex-col items-center gap-3 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <Calendar className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">Aucun rendez-vous à venir</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Votre compte est connecté mais aucun événement n'est planifié pour le moment.
-              </p>
-            </div>
-          </div>
+          </>
         )}
       </div>
+
+      {/* Détail d'un rendez-vous */}
+      {selectedEvent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setSelectedEvent(null)}
+        >
+          <div
+            className="card-elevated w-full max-w-sm p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span
+                  className={cn(
+                    "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
+                    selectedEvent.status === "confirmed"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700",
+                  )}
+                >
+                  {selectedEvent.status === "confirmed" ? "Confirmé" : "Annulé"}
+                </span>
+                <h3 className="mt-2 text-base font-semibold text-foreground">
+                  {selectedEvent.attendeeName || selectedEvent.name}
+                </h3>
+                {selectedEvent.attendeeName && (
+                  <p className="text-sm text-muted-foreground">{selectedEvent.name}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedEvent(null)}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted/50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2 capitalize">
+                {format(new Date(selectedEvent.startTime), "EEEE d MMMM yyyy", { locale: fr })}
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                {format(new Date(selectedEvent.startTime), "HH:mm")} ·{" "}
+                {formatDuration(selectedEvent.startTime, selectedEvent.endTime)}
+              </span>
+              {selectedEvent.attendeeEmail && (
+                <span className="flex items-center gap-2">{selectedEvent.attendeeEmail}</span>
+              )}
+            </div>
+
+            {selectedEvent.location && (
+              <a
+                href={selectedEvent.location}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <Video className="h-4 w-4" />
+                Rejoindre l'appel
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
