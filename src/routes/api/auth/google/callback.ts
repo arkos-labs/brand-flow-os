@@ -5,15 +5,21 @@ export const APIRoute = createAPIFileRoute('/api/auth/google/callback')({
     const url = new URL(request.url)
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
+    const rawState = url.searchParams.get('state') || ''
+
+    // state = "orgId::returnTo" (returnTo par défaut = /parametres pour compat
+    // avec les connexions faites avant l'ajout du scope Calendar).
+    const [, returnToRaw] = decodeURIComponent(rawState).split('::')
+    const returnTo = returnToRaw || '/parametres'
 
     const baseUrl = `${url.protocol}//${url.host}`
-    const settingsUrl = new URL('/parametres', baseUrl)
+    const redirectUrl = new URL(returnTo, baseUrl)
 
     if (error || !code) {
-      settingsUrl.searchParams.set('google_error', error || 'no_code')
+      redirectUrl.searchParams.set('google_error', error || 'no_code')
       return new Response(null, {
         status: 302,
-        headers: { Location: settingsUrl.toString() },
+        headers: { Location: redirectUrl.toString() },
       })
     }
 
@@ -45,30 +51,30 @@ export const APIRoute = createAPIFileRoute('/api/auth/google/callback')({
 
       if (!tokenResponse.ok || !tokenData.refresh_token) {
         console.error('Google Token Error:', tokenData)
-        settingsUrl.searchParams.set(
+        redirectUrl.searchParams.set(
           'google_error',
           'failed_to_get_refresh_token',
         )
         return new Response(null, {
           status: 302,
-          headers: { Location: settingsUrl.toString() },
+          headers: { Location: redirectUrl.toString() },
         })
       }
 
-      // Redirige vers les paramètres avec le refresh token
-      // Le frontend le sauvegarde en DB et nettoie l'URL
-      settingsUrl.searchParams.set('google_token', tokenData.refresh_token)
+      // Redirige vers la page d'origine avec le refresh token.
+      // Le frontend le sauvegarde en DB et nettoie l'URL.
+      redirectUrl.searchParams.set('google_token', tokenData.refresh_token)
 
       return new Response(null, {
         status: 302,
-        headers: { Location: settingsUrl.toString() },
+        headers: { Location: redirectUrl.toString() },
       })
     } catch (err: any) {
       console.error('Error exchanging code for token:', err)
-      settingsUrl.searchParams.set('google_error', 'server_error')
+      redirectUrl.searchParams.set('google_error', 'server_error')
       return new Response(null, {
         status: 302,
-        headers: { Location: settingsUrl.toString() },
+        headers: { Location: redirectUrl.toString() },
       })
     }
   },

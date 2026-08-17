@@ -266,6 +266,11 @@ export type CompanySettings = {
   defaultInvoiceTemplate?: "classic" | "modern" | "minimal" | "elegant" | "bold";
   defaultEmailTemplate?: "modele-1" | "modele-2" | "modele-3" | "modele-4" | "modele-5";
   primaryColor?: string;
+  // Connexion Google (Gmail + Google Calendar, même refresh token / mêmes scopes)
+  google_refresh_token?: string;
+  // Calendrier Google sélectionné pour afficher les rendez-vous (ex: calendrier
+  // d'une équipe précise). "primary" = calendrier principal du compte connecté.
+  google_calendar_id?: string;
 };
 
 const defaultCompanySettings: CompanySettings = {
