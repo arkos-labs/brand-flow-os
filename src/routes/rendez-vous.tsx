@@ -182,13 +182,25 @@ function RendezVousPage() {
   // Gère le retour du flux OAuth Google (redirection depuis /api/auth/google/callback,
   // qui renvoie ici grâce au paramètre returnTo=/rendez-vous)
   useEffect(() => {
+    // Le refresh token ne transite plus jamais par l'URL : on le récupère via
+    // un endpoint qui lit un cookie httpOnly à usage unique posé par
+    // /api/auth/google/callback.
     const params = new URLSearchParams(window.location.search);
-    const googleToken = params.get("google_token");
+    const googleConnected = params.get("google_connected");
     const googleError = params.get("google_error");
 
-    if (googleToken) {
-      updateCompany({ ...company, google_refresh_token: googleToken });
+    if (googleConnected) {
       window.history.replaceState({}, document.title, window.location.pathname);
+      fetch("/api/auth/google/consume-token", { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data: { token?: string }) => {
+          if (data.token) {
+            updateCompany({ ...company, google_refresh_token: data.token });
+          } else {
+            setConnectError("no_token");
+          }
+        })
+        .catch(() => setConnectError("server_error"));
     } else if (googleError) {
       setConnectError(googleError);
       window.history.replaceState({}, document.title, window.location.pathname);

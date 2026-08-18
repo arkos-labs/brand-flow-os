@@ -32,8 +32,8 @@ export default async function handler(req: Request) {
 
     // Note: VITE_ prefix vars are only available in the browser bundle, not in edge/serverless functions.
     // Always use RESEND_API_KEY (without VITE_) in Vercel environment variables.
-    const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.VITE_RESEND_FROM_EMAIL || 'Devis <onboarding@resend.dev>';
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Devis <onboarding@resend.dev>';
 
     if (!resendApiKey) {
       return new Response(JSON.stringify({

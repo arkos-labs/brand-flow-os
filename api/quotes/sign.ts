@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // construction) ; on garde le fallback VITE_ tant que les nouvelles
   // variables ne sont pas encore ajoutées dans les réglages Vercel.
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error("Missing Supabase configuration");
@@ -81,8 +81,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(quote.total_ttc))
       : null;
 
-    const resendApiKey = process.env.RESEND_API_KEY ?? process.env.VITE_RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? process.env.VITE_RESEND_FROM_EMAIL ?? "ClearQuote <onboarding@resend.dev>";
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "ClearQuote <onboarding@resend.dev>";
 
     if (artisanEmail && resendApiKey) {
       const emailHtml = buildNotificationEmail({

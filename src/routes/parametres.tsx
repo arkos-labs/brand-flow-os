@@ -173,21 +173,32 @@ function SettingsPage() {
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
 
   useEffect(() => {
-    // Check if we just returned from Google OAuth
+    // Check if we just returned from Google OAuth. Le refresh token ne
+    // transite plus jamais par l'URL : on le récupère via un endpoint qui lit
+    // un cookie httpOnly à usage unique posé par /api/auth/google/callback.
     const params = new URLSearchParams(window.location.search);
-    const googleToken = params.get("google_token");
+    const googleConnected = params.get("google_connected");
     const googleError = params.get("google_error");
-    
-    if (googleToken) {
-      updateCompany({ ...company, google_refresh_token: googleToken });
-      alert("Votre compte Gmail a été connecté avec succès !");
-      // Clean up URL
+
+    if (googleConnected) {
       window.history.replaceState({}, document.title, window.location.pathname);
+      fetch("/api/auth/google/consume-token", { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data: { token?: string }) => {
+          if (data.token) {
+            updateCompany({ ...company, google_refresh_token: data.token });
+            alert("Votre compte Gmail a été connecté avec succès !");
+          }
+        })
+        .catch(() => {
+          alert("Erreur de connexion à Gmail. Merci de réessayer.");
+        });
     } else if (googleError) {
       alert("Erreur de connexion à Gmail. Avez-vous bien coché toutes les cases ?");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [company, updateCompany]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSiretLookup = async (siret: string) => {
     const clean = siret.replace(/\D/g, "");

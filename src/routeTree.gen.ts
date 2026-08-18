@@ -42,6 +42,7 @@ import { Route as PortailIdRouteImport } from './routes/portail.$id'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
+import { Route as ApiAuthGoogleConsumeTokenRouteImport } from './routes/api/auth/google/consume-token'
 import { Route as ApiAuthGoogleLoginRouteImport } from './routes/api/auth/google/login'
 
 const IndexRoute = IndexRouteImport.update({
@@ -209,6 +210,12 @@ const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
   path: '/api/auth/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthGoogleConsumeTokenRoute =
+  ApiAuthGoogleConsumeTokenRouteImport.update({
+    id: '/api/auth/google/consume-token',
+    path: '/api/auth/google/consume-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthGoogleLoginRoute = ApiAuthGoogleLoginRouteImport.update({
   id: '/api/auth/google/login',
   path: '/api/auth/google/login',
@@ -249,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRoutesByTo {
@@ -285,6 +293,7 @@ export interface FileRoutesByTo {
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRoutesById {
@@ -322,6 +331,7 @@ export interface FileRoutesById {
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
 }
 export interface FileRouteTypes {
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/auth/google/callback'
+    | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/auth/google/callback'
+    | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
   id:
     | '__root__'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/auth/google/callback'
+    | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
   fileRoutesById: FileRoutesById
 }
@@ -469,6 +482,7 @@ export interface RootRouteChildren {
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCalendarListRoute: typeof ApiCalendarListRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
+  ApiAuthGoogleConsumeTokenRoute: typeof ApiAuthGoogleConsumeTokenRoute
   ApiAuthGoogleLoginRoute: typeof ApiAuthGoogleLoginRoute
 }
 
@@ -705,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/google/consume-token': {
+      id: '/api/auth/google/consume-token'
+      path: '/api/auth/google/consume-token'
+      fullPath: '/api/auth/google/consume-token'
+      preLoaderRoute: typeof ApiAuthGoogleConsumeTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/google/login': {
       id: '/api/auth/google/login'
       path: '/api/auth/google/login'
@@ -749,6 +770,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCalendarListRoute: ApiCalendarListRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
+  ApiAuthGoogleConsumeTokenRoute: ApiAuthGoogleConsumeTokenRoute,
   ApiAuthGoogleLoginRoute: ApiAuthGoogleLoginRoute,
 }
 export const routeTree = rootRouteImport
