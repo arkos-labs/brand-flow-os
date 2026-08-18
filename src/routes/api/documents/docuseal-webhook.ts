@@ -1,25 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { verifyDocusealWebhook } from "@/lib/docuseal";
+import { verifyDocusealWebhookSecret } from "@/lib/docuseal";
 
-// Webhook DocuSeal — à configurer dans DocuSeal sur
-// `<ton domaine>/api/documents/docuseal-webhook`, événement "form.completed".
+// Webhook DocuSeal — configuré dans DocuSeal sur
+// `<domaine>/api/documents/docuseal-webhook?secret=...`, événement
+// "form.completed". Le secret est vérifié via le query param (cette
+// version de DocuSeal ne signe pas ses webhooks par header).
+//
 // Réconcilie via `docusealSubmissionId` stocké dans quotes.payload par
 // /api/quotes/docuseal-start, puis verrouille le devis exactement comme
-// /api/quotes/sign (même colonne `status`, même structure de payload) afin
-// que le reste de l'app (liste des devis, factures liées…) n'ait pas à
-// distinguer signature maison et signature DocuSeal.
+// /api/quotes/sign (même colonne `status`, même structure de payload).
 export const Route = createFileRoute("/api/documents/docuseal-webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const rawBody = await request.text();
-        const signature = request.headers.get("x-docuseal-signature");
-
-        const event = await verifyDocusealWebhook(rawBody, signature).catch(() => null);
-        if (!event) {
-          return new Response(JSON.stringify({ error: "invalid_signature" }), {
+        const url = new URL(request.url);
+        if (!verifyDocusealWebhookSecret(url.searchParams.get("secret"))) {
+          return new Response(JSON.stringify({ error: "invalid_secret" }), {
             status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const event = await request.json().catch(() => null);
+        if (!event) {
+          return new Response(JSON.stringify({ error: "invalid_body" }), {
+            status: 400,
             headers: { "Content-Type": "application/json" },
           });
         }

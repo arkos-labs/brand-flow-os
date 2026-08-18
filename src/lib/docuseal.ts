@@ -1,10 +1,14 @@
 /**
- * docuseal.ts — client serveur pour DocuSeal (self-hosted ou cloud).
+ * docuseal.ts — client serveur pour DocuSeal (self-hosted sur Railway).
  *
  * Activation optionnelle : tant que DOCUSEAL_API_URL / DOCUSEAL_API_KEY /
  * DOCUSEAL_TEMPLATE_ID ne sont pas renseignés dans l'environnement, toutes
  * les fonctions ci-dessous sont no-op et l'app retombe sur la signature
  * maison (canvas) déjà en place dans le portail client.
+ *
+ * Le webhook n'est pas signé par DocuSeal (pas de header HMAC sur cette
+ * version) : la vérification se fait via un secret passé en query param
+ * dans l'URL du webhook elle-même (`?secret=...`), comparé côté serveur.
  */
 
 export function isDocusealEnabled(): boolean {
@@ -35,7 +39,7 @@ export async function createDocusealSubmission(
 ): Promise<{ submissionId: number; signUrl: string }> {
   const { apiUrl, apiKey, templateId } = getConfig();
 
-  const res = await fetch(`${apiUrl}/submissions`, {
+  const res = await fetch(`${apiUrl}/api/submissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Auth-Token": apiKey },
     body: JSON.stringify({
@@ -55,26 +59,12 @@ export async function createDocusealSubmission(
 
   return {
     submissionId: first.submission_id ?? first.id,
-    signUrl: first.embed_src ?? `${apiUrl.replace(/\/api$/, "")}/s/${first.slug}`,
+    signUrl: first.embed_src ?? `${apiUrl}/s/${first.slug}`,
   };
 }
 
-/**
- * Vérifie la signature du webhook DocuSeal (header `X-Docuseal-Signature`,
- * HMAC-SHA256 du corps brut avec DOCUSEAL_WEBHOOK_SECRET). Retourne le
- * payload parsé si valide, sinon `null`.
- */
-export async function verifyDocusealWebhook(rawBody: string, signatureHeader: string | null): Promise<any | null> {
-  const secret = process.env.DOCUSEAL_WEBHOOK_SECRET;
-  if (!secret || !signatureHeader) return null;
-
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, [
-    "sign",
-  ]);
-  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
-  const expected = Buffer.from(sig).toString("hex");
-
-  if (expected !== signatureHeader) return null;
-  return JSON.parse(rawBody);
+/** Compare le `?secret=` de l'URL du webhook à DOCUSEAL_WEBHOOK_SECRET. */
+export function verifyDocusealWebhookSecret(providedSecret: string | null): boolean {
+  const expected = process.env.DOCUSEAL_WEBHOOK_SECRET;
+  return !!expected && !!providedSecret && providedSecret === expected;
 }

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { dbQuoteToLegacyQuote, dbOrgToCompanySettings } from "@/lib/portal-adapters";
+import { isDocusealEnabled } from "@/lib/docuseal";
 
 // Route publique (pas d'authentification). Le devis est identifié par son
 // `payload->>publicToken` (uuid aléatoire généré à l'envoi), avec repli sur
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/api/quotes/get")({
             JSON.stringify({
               quote: dbQuoteToLegacyQuote(quote),
               company: dbOrgToCompanySettings(org),
+              docusealEnabled: isDocusealEnabled(),
             }),
             { status: 200, headers: { "Content-Type": "application/json" } },
           );

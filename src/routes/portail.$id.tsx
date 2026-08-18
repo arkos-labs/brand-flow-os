@@ -162,6 +162,7 @@ function ClientPortalPremium() {
       const data = await r.json();
       if (data.quote) setLiveQuote(data.quote);
       if (data.company) setLiveCompany(data.company);
+      setDocusealEnabled(!!data.docusealEnabled);
     } catch {
       setLoadError(true);
     }
@@ -201,6 +202,8 @@ function ClientPortalPremium() {
     else if (isRefused) setStep("refused");
   }, [isSigned, isRefused]);
   const [isSignOpen, setIsSignOpen] = useState(false);
+  const [docusealEnabled, setDocusealEnabled] = useState(false);
+  const [startingDocuseal, setStartingDocuseal] = useState(false);
   const [isRefuseOpen, setIsRefuseOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [signatureMode, setSignatureMode] = useState<"draw" | "type">("draw");
@@ -272,6 +275,32 @@ function ClientPortalPremium() {
     setStep("signed");
     // Re-fetcher le devis pour avoir le statut à jour depuis Supabase
     setTimeout(() => fetchLiveQuote(), 1000);
+  };
+
+  /** Redirige vers la session de signature DocuSeal (niveau eIDAS SES/AES). */
+  const handleStartDocuseal = async () => {
+    setStartingDocuseal(true);
+    try {
+      const res = await fetch("/api/quotes/docuseal-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.signUrl) {
+        // DocuSeal indisponible (ex: email client manquant) → on retombe
+        // sur la signature maison plutôt que de bloquer le client.
+        console.error("DocuSeal indisponible, fallback signature maison :", json.error);
+        setIsSignOpen(true);
+        return;
+      }
+      window.location.href = json.signUrl;
+    } catch (err) {
+      console.error("Failed to start DocuSeal session", err);
+      setIsSignOpen(true);
+    } finally {
+      setStartingDocuseal(false);
+    }
   };
 
   const handleRefuse = async () => {
@@ -449,11 +478,12 @@ function ClientPortalPremium() {
           <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 z-20">
             <div className="max-w-3xl mx-auto flex flex-row gap-3">
               <Button
-                onClick={() => setIsSignOpen(true)}
-                className="flex-1 h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl gap-2 shadow-lg shadow-slate-900/20"
+                onClick={docusealEnabled ? handleStartDocuseal : () => setIsSignOpen(true)}
+                disabled={startingDocuseal}
+                className="flex-1 h-12 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl gap-2 shadow-lg shadow-slate-900/20 disabled:opacity-60"
               >
                 <PenTool className="h-4 w-4" />
-                Accepter & Signer
+                {startingDocuseal ? "Redirection..." : "Accepter & Signer"}
               </Button>
               <Button
                 variant="outline"
