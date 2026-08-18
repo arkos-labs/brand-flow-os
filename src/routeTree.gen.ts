@@ -41,6 +41,11 @@ import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
+import { Route as ApiDocumentsDocusealWebhookRouteImport } from './routes/api/documents/docuseal-webhook'
+import { Route as ApiQuotesDocusealStartRouteImport } from './routes/api/quotes/docuseal-start'
+import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
+import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
+import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
 import { Route as ApiAuthGoogleConsumeTokenRouteImport } from './routes/api/auth/google/consume-token'
@@ -206,6 +211,32 @@ const ApiCalendarListRoute = ApiCalendarListRouteImport.update({
   path: '/api/calendar/list',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDocumentsDocusealWebhookRoute =
+  ApiDocumentsDocusealWebhookRouteImport.update({
+    id: '/api/documents/docuseal-webhook',
+    path: '/api/documents/docuseal-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiQuotesDocusealStartRoute = ApiQuotesDocusealStartRouteImport.update({
+  id: '/api/quotes/docuseal-start',
+  path: '/api/quotes/docuseal-start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiQuotesGetRoute = ApiQuotesGetRouteImport.update({
+  id: '/api/quotes/get',
+  path: '/api/quotes/get',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiQuotesRefuseRoute = ApiQuotesRefuseRouteImport.update({
+  id: '/api/quotes/refuse',
+  path: '/api/quotes/refuse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
+  id: '/api/quotes/sign',
+  path: '/api/quotes/sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
   id: '/api/vies/check',
   path: '/api/vies/check',
@@ -261,6 +292,11 @@ export interface FileRoutesByFullPath {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
+  '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
+  '/api/quotes/get': typeof ApiQuotesGetRoute
+  '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -299,6 +335,11 @@ export interface FileRoutesByTo {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
+  '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
+  '/api/quotes/get': typeof ApiQuotesGetRoute
+  '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -338,6 +379,11 @@ export interface FileRoutesById {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
+  '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
+  '/api/quotes/get': typeof ApiQuotesGetRoute
+  '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -378,6 +424,11 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/documents/docuseal-webhook'
+    | '/api/quotes/docuseal-start'
+    | '/api/quotes/get'
+    | '/api/quotes/refuse'
+    | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -416,6 +467,11 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/documents/docuseal-webhook'
+    | '/api/quotes/docuseal-start'
+    | '/api/quotes/get'
+    | '/api/quotes/refuse'
+    | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -454,6 +510,11 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/documents/docuseal-webhook'
+    | '/api/quotes/docuseal-start'
+    | '/api/quotes/get'
+    | '/api/quotes/refuse'
+    | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -493,6 +554,11 @@ export interface RootRouteChildren {
   PortailIdRoute: typeof PortailIdRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCalendarListRoute: typeof ApiCalendarListRoute
+  ApiDocumentsDocusealWebhookRoute: typeof ApiDocumentsDocusealWebhookRoute
+  ApiQuotesDocusealStartRoute: typeof ApiQuotesDocusealStartRoute
+  ApiQuotesGetRoute: typeof ApiQuotesGetRoute
+  ApiQuotesRefuseRoute: typeof ApiQuotesRefuseRoute
+  ApiQuotesSignRoute: typeof ApiQuotesSignRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
   ApiAuthGoogleConsumeTokenRoute: typeof ApiAuthGoogleConsumeTokenRoute
@@ -725,6 +791,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCalendarListRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/documents/docuseal-webhook': {
+      id: '/api/documents/docuseal-webhook'
+      path: '/api/documents/docuseal-webhook'
+      fullPath: '/api/documents/docuseal-webhook'
+      preLoaderRoute: typeof ApiDocumentsDocusealWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/quotes/docuseal-start': {
+      id: '/api/quotes/docuseal-start'
+      path: '/api/quotes/docuseal-start'
+      fullPath: '/api/quotes/docuseal-start'
+      preLoaderRoute: typeof ApiQuotesDocusealStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/quotes/get': {
+      id: '/api/quotes/get'
+      path: '/api/quotes/get'
+      fullPath: '/api/quotes/get'
+      preLoaderRoute: typeof ApiQuotesGetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/quotes/refuse': {
+      id: '/api/quotes/refuse'
+      path: '/api/quotes/refuse'
+      fullPath: '/api/quotes/refuse'
+      preLoaderRoute: typeof ApiQuotesRefuseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/quotes/sign': {
+      id: '/api/quotes/sign'
+      path: '/api/quotes/sign'
+      fullPath: '/api/quotes/sign'
+      preLoaderRoute: typeof ApiQuotesSignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/vies/check': {
       id: '/api/vies/check'
       path: '/api/vies/check'
@@ -789,6 +890,11 @@ const rootRouteChildren: RootRouteChildren = {
   PortailIdRoute: PortailIdRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCalendarListRoute: ApiCalendarListRoute,
+  ApiDocumentsDocusealWebhookRoute: ApiDocumentsDocusealWebhookRoute,
+  ApiQuotesDocusealStartRoute: ApiQuotesDocusealStartRoute,
+  ApiQuotesGetRoute: ApiQuotesGetRoute,
+  ApiQuotesRefuseRoute: ApiQuotesRefuseRoute,
+  ApiQuotesSignRoute: ApiQuotesSignRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
   ApiAuthGoogleConsumeTokenRoute: ApiAuthGoogleConsumeTokenRoute,

@@ -1,0 +1,77 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+
+export const Route = createFileRoute("/api/quotes/sign")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const body = await request.json().catch(() => null);
+        const token = typeof body?.token === "string" ? body.token : null;
+        const signatureData = body?.signatureData ?? null;
+
+        if (!token || !/^[A-Za-z0-9_-]{1,64}$/.test(token) || !signatureData?.signerName) {
+          return new Response(JSON.stringify({ error: "invalid_input" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        try {
+          const admin = getSupabaseAdmin();
+
+          const { data: quote, error: fetchError } = await admin
+            .from("quotes")
+            .select("id, status, payload")
+            .or(`payload->>publicToken.eq.${token},id.eq.${token},number.eq.${token}`)
+            .maybeSingle();
+
+          if (fetchError || !quote) {
+            return new Response(JSON.stringify({ error: "not_found" }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // Devis déjà verrouillé (signé) : conformité anti-fraude, on ne
+          // re-signe jamais un document déjà finalisé.
+          if (quote.status === "accepted") {
+            return new Response(JSON.stringify({ ok: true, alreadySigned: true }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          const signedAt =
+            typeof signatureData.signedAt === "string" ? signatureData.signedAt : new Date().toISOString();
+          const payload = (quote.payload as Record<string, unknown>) ?? {};
+
+          const { error: updateError } = await admin
+            .from("quotes")
+            .update({
+              status: "accepted",
+              payload: {
+                ...payload,
+                status: { fr: "Signé", en: "Signed" },
+                signatureData,
+                signedAt,
+              },
+            })
+            .eq("id", quote.id);
+
+          if (updateError) throw new Error(updateError.message);
+
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (err) {
+          console.error("Erreur /api/quotes/sign:", err);
+          return new Response(JSON.stringify({ error: "server_error" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      },
+    },
+  },
+});

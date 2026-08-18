@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { useSupabaseData } from "@/lib/supabase-context";
+import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { exportQuotePdf, quoteToDocumentData, companyToDocCompany } from "@/lib/pdf-export";
+import type { Quote } from "@/lib/data-context";
 import { DocumentTemplate } from "@/components/DocumentTemplate";
 import { ScaledDocument } from "@/components/ScaledDocument";
 import { cn } from "@/lib/utils";
@@ -137,36 +138,11 @@ function SignaturePad({ onSign }: { onSign: (dataUrl: string) => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 function ClientPortalPremium() {
   const { id } = Route.useParams();
-  const { quotes, updateQuote, organization } = useSupabaseData();
-  // company locale : l'organisation connectée (artisan) ou les données encodées dans l'URL (client public)
-  const localCompany = organization
-    ? {
-        name: organization.name,
-        email: organization.email ?? "",
-        logoBase64: organization.logo_url ?? undefined,
-      }
-    : null;
   const { money, date } = useI18n();
 
-  // Parse public data from URL if available
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const qParam = searchParams.get('q');
-  const cParam = searchParams.get('c');
-  const orgParam = searchParams.get('org');
-
-  const publicQuote = qParam ? (() => {
-    try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(qParam))))); } catch (e) { return null; }
-  })() : null;
-
-  const publicCompany = cParam ? (() => {
-    try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(cParam))))); } catch (e) { return null; }
-  })() : null;
-
   const [liveQuote, setLiveQuote] = useState<Quote | null>(null);
-  // Entreprise renvoyée par l'API en même temps que le devis — sert de
-  // filet de sécurité quand le lien a été copié tel quel (sans q=/c=), pour
-  // éviter que la page plante faute de données entreprise.
   const [liveCompany, setLiveCompany] = useState<Record<string, unknown> | null>(null);
+  const [loadError, setLoadError] = useState(false);
   // Mémorise localement si le client vient de signer dans cette session
   const [localSigned, setLocalSigned] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -176,30 +152,31 @@ function ClientPortalPremium() {
   const fetchLiveQuote = async () => {
     if (!id) return;
     try {
-      // `id` est le token public du devis (UUID aléatoire, impossible à
+      // `id` est l'identifiant du devis (uuid aléatoire, impossible à
       // deviner) — jamais son numéro, qui est séquentiel et donc devinable.
       const r = await fetch(`/api/quotes/get?token=${encodeURIComponent(id)}`);
-      if (!r.ok) return;
+      if (!r.ok) {
+        setLoadError(true);
+        return;
+      }
       const data = await r.json();
       if (data.quote) setLiveQuote(data.quote);
       if (data.company) setLiveCompany(data.company);
-    } catch { /* silencieux */ }
+    } catch {
+      setLoadError(true);
+    }
   };
 
   useEffect(() => {
     fetchLiveQuote();
   }, [id]);
 
-  // Pour l'artisan connecté : on retrouve le devis via son token public
-  // (fallback sur le numéro pour compatibilité avec d'anciens liens déjà
-  // envoyés avant ce correctif de sécurité).
-  const quote = quotes.find((q) => q.publicToken === id) || quotes.find((q) => q.number === id) || liveQuote || publicQuote;
-  // Toujours un objet valide (jamais null) : entreprise de l'artisan connecté,
-  // sinon celle encodée dans l'URL, sinon celle renvoyée par l'API via le
-  // token, sinon un objet vide — pour ne jamais planter sur `company.xxx`
-  // pendant le chargement ou si aucune des sources n'a de données.
-  const company: { name?: string; email?: string; logoBase64?: string } =
-    (localCompany?.name ? localCompany : null) ?? publicCompany ?? liveCompany ?? {};
+  // Le devis et l'entreprise viennent toujours de l'API serveur (route
+  // publique `/api/quotes/get`) — que le visiteur soit le client final ou
+  // l'artisan qui prévisualise son propre devis, on utilise la même source
+  // de vérité pour éviter toute divergence d'affichage.
+  const quote = liveQuote;
+  const company: { name?: string; email?: string; logoBase64?: string } = liveCompany ?? {};
 
   const docData = quote ? quoteToDocumentData(quote) : null;
   const docCompany = company ? companyToDocCompany(company) : null;
@@ -267,44 +244,24 @@ function ClientPortalPremium() {
       image: signatureMode === "draw" ? signatureData : undefined,
     };
 
-    if (orgParam) {
-      // Cas du client public qui signe via l'URL d'email → API sans auth.
-      // Identification UNIQUEMENT par le token public du devis (UUID
-      // aléatoire) — jamais par son numéro + organization_id.
-      try {
-        const res = await fetch("/api/quotes/sign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: quote.publicToken || id,
-            signatureData: signaturePayload,
-          }),
-        });
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          throw new Error(json.error || "Failed to sign");
-        }
-      } catch (err: any) {
-        console.error("Failed to sync signature", err);
-        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
-        setIsSubmitting(false);
-        return; // Stopper ici, ne pas afficher l'écran de succès
+    // Identification UNIQUEMENT par `id` (uuid aléatoire du devis) — jamais
+    // par son numéro, qui est séquentiel et donc devinable. Même route pour
+    // le client public et l'artisan qui prévisualise son propre lien.
+    try {
+      const res = await fetch("/api/quotes/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: id, signatureData: signaturePayload }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to sign");
       }
-    } else {
-      // Cas de l'artisan connecté → mise à jour directe Supabase (déclenche le Realtime)
-      try {
-        await updateQuote(quote.number, {
-          ...quote,
-          status: { fr: "Signé", en: "Signed" },
-          signedAt,
-          signatureData: signaturePayload,
-        });
-      } catch (err: any) {
-        console.error("Failed to update quote via Supabase", err);
-        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur locale"));
-        setIsSubmitting(false);
-        return;
-      }
+    } catch (err: any) {
+      console.error("Failed to sync signature", err);
+      toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
+      setIsSubmitting(false);
+      return; // Stopper ici, ne pas afficher l'écran de succès
     }
 
     setIsSubmitting(false);
@@ -320,42 +277,20 @@ function ClientPortalPremium() {
   const handleRefuse = async () => {
     const refusedAt = new Date().toISOString();
 
-    if (orgParam) {
-      // Client public → API sans auth. Identification UNIQUEMENT par le
-      // token public du devis (UUID aléatoire) — jamais par son numéro +
-      // organization_id.
-      try {
-        const res = await fetch("/api/quotes/refuse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: quote.publicToken || id,
-            reason: refuseReason || null,
-            refusedAt,
-          }),
-        });
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          throw new Error(json.error || "Failed to refuse");
-        }
-      } catch (err: any) {
-        console.error("Failed to sync refusal", err);
-        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
-        return;
+    try {
+      const res = await fetch("/api/quotes/refuse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: id, reason: refuseReason || null, refusedAt }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to refuse");
       }
-    } else {
-      // Artisan connecté → Supabase direct (déclenche le Realtime)
-      try {
-        await updateQuote(quote.number, {
-          ...quote,
-          status: { fr: "Refusé", en: "Refused" },
-          refusedAt,
-        });
-      } catch (err: any) {
-        console.error("Failed to update quote via Supabase", err);
-        toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur locale"));
-        return;
-      }
+    } catch (err: any) {
+      console.error("Failed to sync refusal", err);
+      toast.error("Erreur d'enregistrement : " + (err?.message || "Erreur serveur"));
+      return;
     }
 
     setIsRefuseOpen(false);

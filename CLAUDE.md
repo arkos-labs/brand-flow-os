@@ -258,7 +258,13 @@ audit_logs (PAF — piste d'audit fiable)
 | **Twilio**              | SMS de relance                              | ❌ Pas trouvé dans le code                          |
 | **Mindee**              | OCR factures fournisseurs                   | ❌ Pas trouvé dans le code                          |
 | **OpenAI GPT-4o**       | IA rédaction devis, traduction, analyse     | ⏳ À vérifier (widget "AIQuoteWidget" présent — source du modèle à confirmer) |
-| **eIDAS**               | Signature électronique certifiée            | ❌ Pas trouvé dans le code                          |
+| **eIDAS (DocuSeal)**     | Signature électronique (SES/AES/QES)        | 📋 Décidé le 2026-08-18 — voir note ci-dessous       |
+
+> **Décision signature électronique (2026-08-18) : DocuSeal, auto-hébergé.**
+> Open source, licence AGPLv3 + clause d'attribution additionnelle (Section 7b) : gratuit et légal en usage commercial SaaS, **à condition de garder la mention "DocuSeal" visible dans l'UI de signature** (pas de marque blanche sans licence commerciale payante). Décision validée : on garde le branding visible, donc solution 100% gratuite.
+> Gère les 3 niveaux eIDAS (SES par défaut, AES/QES via partenaires) — le niveau simple (SES) suffit légalement pour les devis/contrats commerciaux standards en France (art. 25 du règlement eIDAS 910/2014). Niveau qualifié réservé aux actes spécifiques (non nécessaire pour l'usage BTP/artisans d'InvoicePro).
+> ⚠️ Point à faire valider par un avocat avant mise en prod : la portée exacte de l'obligation AGPL de mise à disposition du code source vis-à-vis des utilisateurs finaux (clients d'InvoicePro qui signent via DocuSeal intégré).
+> Intégration envisagée : héberger DocuSeal séparément (ex. Vercel ou petit service dédié), stocker les PDF signés dans Supabase Storage, brancher au flow existant `document-workflow.ts` / `pdf-export.ts` / `invoice-from-quote.ts`.
 
 ---
 
