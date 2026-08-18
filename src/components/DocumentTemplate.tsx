@@ -993,7 +993,7 @@ export const DocumentTemplate: FC<DocumentTemplateProps> = ({
               {company.siret && ` · SIRET ${company.siret}`}
               {company.vatNumber && ` · N° TVA ${company.vatNumber}`}
               <br />
-              {company.footerNote || "Document généré par Devizia"}
+              {company.footerNote || "Document généré par ClearQuote"}
             </div>
           </div>
       </div>

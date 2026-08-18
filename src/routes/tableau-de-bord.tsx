@@ -197,12 +197,9 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
           </Link>
         </div>
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
+        <Button onClick={onClose} className="mt-6 w-full py-3">
           C'est parti →
-        </button>
+        </Button>
       </div>
     </div>
   );

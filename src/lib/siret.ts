@@ -67,3 +67,40 @@ export async function searchCompanyBySiret(siret: string): Promise<SiretData | n
     return null;
   }
 }
+
+export interface VatCheckResult {
+  valid: boolean;
+  name: string | null;
+  address: string | null;
+  countryCode: string;
+  vatNumber: string;
+  requestDate: string | null;
+}
+
+/**
+ * Valide un numéro de TVA intracommunautaire via le service officiel VIES
+ * (Commission européenne — gratuit, sans clé API). Le numéro complet
+ * (ex: "FR32123456789") est découpé en code pays + numéro.
+ * Passe par notre route serveur /api/vies/check car l'API VIES ne renvoie
+ * pas d'en-têtes CORS exploitables depuis le navigateur.
+ */
+export async function checkVatNumber(fullVatNumber: string): Promise<VatCheckResult | null> {
+  const clean = fullVatNumber.replace(/\s/g, "").toUpperCase();
+  const match = clean.match(/^([A-Z]{2})([A-Z0-9]+)$/);
+  if (!match) return null;
+
+  const [, countryCode, vatNumber] = match;
+
+  try {
+    const res = await fetch("/api/vies/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ countryCode, vatNumber }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as VatCheckResult;
+  } catch (error) {
+    console.error("Error checking VAT number via VIES:", error);
+    return null;
+  }
+}

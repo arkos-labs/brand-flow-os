@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { searchCompanyBySiret } from "@/lib/siret";
+import { searchCompanyBySiret, checkVatNumber, type VatCheckResult } from "@/lib/siret";
 
 export const Route = createFileRoute("/parametres")({
   head: () => ({
@@ -171,6 +171,8 @@ function SettingsPage() {
   const { theme, setTheme } = useTheme();
   
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
+  const [isCheckingVat, setIsCheckingVat] = useState(false);
+  const [vatCheckResult, setVatCheckResult] = useState<VatCheckResult | null | "error">(null);
 
   useEffect(() => {
     // Check if we just returned from Google OAuth. Le refresh token ne
@@ -411,11 +413,48 @@ function SettingsPage() {
                 </FieldRow>
 
                 <FieldRow label={t("set.vatNumber")} hint={lang === "fr" ? "Ex : FR12345678901 — laisser vide si non assujetti" : "E.g. FR12345678901 — leave blank if exempt"}>
-                  <Input
-                    value={form.vatNumber}
-                    onChange={(e) => set("vatNumber", e.target.value.toUpperCase())}
-                    placeholder="FR12345678901"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.vatNumber}
+                      onChange={(e) => {
+                        set("vatNumber", e.target.value.toUpperCase());
+                        setVatCheckResult(null);
+                      }}
+                      placeholder="FR12345678901"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!form.vatNumber) return;
+                        setIsCheckingVat(true);
+                        setVatCheckResult(null);
+                        const result = await checkVatNumber(form.vatNumber);
+                        setVatCheckResult(result ?? "error");
+                        setIsCheckingVat(false);
+                      }}
+                      disabled={!form.vatNumber || isCheckingVat}
+                      className="flex h-9 items-center justify-center rounded-[var(--shape-control)] border-2 border-navy bg-primary px-3 text-sm font-bold text-primary-foreground shadow-offset-sm transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none disabled:opacity-50"
+                      title={lang === "fr" ? "Vérifier via VIES" : "Verify via VIES"}
+                    >
+                      {isCheckingVat ? <Search className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {vatCheckResult === "error" && (
+                    <p className="text-xs text-warning-foreground mt-1">
+                      {lang === "fr" ? "Vérification VIES indisponible pour le moment." : "VIES verification unavailable right now."}
+                    </p>
+                  )}
+                  {vatCheckResult && vatCheckResult !== "error" && (
+                    <p className={`text-xs mt-1 ${vatCheckResult.valid ? "text-success" : "text-destructive"}`}>
+                      {vatCheckResult.valid
+                        ? lang === "fr"
+                          ? `Numéro valide${vatCheckResult.name ? ` — ${vatCheckResult.name}` : ""}`
+                          : `Valid number${vatCheckResult.name ? ` — ${vatCheckResult.name}` : ""}`
+                        : lang === "fr"
+                          ? "Numéro invalide selon VIES"
+                          : "Invalid number according to VIES"}
+                    </p>
+                  )}
                 </FieldRow>
 
                 <FieldRow label={t("set.rcs")} hint={lang === "fr" ? "RCS Ville N° / RM Ville N°" : "Trade register"}>
@@ -850,7 +889,7 @@ function SettingsPage() {
                     <Mail className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground">Envoi d'E-mails (Devizia)</h3>
+                    <h3 className="text-sm font-bold text-foreground">Envoi d'E-mails (ClearQuote)</h3>
                     <p className="text-xs text-muted-foreground">Inclus avec votre abonnement. Vos e-mails sont envoyés instantanément.</p>
                   </div>
                   <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-200">

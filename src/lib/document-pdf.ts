@@ -69,7 +69,7 @@ function injectPrintStyle(documentId: string): void {
       }
 
       /* Le conteneur de portail d'impression */
-      #devizia-print-portal {
+      #clearquote-print-portal {
         display: block !important;
         position: fixed !important;
         inset: 0 !important;

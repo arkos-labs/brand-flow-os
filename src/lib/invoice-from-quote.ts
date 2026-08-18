@@ -10,7 +10,7 @@ export type InvoiceLine = {
 
 /** Retourne true si le devis peut être converti en facture. */
 export function isQuoteReadyToInvoice(status: string): boolean {
-  return status === "Signé" || status === "Facturé" || status === "Payé";
+  return status === "Signé";
 }
 
 export function selectInvoiceLines<T extends { id: string }>(lines: T[], selectedIds: Set<string>): T[] {

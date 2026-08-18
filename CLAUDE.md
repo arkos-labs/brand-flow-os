@@ -1,6 +1,8 @@
 # CLAUDE.md — InvoicePro / Brand Flow OS
 
 > Instructions personnelles pour Claude dans ce projet. À lire en priorité avant toute action.
+>
+> **Dernière vérification par rapport au code réel : 2026-08-18** (commit `5c5bf2f1`, via analyse de graphe de dépendances Graphify). Après toute évolution significative du code, penser à relancer `graphify update .` en local pour garder le graphe à jour, et à revérifier ce fichier périodiquement — il dérive vite du code réel sinon.
 
 ---
 
@@ -11,14 +13,33 @@
 **Cibles :** Artisans (BTP, plomberie, électricité, menuiserie…), freelances (créatifs, tech, conseil), agences, TPE de services
 **Vision :** Remplacer Word/Excel par un outil professionnel complet : devis web interactifs, facturation conforme Factur-X, CRM Kanban, suivi du temps, trésorerie prédictive
 
-**Routes existantes :**
+**Routes existantes (vérifié via analyse du code le 2026-08-18, commit `5c5bf2f1`) :**
 
-- `/` → Dashboard KPIs + graphe CA + conformité
-- `/devis` → Gestion des devis (pipeline commercial)
+Marketing / public :
+
+- `/` → Landing page (`index.tsx`)
+- `/fonctionnalites`, `/fonctionnement`, `/tarifs`, `/benefices` → Pages marketing
+- `/connexion`, `/inscription`, `/mot-de-passe-oublie` → Auth (Supabase Auth + Google OAuth)
+- `/centre-aide`, `/contactez-nous`, `/nouveautes`, `/mises-a-jour`, `/plan-site`, `/legal`, `/conditions-utilisation`, `/confidentialite` → Pages support/légales
+- `/portail/$id` → Portail client (accès magique, consultation devis/factures)
+
+Application (authentifiée) :
+
+- `/tableau-de-bord` → Dashboard KPIs + graphe CA + conformité
+- `/devis` → Gestion des devis
 - `/factures` → Factures clients
 - `/pipeline` → CRM Kanban (lead → qualifié → devis → gagné)
-- `/temps` → Time-tracking par client/projet
+- `/catalogue` → Catalogue de prestations (import/export Excel)
+- `/clients` → Fiches clients
+- `/depenses` → Dépenses fournisseurs
+- `/paiements` → Suivi paiements + relances
+- `/archives` → Documents archivés
+- `/abonnements` → Abonnements / MRR
+- `/rendez-vous` → RDV (intégration Google Calendar + Calendly)
 - `/tresorerie` → Cashflow prédictif
+- `/parametres` → Paramètres workspace, SIRET/TVA, préférences
+
+> ⚠️ Ces routes remplacent la liste précédente (`/`, `/devis`, `/factures`, `/pipeline`, `/temps`, `/tresorerie`) qui était obsolète. Il n'y a pas de route `/temps` (time-tracking) actuellement implémentée.
 
 ---
 
@@ -143,22 +164,28 @@ bun run format   # prettier
 
 ## 6. Roadmap et priorités
 
-### Phase 1 — MVP (en cours)
+> Mise à jour le 2026-08-18 après audit du code réel (analyse de graphe de dépendances, commit `5c5bf2f1`). L'ancienne roadmap sous-estimait fortement l'avancement : la quasi-totalité de la Phase 1 est déjà implémentée.
 
-- [x] Dashboard KPIs
-- [x] Routes devis, factures, pipeline, temps, trésorerie (shell)
-- [ ] Formulaire création de devis avec catalogue de prestations
-- [ ] Génération PDF Factur-X
-- [ ] Authentification (Supabase Auth)
-- [ ] Base de données (Supabase PostgreSQL)
-- [ ] Espace client (portail magique, accès PIN)
+### Phase 1 — MVP
+
+- [x] Dashboard KPIs (`tableau-de-bord.tsx`)
+- [x] Routes devis, factures, pipeline, catalogue, clients, dépenses, paiements, archives, abonnements, rendez-vous, trésorerie, paramètres
+- [x] Formulaire création de devis avec catalogue de prestations (`devis.tsx`, `catalogue.tsx`, `QuoteEditorDialog.tsx`)
+- [x] Génération PDF Factur-X (`facturx-embed.ts`, `facturx-xml.ts`, `pdf-export.ts`, `document-pdf.ts`)
+- [x] Authentification (Supabase Auth + OAuth Google — `connexion.tsx`, `inscription.tsx`, `api/auth/google/*`)
+- [x] Base de données (Supabase PostgreSQL — `supabase.ts`, `supabase-context.tsx`, `database.types.ts`)
+- [x] Espace client (portail magique — `portail.$id.tsx`)
+- [x] Validation SIRET/TVA (`siret.ts`, `api/vies/check.ts`)
+- [ ] Time-tracking par client/projet (`/temps`) — **non implémenté**, à confirmer si toujours dans le scope
 
 ### Phase 2 — Growth
 
-- [ ] Web-quotes interactifs (options à cocher, curseurs quantité)
-- [ ] Signature eIDAS
-- [ ] Paiement Stripe intégré
-- [ ] Relances automatisées email
+- [x] Relances (manuelles) — `ReminderModal.tsx`, `email-templates.ts`, `paiements.tsx`
+- [x] Intégration calendrier (Google Calendar + Calendly) — **non prévue dans la roadmap d'origine, déjà livrée**
+- [ ] Web-quotes interactifs (options à cocher, curseurs quantité) — à vérifier précisément dans `portail.$id.tsx`
+- [ ] Signature eIDAS — pas trouvé dans le code
+- [ ] Paiement Stripe intégré — pas trouvé dans le code
+- [ ] Relances automatisées (déclenchement planifié, pas seulement manuel) — à confirmer
 
 ### Phase 3 — Scale
 
@@ -172,13 +199,19 @@ bun run format   # prettier
 - [ ] Multi-sociétés / marque blanche
 - [ ] Intégrations Pennylane, Xero, Zapier
 
+### Dette technique identifiée (rapport Graphify du 2026-08-18)
+
+- `devis.tsx` (81 Ko) et `portail.$id.tsx` (30 Ko) ont une cohésion très faible (0.12 et 0.06) → candidats à un découpage en modules plus petits
+- 397 nœuds faiblement connectés dans le graphe de dépendances → possibles zones mortes ou peu documentées à vérifier
+- Un dossier `_to_delete/` existe à la racine avec d'anciens fichiers (dont `routes/situations.tsx`, une ancienne feature "situations de travaux" remplacée) et d'anciennes pages HTML de démo (`public-demo-pages/`). Ces fichiers ne sont plus référencés par le code actif — à supprimer définitivement quand tu confirmes
+
 ---
 
-## 7. Supabase (backend cible)
+## 7. Supabase (backend — déjà branché)
 
-Le projet vise Supabase comme backend (BaaS).
+Le projet utilise Supabase comme backend (BaaS) — ce n'est plus une cible, c'est en place (`src/lib/supabase.ts`, `src/lib/supabase-context.tsx`, types générés dans `src/lib/database.types.ts`).
 
-**Tables principales à créer :**
+**Tables** : se référer directement à `database.types.ts` (source de vérité, généré depuis le schéma réel) plutôt qu'à la liste ci-dessous, qui reste la liste cible d'origine et peut ne plus correspondre exactement :
 
 ```
 workspaces, users, clients, contacts
@@ -197,6 +230,8 @@ audit_logs (PAF — piste d'audit fiable)
 - Multi-tenant : chaque workspace est isolé
 - Logs d'audit horodatés pour conformité anti-fraude
 
+> À vérifier lors d'une prochaine session avec les outils Supabase MCP (`list_tables`, `get_advisors`) pour confirmer que RLS est bien actif partout et lister les vraies tables en base plutôt que de se fier à cette liste indicative.
+
 ---
 
 ## 8. Règles de travail
@@ -210,18 +245,20 @@ audit_logs (PAF — piste d'audit fiable)
 
 ---
 
-## 9. Intégrations API tierces prévues
+## 9. Intégrations API tierces
 
-| Service              | Usage                                      |
-| -------------------- | ------------------------------------------ |
-| **SIRENE / Pappers** | Auto-complétion SIRET → données entreprise |
-| **VIES (EU)**        | Validation numéro TVA intracommunautaire   |
-| **Stripe**           | Paiement carte + virement                  |
-| **GoCardless**       | Prélèvement SEPA                           |
-| **Twilio**           | SMS de relance                             |
-| **Mindee**           | OCR factures fournisseurs                  |
-| **OpenAI GPT-4o**    | IA rédaction devis, traduction, analyse    |
-| **eIDAS**            | Signature électronique certifiée           |
+| Service               | Usage                                      | Statut                                            |
+| ---------------------- | ------------------------------------------- | -------------------------------------------------- |
+| **VIES (EU)**          | Validation numéro TVA intracommunautaire    | ✅ Fait (`api/vies/check.ts`)                      |
+| **Google OAuth**        | Authentification / Google Calendar          | ✅ Fait (`api/auth/google/*`, `api/calendar/*`)    |
+| **Calendly**            | Prise de RDV                                | ✅ Fait (`api/auth/calendly/*`, `api/calendly/*`) — non prévu à l'origine |
+| **SIRENE / Pappers**    | Auto-complétion SIRET → données entreprise  | ⏳ À vérifier (siret.ts existe, source à confirmer) |
+| **Stripe**              | Paiement carte + virement                   | ❌ Pas trouvé dans le code                          |
+| **GoCardless**          | Prélèvement SEPA                            | ❌ Pas trouvé dans le code                          |
+| **Twilio**              | SMS de relance                              | ❌ Pas trouvé dans le code                          |
+| **Mindee**              | OCR factures fournisseurs                   | ❌ Pas trouvé dans le code                          |
+| **OpenAI GPT-4o**       | IA rédaction devis, traduction, analyse     | ⏳ À vérifier (widget "AIQuoteWidget" présent — source du modèle à confirmer) |
+| **eIDAS**               | Signature électronique certifiée            | ❌ Pas trouvé dans le code                          |
 
 ---
 
@@ -230,17 +267,48 @@ audit_logs (PAF — piste d'audit fiable)
 ```
 src/
   lib/
-    demo-data.ts     ← Types + données de démo (Deal, InvoiceStatus, Bi, etc.)
-    i18n.tsx         ← Système de traduction + hook useI18n()
-    utils.ts         ← cn() et helpers
+    demo-data.ts        ← Types + données de démo (Deal, InvoiceStatus, Bi, etc.)
+    showcase-data.ts     ← Données de démonstration (mode showcase)
+    i18n.tsx             ← Système de traduction + hook useI18n()
+    utils.ts             ← cn() et helpers
+    supabase.ts           ← Client Supabase
+    supabase-context.tsx  ← Contexte data Supabase (remplace/complète data-context.tsx)
+    data-context.tsx      ← Contexte data legacy/local
+    database.types.ts     ← Types générés depuis le schéma Supabase
+    facturx-embed.ts       ← Embed XML dans le PDF (Factur-X)
+    facturx-xml.ts          ← Génération du XML Factur-X
+    pdf-export.ts            ← Export PDF devis/factures
+    document-pdf.ts          ← Génération PDF documents
+    document-workflow.ts      ← Workflow devis → facture → avoir
+    invoice-from-quote.ts      ← Conversion devis → facture
+    quote-editor.ts             ← Logique éditeur de devis
+    catalogue-io.ts               ← Import/export catalogue (Excel)
+    email-templates.ts             ← Templates d'emails (relances, envoi devis/facture)
+    siret.ts                        ← Validation SIRET/TVA (France)
+    export-compta.ts                 ← Export comptable
   components/
-    AppShell.tsx     ← Layout global + PageHeader
-    ui/              ← Composants shadcn/Radix
+    AppShell.tsx        ← Layout global + PageHeader
+    QuoteEditorDialog.tsx ← Édition d'un devis
+    DocumentTemplate.tsx  ← Template de rendu devis/facture
+    ReminderModal.tsx      ← Relance de paiement
+    ui/                     ← Composants shadcn/Radix
   routes/
-    index.tsx        ← Dashboard
-    devis.tsx        ← Devis
-    factures.tsx     ← Factures
-    pipeline.tsx     ← CRM Kanban
-    temps.tsx        ← Time-tracking
-    tresorerie.tsx   ← Cashflow
+    index.tsx           ← Landing page marketing
+    tableau-de-bord.tsx  ← Dashboard (app)
+    devis.tsx             ← Devis
+    factures.tsx           ← Factures
+    pipeline.tsx             ← CRM Kanban
+    catalogue.tsx              ← Catalogue de prestations
+    clients.tsx                 ← Clients
+    depenses.tsx                  ← Dépenses
+    paiements.tsx                   ← Paiements / relances
+    archives.tsx                     ← Documents archivés
+    abonnements.tsx                    ← Abonnements / MRR
+    rendez-vous.tsx                      ← RDV (Google Calendar / Calendly)
+    tresorerie.tsx                         ← Cashflow
+    parametres.tsx                          ← Paramètres workspace
+    portail.$id.tsx                           ← Portail client
+    api/                                       ← Endpoints serveur (auth Google/Calendly, calendar, VIES)
 ```
+
+> ⚠️ Il n'existe pas de route `/temps` (time-tracking) ni de fichier associé — l'ancienne référence a été retirée.
