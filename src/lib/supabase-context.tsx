@@ -246,10 +246,41 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             .then(({ data }) => setQuotes(data ?? []));
         },
       )
+      .on(
+        // FIX BUG CRITIQUE (PRO-1/AGENCY-1) : écouter les changements de plan_tier sur l'organisation
+        // pour que l'UI reflète immédiatement une montée de plan sans rechargement de page.
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "organizations", filter: `id=eq.${organization.id}` },
+        (payload) => {
+          setOrganization((prev) => prev ? { ...prev, ...(payload.new as Partial<DbOrganization>) } : prev);
+        },
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [organization]);
+
+  // ── Realtime : profil utilisateur (plan_tier) ────────────────────────────
+  // FIX BUG CRITIQUE (PRO-1/AGENCY-1) : si le plan_tier est modifié en DB
+  // (ex: webhook Stripe), le frontend est notifié instantanément et met à jour
+  // le cache local sans attendre un rechargement de page.
+
+  useEffect(() => {
+    if (!user) return;
+
+    const profileChannel = supabase
+      .channel("profile-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        (payload) => {
+          setProfile((prev) => prev ? { ...prev, ...(payload.new as Partial<DbProfile>) } : prev);
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(profileChannel); };
+  }, [user]);
 
   // ── Clients ───────────────────────────────────────────────────────────────
 

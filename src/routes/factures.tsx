@@ -239,8 +239,9 @@ function Invoices() {
     if (plan === "solo") {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
+      // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
       const invoicesThisMonth = invoices.filter(inv => {
-        const d = new Date(inv.date);
+        const d = new Date(inv.issue_date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
       if (invoicesThisMonth.length >= 3) {
@@ -499,8 +500,9 @@ function Invoices() {
     if (plan === "solo") {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
+      // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
       const invoicesThisMonth = invoices.filter(i => {
-        const d = new Date(i.date);
+        const d = new Date(i.issue_date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
       if (invoicesThisMonth.length >= 3) {

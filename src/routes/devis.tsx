@@ -643,8 +643,9 @@ function QuotesInner() {
               if (plan === "solo") {
                 const currentMonth = new Date().getMonth();
                 const currentYear = new Date().getFullYear();
+                // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
                 const quotesThisMonth = quotes.filter(q => {
-                  const d = new Date(q.date);
+                  const d = new Date(q.issue_date);
                   return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                 });
                 if (quotesThisMonth.length >= 3) {
