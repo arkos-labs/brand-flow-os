@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/stripe/checkout")({
           }
 
           const sessionOptions: any = {
-            payment_method_types: ["card", "sepa_debit"],
+            payment_method_types: ["card"],
             line_items: [
               {
                 price: priceId, // ID du prix Stripe (ex: price_1Pox...)
@@ -33,6 +33,9 @@ export const Route = createFileRoute("/api/stripe/checkout")({
               },
             ],
             mode: "subscription",
+            subscription_data: planName === "pro" || planName === "agency" ? {
+              trial_period_days: 15,
+            } : undefined,
             customer_email: email, // Pré-remplir l'email si disponible
             success_url: successUrl || request.headers.get("referer") || "http://localhost:5173",
             cancel_url: cancelUrl || request.headers.get("referer") || "http://localhost:5173",
@@ -53,9 +56,9 @@ export const Route = createFileRoute("/api/stripe/checkout")({
             status: 200,
             headers: { "Content-Type": "application/json" },
           });
-        } catch (err) {
+        } catch (err: any) {
           console.error("Erreur Stripe Checkout:", err);
-          return new Response(JSON.stringify({ error: "Erreur serveur" }), {
+          return new Response(JSON.stringify({ error: err.message || "Erreur serveur" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });
