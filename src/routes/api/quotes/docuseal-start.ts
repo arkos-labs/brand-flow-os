@@ -31,13 +31,14 @@ export const Route = createFileRoute("/api/quotes/docuseal-start")({
         try {
           const admin = getSupabaseAdmin();
 
-          const { data: quote, error } = await admin
-            .from("quotes")
-            .select("id, number, status, payload")
-            .or(`payload->>publicToken.eq.${token},id.eq.${token},number.eq.${token}`)
-            .maybeSingle();
+          let quote: Record<string, unknown> | null = null;
+          const byToken = await admin.from("quotes").select("id, number, status, payload").filter("payload->>publicToken", "eq", token).maybeSingle();
+          if (!byToken.error && byToken.data) quote = byToken.data;
+          if (!quote) { const byId = await admin.from("quotes").select("id, number, status, payload").eq("id", token).maybeSingle(); if (!byId.error && byId.data) quote = byId.data; }
+          if (!quote) { const byNum = await admin.from("quotes").select("id, number, status, payload").eq("number", token).maybeSingle(); if (!byNum.error && byNum.data) quote = byNum.data; }
+          const error = null;
 
-          if (error || !quote) {
+          if (!quote) {
             return new Response(JSON.stringify({ error: "not_found" }), {
               status: 404,
               headers: { "Content-Type": "application/json" },

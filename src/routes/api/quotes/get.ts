@@ -26,11 +26,43 @@ export const Route = createFileRoute("/api/quotes/get")({
         try {
           const admin = getSupabaseAdmin();
 
-          const { data: quote, error: quoteError } = await admin
+          // Cherche d'abord par token dans le payload JSON (cas normal — lien
+          // envoyé par email). Si non trouvé, repli sur id (UUID) puis number
+          // (compatibilité anciens liens). `.or()` PostgREST ne supporte pas
+          // les filtres JSONB dans la même clause — on enchaîne les requêtes.
+          let quote: Record<string, unknown> | null = null;
+          let quoteError: { message: string } | null = null;
+
+          // 1. Recherche par publicToken (champ JSONB payload->>'publicToken')
+          const byToken = await admin
             .from("quotes")
             .select("*")
-            .or(`payload->>publicToken.eq.${token},id.eq.${token},number.eq.${token}`)
+            .filter("payload->>publicToken", "eq", token)
             .maybeSingle();
+          if (!byToken.error && byToken.data) {
+            quote = byToken.data;
+          }
+
+          // 2. Repli : id UUID exact
+          if (!quote) {
+            const byId = await admin
+              .from("quotes")
+              .select("*")
+              .eq("id", token)
+              .maybeSingle();
+            if (!byId.error && byId.data) quote = byId.data;
+          }
+
+          // 3. Repli : numéro de devis (ex. DV-2026-001)
+          if (!quote) {
+            const byNumber = await admin
+              .from("quotes")
+              .select("*")
+              .eq("number", token)
+              .maybeSingle();
+            if (!byNumber.error && byNumber.data) quote = byNumber.data;
+            else quoteError = byNumber.error;
+          }
 
           if (quoteError || !quote) {
             return new Response(JSON.stringify({ error: "not_found" }), {
