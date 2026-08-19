@@ -51,7 +51,9 @@ import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
 import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
 import { Route as ApiQuotesSendRouteImport } from './routes/api/quotes/send'
 import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
+import { Route as ApiStripeCheckoutRouteImport } from './routes/api/stripe/checkout'
 import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthCalendlyCallbackRouteImport } from './routes/api/auth/calendly/callback'
 import { Route as ApiAuthCalendlyLoginRouteImport } from './routes/api/auth/calendly/login'
@@ -270,9 +272,19 @@ const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
   path: '/api/quotes/sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeCheckoutRoute = ApiStripeCheckoutRouteImport.update({
+  id: '/api/stripe/checkout',
+  path: '/api/stripe/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripePortalRoute = ApiStripePortalRouteImport.update({
   id: '/api/stripe/portal',
   path: '/api/stripe/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
@@ -350,7 +362,9 @@ export interface FileRoutesByFullPath {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -401,7 +415,9 @@ export interface FileRoutesByTo {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -453,7 +469,9 @@ export interface FileRoutesById {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -506,7 +524,9 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -557,7 +577,9 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -608,7 +630,9 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -660,7 +684,9 @@ export interface RootRouteChildren {
   ApiQuotesRefuseRoute: typeof ApiQuotesRefuseRoute
   ApiQuotesSendRoute: typeof ApiQuotesSendRoute
   ApiQuotesSignRoute: typeof ApiQuotesSignRoute
+  ApiStripeCheckoutRoute: typeof ApiStripeCheckoutRoute
   ApiStripePortalRoute: typeof ApiStripePortalRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthCalendlyCallbackRoute: typeof ApiAuthCalendlyCallbackRoute
   ApiAuthCalendlyLoginRoute: typeof ApiAuthCalendlyLoginRoute
@@ -965,11 +991,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuotesSignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/checkout': {
+      id: '/api/stripe/checkout'
+      path: '/api/stripe/checkout'
+      fullPath: '/api/stripe/checkout'
+      preLoaderRoute: typeof ApiStripeCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/portal': {
       id: '/api/stripe/portal'
       path: '/api/stripe/portal'
       fullPath: '/api/stripe/portal'
       preLoaderRoute: typeof ApiStripePortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/vies/check': {
@@ -1060,7 +1100,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuotesRefuseRoute: ApiQuotesRefuseRoute,
   ApiQuotesSendRoute: ApiQuotesSendRoute,
   ApiQuotesSignRoute: ApiQuotesSignRoute,
+  ApiStripeCheckoutRoute: ApiStripeCheckoutRoute,
   ApiStripePortalRoute: ApiStripePortalRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthCalendlyCallbackRoute: ApiAuthCalendlyCallbackRoute,
   ApiAuthCalendlyLoginRoute: ApiAuthCalendlyLoginRoute,
