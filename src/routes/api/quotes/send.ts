@@ -24,8 +24,8 @@ export const Route = createFileRoute("/api/quotes/send")({
             });
           }
 
-          const resendApiKey = process.env.RESEND_API_KEY;
-          const fromEmail = process.env.RESEND_FROM_EMAIL || 'Devis <onboarding@resend.dev>';
+          const resendApiKey = process.env['RESEND_API_KEY'];
+          const fromEmail = process.env['RESEND_FROM_EMAIL'] || 'Devis <onboarding@resend.dev>';
 
           if (!resendApiKey) {
             return new Response(JSON.stringify({

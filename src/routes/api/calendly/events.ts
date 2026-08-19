@@ -1,13 +1,13 @@
-import { createAPIFileRoute } from '@tanstack/react-start/api'
+import { createFileRoute } from '@tanstack/react-router'
 
 // Calendly access tokens expirent au bout de ~2h : on les rafraîchit
 // systématiquement avec le refresh_token avant d'appeler l'API.
 async function refreshCalendlyToken(refreshToken: string) {
   const clientId =
-    process.env.VITE_CALENDLY_CLIENT_ID || process.env.CALENDLY_CLIENT_ID
+    process.env['VITE_CALENDLY_CLIENT_ID'] || process.env['CALENDLY_CLIENT_ID']
   const clientSecret =
-    process.env.VITE_CALENDLY_CLIENT_SECRET ||
-    process.env.CALENDLY_CLIENT_SECRET
+    process.env['VITE_CALENDLY_CLIENT_SECRET'] ||
+    process.env['CALENDLY_CLIENT_SECRET']
 
   const res = await fetch('https://auth.calendly.com/oauth/token', {
     method: 'POST',
@@ -27,94 +27,98 @@ async function refreshCalendlyToken(refreshToken: string) {
   return data as { access_token: string; refresh_token: string }
 }
 
-export const APIRoute = createAPIFileRoute('/api/calendly/events')({
-  POST: async ({ request }) => {
-    // Le refresh token voyage dans le corps de la requête, jamais dans
-    // l'URL (query string) — évite qu'il finisse dans les logs serveur,
-    // l'historique du navigateur ou les headers Referer.
-    const body = await request.json().catch(() => ({}))
-    const refreshToken =
-      typeof body.refresh_token === 'string' ? body.refresh_token : null
+export const Route = createFileRoute('/api/calendly/events')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        // Le refresh token voyage dans le corps de la requête, jamais dans
+        // l'URL (query string) — évite qu'il finisse dans les logs serveur,
+        // l'historique du navigateur ou les headers Referer.
+        const body = await request.json().catch(() => ({}))
+        const refreshToken =
+          typeof body.refresh_token === 'string' ? body.refresh_token : null
 
-    if (!refreshToken) {
-      return new Response(
-        JSON.stringify({ error: 'missing_refresh_token' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      )
-    }
+        if (!refreshToken) {
+          return new Response(
+            JSON.stringify({ error: 'missing_refresh_token' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
+          )
+        }
 
-    try {
-      const tokens = await refreshCalendlyToken(refreshToken)
+        try {
+          const tokens = await refreshCalendlyToken(refreshToken)
 
-      const meRes = await fetch('https://api.calendly.com/users/me', {
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
-      })
-      const me = await meRes.json()
-      if (!meRes.ok) {
-        throw new Error('Impossible de récupérer le profil Calendly')
-      }
-      const userUri = me.resource.uri
+          const meRes = await fetch('https://api.calendly.com/users/me', {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          })
+          const me = await meRes.json()
+          if (!meRes.ok) {
+            throw new Error('Impossible de récupérer le profil Calendly')
+          }
+          const userUri = me.resource.uri
 
-      const eventsRes = await fetch(
-        `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(userUri)}&sort=start_time:asc&count=50`,
-        { headers: { Authorization: `Bearer ${tokens.access_token}` } },
-      )
-      const eventsData = await eventsRes.json()
-      if (!eventsRes.ok) {
-        throw new Error('Impossible de récupérer les événements Calendly')
-      }
-
-      // Pour chaque événement, on récupère le premier invité (nom/email).
-      const events = await Promise.all(
-        (eventsData.collection || []).map(async (event: any) => {
-          let inviteeName: string | null = null
-          let inviteeEmail: string | null = null
-          try {
-            const inviteesRes = await fetch(
-              `${event.uri}/invitees?count=1`,
-              { headers: { Authorization: `Bearer ${tokens.access_token}` } },
-            )
-            const inviteesData = await inviteesRes.json()
-            const invitee = inviteesData.collection?.[0]
-            if (invitee) {
-              inviteeName = invitee.name
-              inviteeEmail = invitee.email
-            }
-          } catch {
-            // pas bloquant si la récupération de l'invité échoue
+          const eventsRes = await fetch(
+            `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(userUri)}&sort=start_time:asc&count=50`,
+            { headers: { Authorization: `Bearer ${tokens.access_token}` } },
+          )
+          const eventsData = await eventsRes.json()
+          if (!eventsRes.ok) {
+            throw new Error('Impossible de récupérer les événements Calendly')
           }
 
-          return {
-            id: event.uri,
-            name: event.name,
-            inviteeName,
-            inviteeEmail,
-            startTime: event.start_time,
-            endTime: event.end_time,
-            status: event.status,
-            location:
-              event.location?.join_url ||
-              event.location?.location ||
-              null,
-          }
-        }),
-      )
+          // Pour chaque événement, on récupère le premier invité (nom/email).
+          const events = await Promise.all(
+            (eventsData.collection || []).map(async (event: any) => {
+              let inviteeName: string | null = null
+              let inviteeEmail: string | null = null
+              try {
+                const inviteesRes = await fetch(
+                  `${event.uri}/invitees?count=1`,
+                  { headers: { Authorization: `Bearer ${tokens.access_token}` } },
+                )
+                const inviteesData = await inviteesRes.json()
+                const invitee = inviteesData.collection?.[0]
+                if (invitee) {
+                  inviteeName = invitee.name
+                  inviteeEmail = invitee.email
+                }
+              } catch {
+                // pas bloquant si la récupération de l'invité échoue
+              }
 
-      return new Response(
-        JSON.stringify({
-          events,
-          // On renvoie le nouveau refresh_token : Calendly peut le faire tourner
-          // à chaque rafraîchissement, il faut le persister côté client.
-          refreshToken: tokens.refresh_token,
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      )
-    } catch (err: any) {
-      console.error('Calendly events error:', err)
-      return new Response(
-        JSON.stringify({ error: err.message || 'server_error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } },
-      )
+              return {
+                id: event.uri,
+                name: event.name,
+                inviteeName,
+                inviteeEmail,
+                startTime: event.start_time,
+                endTime: event.end_time,
+                status: event.status,
+                location:
+                  event.location?.join_url ||
+                  event.location?.location ||
+                  null,
+              }
+            }),
+          )
+
+          return new Response(
+            JSON.stringify({
+              events,
+              // On renvoie le nouveau refresh_token : Calendly peut le faire tourner
+              // à chaque rafraîchissement, il faut le persister côté client.
+              refreshToken: tokens.refresh_token,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          )
+        } catch (err: any) {
+          console.error('Calendly events error:', err)
+          return new Response(
+            JSON.stringify({ error: err.message || 'server_error' }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } },
+          )
+        }
+      },
     }
-  },
+  }
 })

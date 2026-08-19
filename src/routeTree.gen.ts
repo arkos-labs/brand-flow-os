@@ -41,6 +41,7 @@ import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
+import { Route as ApiCalendlyEventsRouteImport } from './routes/api/calendly/events'
 import { Route as ApiDocumentsDocusealWebhookRouteImport } from './routes/api/documents/docuseal-webhook'
 import { Route as ApiQuotesDocusealStartRouteImport } from './routes/api/quotes/docuseal-start'
 import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
@@ -48,6 +49,8 @@ import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
 import { Route as ApiQuotesSendRouteImport } from './routes/api/quotes/send'
 import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
+import { Route as ApiAuthCalendlyCallbackRouteImport } from './routes/api/auth/calendly/callback'
+import { Route as ApiAuthCalendlyLoginRouteImport } from './routes/api/auth/calendly/login'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
 import { Route as ApiAuthGoogleConsumeTokenRouteImport } from './routes/api/auth/google/consume-token'
 import { Route as ApiAuthGoogleLoginRouteImport } from './routes/api/auth/google/login'
@@ -212,6 +215,11 @@ const ApiCalendarListRoute = ApiCalendarListRouteImport.update({
   path: '/api/calendar/list',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCalendlyEventsRoute = ApiCalendlyEventsRouteImport.update({
+  id: '/api/calendly/events',
+  path: '/api/calendly/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDocumentsDocusealWebhookRoute =
   ApiDocumentsDocusealWebhookRouteImport.update({
     id: '/api/documents/docuseal-webhook',
@@ -246,6 +254,16 @@ const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
 const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
   id: '/api/vies/check',
   path: '/api/vies/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthCalendlyCallbackRoute = ApiAuthCalendlyCallbackRouteImport.update({
+  id: '/api/auth/calendly/callback',
+  path: '/api/auth/calendly/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthCalendlyLoginRoute = ApiAuthCalendlyLoginRouteImport.update({
+  id: '/api/auth/calendly/login',
+  path: '/api/auth/calendly/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
@@ -298,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
@@ -305,6 +324,8 @@ export interface FileRoutesByFullPath {
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
+  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
+  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -342,6 +363,7 @@ export interface FileRoutesByTo {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
@@ -349,6 +371,8 @@ export interface FileRoutesByTo {
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
+  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
+  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -387,6 +411,7 @@ export interface FileRoutesById {
   '/portail/$id': typeof PortailIdRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
+  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
@@ -394,6 +419,8 @@ export interface FileRoutesById {
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
+  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
+  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -433,6 +460,7 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/calendly/events'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
@@ -440,6 +468,8 @@ export interface FileRouteTypes {
     | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
+    | '/api/auth/calendly/callback'
+    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -477,6 +507,7 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/calendly/events'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
@@ -484,6 +515,8 @@ export interface FileRouteTypes {
     | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
+    | '/api/auth/calendly/callback'
+    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -521,6 +554,7 @@ export interface FileRouteTypes {
     | '/portail/$id'
     | '/api/calendar/events'
     | '/api/calendar/list'
+    | '/api/calendly/events'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
@@ -528,6 +562,8 @@ export interface FileRouteTypes {
     | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
+    | '/api/auth/calendly/callback'
+    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -566,6 +602,7 @@ export interface RootRouteChildren {
   PortailIdRoute: typeof PortailIdRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCalendarListRoute: typeof ApiCalendarListRoute
+  ApiCalendlyEventsRoute: typeof ApiCalendlyEventsRoute
   ApiDocumentsDocusealWebhookRoute: typeof ApiDocumentsDocusealWebhookRoute
   ApiQuotesDocusealStartRoute: typeof ApiQuotesDocusealStartRoute
   ApiQuotesGetRoute: typeof ApiQuotesGetRoute
@@ -573,6 +610,8 @@ export interface RootRouteChildren {
   ApiQuotesSendRoute: typeof ApiQuotesSendRoute
   ApiQuotesSignRoute: typeof ApiQuotesSignRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
+  ApiAuthCalendlyCallbackRoute: typeof ApiAuthCalendlyCallbackRoute
+  ApiAuthCalendlyLoginRoute: typeof ApiAuthCalendlyLoginRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
   ApiAuthGoogleConsumeTokenRoute: typeof ApiAuthGoogleConsumeTokenRoute
   ApiAuthGoogleLoginRoute: typeof ApiAuthGoogleLoginRoute
@@ -804,6 +843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCalendarListRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/calendly/events': {
+      id: '/api/calendly/events'
+      path: '/api/calendly/events'
+      fullPath: '/api/calendly/events'
+      preLoaderRoute: typeof ApiCalendlyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/documents/docuseal-webhook': {
       id: '/api/documents/docuseal-webhook'
       path: '/api/documents/docuseal-webhook'
@@ -851,6 +897,20 @@ declare module '@tanstack/react-router' {
       path: '/api/vies/check'
       fullPath: '/api/vies/check'
       preLoaderRoute: typeof ApiViesCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/calendly/callback': {
+      id: '/api/auth/calendly/callback'
+      path: '/api/auth/calendly/callback'
+      fullPath: '/api/auth/calendly/callback'
+      preLoaderRoute: typeof ApiAuthCalendlyCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/calendly/login': {
+      id: '/api/auth/calendly/login'
+      path: '/api/auth/calendly/login'
+      fullPath: '/api/auth/calendly/login'
+      preLoaderRoute: typeof ApiAuthCalendlyLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/google/callback': {
@@ -910,6 +970,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortailIdRoute: PortailIdRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCalendarListRoute: ApiCalendarListRoute,
+  ApiCalendlyEventsRoute: ApiCalendlyEventsRoute,
   ApiDocumentsDocusealWebhookRoute: ApiDocumentsDocusealWebhookRoute,
   ApiQuotesDocusealStartRoute: ApiQuotesDocusealStartRoute,
   ApiQuotesGetRoute: ApiQuotesGetRoute,
@@ -917,6 +978,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuotesSendRoute: ApiQuotesSendRoute,
   ApiQuotesSignRoute: ApiQuotesSignRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
+  ApiAuthCalendlyCallbackRoute: ApiAuthCalendlyCallbackRoute,
+  ApiAuthCalendlyLoginRoute: ApiAuthCalendlyLoginRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
   ApiAuthGoogleConsumeTokenRoute: ApiAuthGoogleConsumeTokenRoute,
   ApiAuthGoogleLoginRoute: ApiAuthGoogleLoginRoute,
