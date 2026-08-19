@@ -1,11 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createAPIFileRoute } from "@tanstack/start/api";
 import { stripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-export const Route = createFileRoute("/api/stripe/webhook")({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
+export const APIRoute = createAPIFileRoute("/api/stripe/webhook")({
+  POST: async ({ request }) => {
         try {
           const body = await request.text();
           const signature = request.headers.get("stripe-signature");
@@ -73,6 +71,4 @@ export const Route = createFileRoute("/api/stripe/webhook")({
           return new Response(`Webhook Error: ${err.message}`, { status: 400 });
         }
       },
-    },
-  },
 });

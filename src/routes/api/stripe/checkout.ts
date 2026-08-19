@@ -1,11 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createAPIFileRoute } from "@tanstack/start/api";
 import { stripe, isStripeEnabled } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-export const Route = createFileRoute("/api/stripe/checkout")({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
+export const APIRoute = createAPIFileRoute("/api/stripe/checkout")({
+  POST: async ({ request }) => {
         if (!isStripeEnabled()) {
           return new Response(JSON.stringify({ error: "Stripe non configuré" }), {
             status: 400,
@@ -64,6 +62,4 @@ export const Route = createFileRoute("/api/stripe/checkout")({
           });
         }
       },
-    },
-  },
 });
