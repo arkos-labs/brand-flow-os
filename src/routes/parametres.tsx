@@ -32,6 +32,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { searchCompanyBySiret, checkVatNumber, type VatCheckResult } from "@/lib/siret";
 import { useSupabaseData } from "@/lib/supabase-context";
+import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/parametres")({
   head: () => ({
@@ -170,7 +171,9 @@ function PrefToggleRow({
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { company, updateCompany } = useData();
-  const { profile } = useSupabaseData();
+  const { profile, organization, ownedOrganizations, createOrganization, switchOrganization } = useSupabaseData();
+  const [newOrgName, setNewOrgName] = useState("");
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const { prefs, setPrefs } = usePrefs();
   const { theme, setTheme } = useTheme();
   
@@ -950,7 +953,7 @@ function SettingsPage() {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
-                            customerId: (profile as any)?.stripe_customer_id, // Fetching from user profile
+                            customerId: organization?.stripe_customer_id, // Depuis organizations table
                             returnUrl: window.location.href,
                           }),
                         });
@@ -972,14 +975,75 @@ function SettingsPage() {
                   >
                     Ouvrir le portail d'abonnement <ExternalLink className="w-4 h-4" />
                   </button>
-                  {!(profile as any)?.stripe_customer_id && (
+                  {!organization?.stripe_customer_id && (
                     <p className="mt-2 text-xs text-warning-foreground font-medium">
-                      ⚠️ Note: Vous n'avez pas encore de souscription active rattachée à ce compte ou votre ID Stripe n'est pas renseigné dans la base de données. 
-                      Vous pouvez souscrire depuis l'onglet Tarifs.
+                      ⚠️ Aucun abonnement actif rattaché à cette organisation. Souscrivez depuis l'onglet Tarifs.
                     </p>
                   )}
                 </div>
               </div>
+
+              {/* ── Gestion multi-entreprises (plan Agency) ── */}
+              {(organization?.plan_tier === "agency") && (
+                <div className="rounded-lg border border-border p-5 bg-card flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <h3 className="text-sm font-bold">Mes entreprises</h3>
+                    <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">Agency</span>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {ownedOrganizations.map((org) => (
+                      <div
+                        key={org.id}
+                        className={cn(
+                          "flex items-center justify-between rounded-lg border px-4 py-2 text-sm transition-all",
+                          org.id === organization?.id
+                            ? "border-blue-500 bg-blue-50 font-semibold text-blue-700"
+                            : "border-border bg-background text-foreground hover:border-blue-300 cursor-pointer"
+                        )}
+                        onClick={() => org.id !== organization?.id && switchOrganization(org.id)}
+                      >
+                        <span>{org.name}</span>
+                        {org.id === organization?.id && (
+                          <span className="text-xs text-blue-600 font-normal">Active</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={newOrgName}
+                      onChange={(e) => setNewOrgName(e.target.value)}
+                      placeholder="Nom de la nouvelle entreprise"
+                      className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-blue-500"
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter" && newOrgName.trim()) {
+                          setIsCreatingOrg(true);
+                          try { await createOrganization(newOrgName.trim()); setNewOrgName(""); }
+                          finally { setIsCreatingOrg(false); }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!newOrgName.trim() || isCreatingOrg}
+                      onClick={async () => {
+                        if (!newOrgName.trim()) return;
+                        setIsCreatingOrg(true);
+                        try { await createOrganization(newOrgName.trim()); setNewOrgName(""); }
+                        finally { setIsCreatingOrg(false); }
+                      }}
+                      className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white transition-all hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {isCreatingOrg ? "..." : "Ajouter"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
