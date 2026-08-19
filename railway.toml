@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm run build"
+
+[build.nixpacksPlan.variables]
+NITRO_PRESET = "node-server"
+
+[deploy]
+startCommand = "npm run start"
+restartPolicyType = "on_failure"
