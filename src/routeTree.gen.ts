@@ -45,6 +45,7 @@ import { Route as ApiDocumentsDocusealWebhookRouteImport } from './routes/api/do
 import { Route as ApiQuotesDocusealStartRouteImport } from './routes/api/quotes/docuseal-start'
 import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
 import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
+import { Route as ApiQuotesSendRouteImport } from './routes/api/quotes/send'
 import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
@@ -232,6 +233,11 @@ const ApiQuotesRefuseRoute = ApiQuotesRefuseRouteImport.update({
   path: '/api/quotes/refuse',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiQuotesSendRoute = ApiQuotesSendRouteImport.update({
+  id: '/api/quotes/send',
+  path: '/api/quotes/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
   id: '/api/quotes/sign',
   path: '/api/quotes/sign',
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
+  '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
+    | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
+    | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
+    | '/api/quotes/send'
     | '/api/quotes/sign'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -558,6 +570,7 @@ export interface RootRouteChildren {
   ApiQuotesDocusealStartRoute: typeof ApiQuotesDocusealStartRoute
   ApiQuotesGetRoute: typeof ApiQuotesGetRoute
   ApiQuotesRefuseRoute: typeof ApiQuotesRefuseRoute
+  ApiQuotesSendRoute: typeof ApiQuotesSendRoute
   ApiQuotesSignRoute: typeof ApiQuotesSignRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
@@ -819,6 +832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuotesRefuseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/quotes/send': {
+      id: '/api/quotes/send'
+      path: '/api/quotes/send'
+      fullPath: '/api/quotes/send'
+      preLoaderRoute: typeof ApiQuotesSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/quotes/sign': {
       id: '/api/quotes/sign'
       path: '/api/quotes/sign'
@@ -894,6 +914,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuotesDocusealStartRoute: ApiQuotesDocusealStartRoute,
   ApiQuotesGetRoute: ApiQuotesGetRoute,
   ApiQuotesRefuseRoute: ApiQuotesRefuseRoute,
+  ApiQuotesSendRoute: ApiQuotesSendRoute,
   ApiQuotesSignRoute: ApiQuotesSignRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
@@ -903,13 +924,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
