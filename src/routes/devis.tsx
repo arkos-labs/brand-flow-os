@@ -539,6 +539,10 @@ function QuotesInner() {
       status: { fr: "Brouillon", en: "Draft" },
       date: editingQuote?.date ?? new Date().toISOString().split("T")[0] ?? "",
       ...(editingQuote?.invoicedLineIds ? { invoicedLineIds: editingQuote.invoicedLineIds } : {}),
+      // Toujours conserver le publicToken existant lors d'une édition —
+      // sinon updateQuote l'écrase dans Supabase et le lien portail client
+      // cesse de fonctionner.
+      ...(editingQuote?.publicToken ? { publicToken: editingQuote.publicToken } : {}),
       details: {
         clientType,
         lastName,
@@ -1756,10 +1760,20 @@ function QuotesInner() {
 
                 setIsSendingEmail(true);
                 try {
+                  // Garantit que le devis a un publicToken avant l'envoi.
+                  // Peut manquer si le devis a été édité avant le correctif
+                  // (bug : updateQuote écrasait le payload sans le token).
+                  let quoteForEmail = emailQuote;
+                  if (!quoteForEmail.publicToken) {
+                    const newToken = crypto.randomUUID();
+                    quoteForEmail = { ...emailQuote, publicToken: newToken };
+                    updateQuote(emailQuote.number, quoteForEmail);
+                  }
+
                   // 1. Generate PDF
-                  const pdfBase64 = await generateQuotePdfBase64(emailQuote, company);
+                  const pdfBase64 = await generateQuotePdfBase64(quoteForEmail, company);
                   const currentOrgId = await getMyOrgId() || "";
-                  const html = generateQuoteEmailHtml(emailQuote, company, emailTemplateId, window.location.origin, currentOrgId);
+                  const html = generateQuoteEmailHtml(quoteForEmail, company, emailTemplateId, window.location.origin, currentOrgId);
 
                   const artisanEmail = company?.email;
 
@@ -1769,10 +1783,10 @@ function QuotesInner() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       to: sendToEmail,
-                      subject: `Votre devis ${emailQuote.number} de ${company.name || "notre entreprise"}`,
+                      subject: `Votre devis ${quoteForEmail.number} de ${company.name || "notre entreprise"}`,
                       html,
                       pdfBase64,
-                      pdfFilename: `Devis_${emailQuote.number}.pdf`,
+                      pdfFilename: `Devis_${quoteForEmail.number}.pdf`,
                       artisanEmail: artisanEmail,
                     }),
                   });
@@ -1781,7 +1795,7 @@ function QuotesInner() {
 
                   if (res.ok) {
                     const now = new Date().toISOString();
-                    const isResend = !!emailQuote.sentAt;
+                    const isResend = !!quoteForEmail.sentAt;
                     const newSend = {
                       date: now,
                       to: sendToEmail,
@@ -1791,12 +1805,12 @@ function QuotesInner() {
                         ? "Confirmation signature"
                         : isResend ? "Renvoi" : "Envoi initial",
                     };
-                    updateQuote(emailQuote.number, {
-                      ...emailQuote,
+                    updateQuote(quoteForEmail.number, {
+                      ...quoteForEmail,
                       clientEmail: sendToEmail,
                       status: { fr: "Envoyé", en: "Sent" },
-                      sentAt: emailQuote.sentAt || now,
-                      emailsSent: [...(emailQuote.emailsSent || []), newSend],
+                      sentAt: quoteForEmail.sentAt || now,
+                      emailsSent: [...(quoteForEmail.emailsSent || []), newSend],
                     });
                     setEmailQuote(null);
                   } else {
