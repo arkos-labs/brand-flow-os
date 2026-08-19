@@ -471,6 +471,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     if (profError) throw new Error(profError.message);
 
     await loadAll();
+    window.location.reload();
     return org;
   }, [user, loadAll]);
 
@@ -482,6 +483,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message);
     
     await loadAll();
+    window.location.reload();
   }, [user, loadAll]);
 
   // ── Context value ─────────────────────────────────────────────────────────
