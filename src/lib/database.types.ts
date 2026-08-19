@@ -339,6 +339,9 @@ export type Database = {
           updated_at: string
           website: string | null
           google_refresh_token: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          plan_tier: string | null
         }
         Insert: {
           address_line1?: string | null

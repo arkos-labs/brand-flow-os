@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ArrowRight, Zap, ShieldCheck, Menu, X } from "lucide-react";
 import React, { useState } from "react";
+import { useSupabaseData } from "@/lib/supabase-context";
+import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Footer } from "@/components/Footer";
 import "./homepage.css";
@@ -63,10 +65,11 @@ const PLANS = [
       "Support par email",
     ],
     disabled: ["Catalogue illimité", "Relances automatiques", "Signature électronique", "Trésorerie prédictive"],
+    stripePriceId: null,
   },
   {
     name: "Pro",
-    price: "29 €",
+    price: "19,99 €",
     period: "/ mois",
     desc: "Pour les freelances et artisans actifs",
     highlight: true,
@@ -88,10 +91,11 @@ const PLANS = [
       "Support prioritaire",
     ],
     disabled: [],
+    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_PRO || "price_REPLACE_WITH_PRO_PRICE_ID",
   },
   {
     name: "Agency",
-    price: "79 €",
+    price: "49,99 €",
     period: "/ mois",
     desc: "Pour les équipes et agences",
     highlight: false,
@@ -113,6 +117,7 @@ const PLANS = [
       "Account manager dédié",
     ],
     disabled: [],
+    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_AGENCY || "price_REPLACE_WITH_AGENCY_PRICE_ID",
   },
 ];
 
@@ -174,6 +179,49 @@ function PublicNav() {
 
 
 function TarifsPage() {
+  const { session, profile } = useSupabaseData();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleSubscribe = async (plan: typeof PLANS[0], e: React.MouseEvent) => {
+    // Si l'utilisateur n'est pas connecté, on laisse le Link faire son travail vers /inscription
+    if (!session) return;
+    
+    // S'il est connecté et clique sur Solo, il est déjà en Solo (ou on redirige vers le dashboard)
+    if (!plan.stripePriceId) {
+      e.preventDefault();
+      window.location.href = "/tableau-de-bord";
+      return;
+    }
+
+    e.preventDefault();
+    setLoadingPlan(plan.name);
+    
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId: plan.stripePriceId,
+          planName: plan.name.toLowerCase(), // On envoie le nom du plan (pro ou agency)
+          email: session.user?.email,
+          userId: session.user?.id,
+          successUrl: window.location.origin + "/tableau-de-bord?payment=success",
+          cancelUrl: window.location.origin + "/tarifs?payment=cancelled",
+        }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur de paiement");
+      
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Impossible de contacter Stripe");
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="devizia-page">
       <PublicNav />
@@ -247,6 +295,7 @@ function TarifsPage() {
                   {/* CTA */}
                   <Link
                     to={plan.ctaTo}
+                    onClick={(e) => handleSubscribe(plan, e)}
                     className="devizia-button"
                     style={{
                       background: plan.highlight ? "var(--signal)" : "transparent",
@@ -255,9 +304,12 @@ function TarifsPage() {
                       boxShadow: plan.highlight ? "4px 4px 0 #fff" : "3px 3px 0 var(--ink)",
                       justifyContent: "center",
                       width: "100%",
+                      opacity: loadingPlan === plan.name ? 0.6 : 1,
+                      pointerEvents: loadingPlan === plan.name ? "none" : "auto",
                     }}
                   >
-                    {plan.cta} <ArrowRight size={14} />
+                    {loadingPlan === plan.name ? "Redirection..." : (session ? (plan.stripePriceId ? "Souscrire" : "Plan actuel") : plan.cta)}{" "}
+                    {loadingPlan !== plan.name && <ArrowRight size={14} />}
                   </Link>
                 </article>
               ))}

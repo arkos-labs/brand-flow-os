@@ -39,15 +39,21 @@ import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TresorerieRouteImport } from './routes/tresorerie'
 import { Route as PortailIdRouteImport } from './routes/portail.$id'
+import { Route as ApiAiGenerateQuoteRouteImport } from './routes/api/ai/generate-quote'
+import { Route as ApiAiOcrExpenseRouteImport } from './routes/api/ai/ocr-expense'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
 import { Route as ApiCalendlyEventsRouteImport } from './routes/api/calendly/events'
+import { Route as ApiCronRelancesRouteImport } from './routes/api/cron/relances'
 import { Route as ApiDocumentsDocusealWebhookRouteImport } from './routes/api/documents/docuseal-webhook'
 import { Route as ApiQuotesDocusealStartRouteImport } from './routes/api/quotes/docuseal-start'
 import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
 import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
 import { Route as ApiQuotesSendRouteImport } from './routes/api/quotes/send'
 import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
+import { Route as ApiStripeCheckoutRouteImport } from './routes/api/stripe/checkout'
+import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthCalendlyCallbackRouteImport } from './routes/api/auth/calendly/callback'
 import { Route as ApiAuthCalendlyLoginRouteImport } from './routes/api/auth/calendly/login'
@@ -205,6 +211,16 @@ const PortailIdRoute = PortailIdRouteImport.update({
   path: '/portail/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiGenerateQuoteRoute = ApiAiGenerateQuoteRouteImport.update({
+  id: '/api/ai/generate-quote',
+  path: '/api/ai/generate-quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiOcrExpenseRoute = ApiAiOcrExpenseRouteImport.update({
+  id: '/api/ai/ocr-expense',
+  path: '/api/ai/ocr-expense',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCalendarEventsRoute = ApiCalendarEventsRouteImport.update({
   id: '/api/calendar/events',
   path: '/api/calendar/events',
@@ -218,6 +234,11 @@ const ApiCalendarListRoute = ApiCalendarListRouteImport.update({
 const ApiCalendlyEventsRoute = ApiCalendlyEventsRouteImport.update({
   id: '/api/calendly/events',
   path: '/api/calendly/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronRelancesRoute = ApiCronRelancesRouteImport.update({
+  id: '/api/cron/relances',
+  path: '/api/cron/relances',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDocumentsDocusealWebhookRoute =
@@ -249,6 +270,21 @@ const ApiQuotesSendRoute = ApiQuotesSendRouteImport.update({
 const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
   id: '/api/quotes/sign',
   path: '/api/quotes/sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeCheckoutRoute = ApiStripeCheckoutRouteImport.update({
+  id: '/api/stripe/checkout',
+  path: '/api/stripe/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripePortalRoute = ApiStripePortalRouteImport.update({
+  id: '/api/stripe/portal',
+  path: '/api/stripe/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
@@ -314,15 +350,21 @@ export interface FileRoutesByFullPath {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/ai/generate-quote': typeof ApiAiGenerateQuoteRoute
+  '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/calendly/events': typeof ApiCalendlyEventsRoute
+  '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -361,15 +403,21 @@ export interface FileRoutesByTo {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/ai/generate-quote': typeof ApiAiGenerateQuoteRoute
+  '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/calendly/events': typeof ApiCalendlyEventsRoute
+  '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -409,15 +457,21 @@ export interface FileRoutesById {
   '/tarifs': typeof TarifsRoute
   '/tresorerie': typeof TresorerieRoute
   '/portail/$id': typeof PortailIdRoute
+  '/api/ai/generate-quote': typeof ApiAiGenerateQuoteRoute
+  '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
   '/api/calendly/events': typeof ApiCalendlyEventsRoute
+  '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
   '/api/quotes/get': typeof ApiQuotesGetRoute
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
+  '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
   '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
@@ -458,15 +512,21 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/ai/generate-quote'
+    | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/calendly/events'
+    | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -505,15 +565,21 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/ai/generate-quote'
+    | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/calendly/events'
+    | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -552,15 +618,21 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/tresorerie'
     | '/portail/$id'
+    | '/api/ai/generate-quote'
+    | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
     | '/api/calendly/events'
+    | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
     | '/api/quotes/get'
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/checkout'
+    | '/api/stripe/portal'
+    | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
     | '/api/auth/calendly/login'
@@ -600,15 +672,21 @@ export interface RootRouteChildren {
   TarifsRoute: typeof TarifsRoute
   TresorerieRoute: typeof TresorerieRoute
   PortailIdRoute: typeof PortailIdRoute
+  ApiAiGenerateQuoteRoute: typeof ApiAiGenerateQuoteRoute
+  ApiAiOcrExpenseRoute: typeof ApiAiOcrExpenseRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCalendarListRoute: typeof ApiCalendarListRoute
   ApiCalendlyEventsRoute: typeof ApiCalendlyEventsRoute
+  ApiCronRelancesRoute: typeof ApiCronRelancesRoute
   ApiDocumentsDocusealWebhookRoute: typeof ApiDocumentsDocusealWebhookRoute
   ApiQuotesDocusealStartRoute: typeof ApiQuotesDocusealStartRoute
   ApiQuotesGetRoute: typeof ApiQuotesGetRoute
   ApiQuotesRefuseRoute: typeof ApiQuotesRefuseRoute
   ApiQuotesSendRoute: typeof ApiQuotesSendRoute
   ApiQuotesSignRoute: typeof ApiQuotesSignRoute
+  ApiStripeCheckoutRoute: typeof ApiStripeCheckoutRoute
+  ApiStripePortalRoute: typeof ApiStripePortalRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthCalendlyCallbackRoute: typeof ApiAuthCalendlyCallbackRoute
   ApiAuthCalendlyLoginRoute: typeof ApiAuthCalendlyLoginRoute
@@ -829,6 +907,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortailIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/generate-quote': {
+      id: '/api/ai/generate-quote'
+      path: '/api/ai/generate-quote'
+      fullPath: '/api/ai/generate-quote'
+      preLoaderRoute: typeof ApiAiGenerateQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/ocr-expense': {
+      id: '/api/ai/ocr-expense'
+      path: '/api/ai/ocr-expense'
+      fullPath: '/api/ai/ocr-expense'
+      preLoaderRoute: typeof ApiAiOcrExpenseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/calendar/events': {
       id: '/api/calendar/events'
       path: '/api/calendar/events'
@@ -848,6 +940,13 @@ declare module '@tanstack/react-router' {
       path: '/api/calendly/events'
       fullPath: '/api/calendly/events'
       preLoaderRoute: typeof ApiCalendlyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/relances': {
+      id: '/api/cron/relances'
+      path: '/api/cron/relances'
+      fullPath: '/api/cron/relances'
+      preLoaderRoute: typeof ApiCronRelancesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/documents/docuseal-webhook': {
@@ -890,6 +989,27 @@ declare module '@tanstack/react-router' {
       path: '/api/quotes/sign'
       fullPath: '/api/quotes/sign'
       preLoaderRoute: typeof ApiQuotesSignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/checkout': {
+      id: '/api/stripe/checkout'
+      path: '/api/stripe/checkout'
+      fullPath: '/api/stripe/checkout'
+      preLoaderRoute: typeof ApiStripeCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/portal': {
+      id: '/api/stripe/portal'
+      path: '/api/stripe/portal'
+      fullPath: '/api/stripe/portal'
+      preLoaderRoute: typeof ApiStripePortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/vies/check': {
@@ -968,15 +1088,21 @@ const rootRouteChildren: RootRouteChildren = {
   TarifsRoute: TarifsRoute,
   TresorerieRoute: TresorerieRoute,
   PortailIdRoute: PortailIdRoute,
+  ApiAiGenerateQuoteRoute: ApiAiGenerateQuoteRoute,
+  ApiAiOcrExpenseRoute: ApiAiOcrExpenseRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCalendarListRoute: ApiCalendarListRoute,
   ApiCalendlyEventsRoute: ApiCalendlyEventsRoute,
+  ApiCronRelancesRoute: ApiCronRelancesRoute,
   ApiDocumentsDocusealWebhookRoute: ApiDocumentsDocusealWebhookRoute,
   ApiQuotesDocusealStartRoute: ApiQuotesDocusealStartRoute,
   ApiQuotesGetRoute: ApiQuotesGetRoute,
   ApiQuotesRefuseRoute: ApiQuotesRefuseRoute,
   ApiQuotesSendRoute: ApiQuotesSendRoute,
   ApiQuotesSignRoute: ApiQuotesSignRoute,
+  ApiStripeCheckoutRoute: ApiStripeCheckoutRoute,
+  ApiStripePortalRoute: ApiStripePortalRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthCalendlyCallbackRoute: ApiAuthCalendlyCallbackRoute,
   ApiAuthCalendlyLoginRoute: ApiAuthCalendlyLoginRoute,

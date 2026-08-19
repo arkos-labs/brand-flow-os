@@ -18,6 +18,8 @@ import {
   Monitor,
   SlidersHorizontal,
   Search,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
@@ -29,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { searchCompanyBySiret, checkVatNumber, type VatCheckResult } from "@/lib/siret";
+import { useSupabaseData } from "@/lib/supabase-context";
 
 export const Route = createFileRoute("/parametres")({
   head: () => ({
@@ -58,7 +61,7 @@ const LEGAL_FORMS = [
   "Autre",
 ];
 
-type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs" | "integrations";
+type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs" | "integrations" | "subscription";
 
 function SectionHeader({
   icon: Icon,
@@ -167,6 +170,7 @@ function PrefToggleRow({
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { company, updateCompany } = useData();
+  const { profile } = useSupabaseData();
   const { prefs, setPrefs } = usePrefs();
   const { theme, setTheme } = useTheme();
   
@@ -265,6 +269,7 @@ function SettingsPage() {
     { id: "docs", icon: FileText, label: lang === "fr" ? "Documents" : "Documents" },
     { id: "bank", icon: Landmark, label: lang === "fr" ? "Bancaire" : "Bank" },
     { id: "integrations", icon: SlidersHorizontal, label: "Intégrations" },
+    { id: "subscription", icon: CreditCard, label: "Abonnement" },
     { id: "prefs", icon: Palette, label: t("pref.title") },
   ];
 
@@ -901,6 +906,78 @@ function SettingsPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     Vous n'avez rien à configurer. Lorsque vos clients répondent à vos devis, la réponse arrive directement sur votre adresse e-mail ({company.email}).
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Abonnement ── */}
+          {activeSection === "subscription" && (
+            <div className="card-elevated p-6 space-y-5">
+              <h2 className="text-sm font-semibold">Gérer mon abonnement</h2>
+              <p className="text-xs text-muted-foreground">
+                Gérez votre abonnement, passez au forfait supérieur (Pro, Agency) pour débloquer de nouvelles fonctionnalités ou mettez à jour votre moyen de paiement.
+              </p>
+
+              <div className="rounded-lg border border-border p-5 bg-card flex flex-col items-start gap-4">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-foreground">Portail Client Sécurisé</h3>
+                    <p className="text-xs text-muted-foreground">Propulsé par Stripe</p>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Vous allez être redirigé vers l'interface sécurisée Stripe où vous pourrez gérer vos factures, changer de carte bancaire, et ajuster votre plan (options multi-sociétés, utilisateurs supplémentaires, etc.).
+                  </p>
+                  
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      const btn = e.currentTarget;
+                      const originalText = btn.innerHTML;
+                      btn.innerHTML = "Redirection...";
+                      btn.disabled = true;
+                      
+                      try {
+                        // On passe un org ID ou customerId si dispo, sinon le backend le trouvera
+                        const res = await fetch("/api/stripe/portal", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            customerId: (profile as any)?.stripe_customer_id, // Fetching from user profile
+                            returnUrl: window.location.href,
+                          }),
+                        });
+                        
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || "Erreur lors de l'accès au portail");
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          throw new Error("Lien introuvable");
+                        }
+                      } catch (err: any) {
+                        alert(err.message || "Impossible d'ouvrir le portail d'abonnement. Avez-vous déjà souscrit ?");
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                      }
+                    }}
+                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-blue-700"
+                  >
+                    Ouvrir le portail d'abonnement <ExternalLink className="w-4 h-4" />
+                  </button>
+                  {!(profile as any)?.stripe_customer_id && (
+                    <p className="mt-2 text-xs text-warning-foreground font-medium">
+                      ⚠️ Note: Vous n'avez pas encore de souscription active rattachée à ce compte ou votre ID Stripe n'est pas renseigné dans la base de données. 
+                      Vous pouvez souscrire depuis l'onglet Tarifs.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

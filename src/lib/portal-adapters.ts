@@ -17,6 +17,7 @@ import type { Quote, CompanySettings } from "./data-context";
 import type { Database } from "./database.types";
 
 type DbQuote = Database["public"]["Tables"]["quotes"]["Row"];
+type DbInvoice = Database["public"]["Tables"]["invoices"]["Row"];
 type DbOrganization = Database["public"]["Tables"]["organizations"]["Row"];
 
 export const STATUS_MAP: Record<DbQuote["status"], { fr: string; en: string }> = {
@@ -41,6 +42,18 @@ export function dbQuoteToLegacyQuote(row: DbQuote): Quote {
     status: STATUS_MAP[row.status] ?? payload.status ?? STATUS_MAP.draft,
     publicToken: payload.publicToken || row.id,
   } as Quote;
+}
+
+export function dbInvoiceToLegacyInvoice(row: DbInvoice): any {
+  // We use any to quickly satisfy the type constraint for the Cron, since the legacy payload contains everything
+  const payload = (row.payload ?? {}) as any;
+  return {
+    number: row.number,
+    client: "Client",
+    amount: row.total_ttc,
+    date: row.issue_date,
+    ...payload,
+  };
 }
 
 export function dbOrgToCompanySettings(org: DbOrganization): CompanySettings {

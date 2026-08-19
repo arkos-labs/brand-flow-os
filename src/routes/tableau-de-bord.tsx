@@ -219,6 +219,7 @@ function Dashboard() {
       const timer = setTimeout(() => setShowOnboarding(true), 800);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [quotes.length, invoices.length]);
 
   const handleCloseOnboarding = () => {

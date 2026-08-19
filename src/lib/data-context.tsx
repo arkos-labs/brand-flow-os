@@ -474,6 +474,7 @@ export type Subscription = {
   createdAt: string;
 };
 
+
 export type DataContextType = {
   quotes: Quote[];
   addQuote: (quote: Quote) => void;
@@ -504,6 +505,8 @@ export type DataContextType = {
   addSubscription: (s: Omit<Subscription, "id" | "createdAt">) => void;
   updateSubscription: (id: string, partial: Partial<Subscription>) => void;
   deleteSubscription: (id: string) => void;
+
+
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -587,6 +590,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [upsells, setUpsells] = useState<Upsell[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+
 
   // Organisation Supabase de l'utilisateur connecté
   const orgIdRef = useRef<string | null>(null);
@@ -985,6 +989,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
+
+
   // Ne jamais bloquer le rendu du Provider : si les données ne sont pas encore
   // chargées (SSR ou premier tick client), on rend quand même le contexte avec
   // les valeurs en cours (vides par défaut) pour éviter "useData must be used
@@ -1019,6 +1025,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addSubscription,
         updateSubscription,
         deleteSubscription,
+
       }}
     >
       {children}

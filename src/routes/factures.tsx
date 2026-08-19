@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Download,
   Bell,
@@ -18,6 +19,7 @@ import {
   Search,
   Send,
   CalendarDays,
+  CreditCard,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
@@ -1173,6 +1175,35 @@ function Invoices() {
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             Valider
+                          </button>
+                        )}
+                        {(inv.status === "draft" || inv.status === "sent" || inv.status === "late") && (
+                          <button
+                            title="Payer en ligne (Stripe)"
+                            onClick={async () => {
+                              try {
+                                const res = await fetch("/api/stripe/checkout", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    invoiceNumber: inv.number,
+                                    amount: inv.amount,
+                                    clientName: inv.client,
+                                  })
+                                });
+                                const data = await res.json();
+                                if (data.url) {
+                                  window.open(data.url, "_blank");
+                                } else {
+                                  toast.error(data.error || "Erreur Stripe");
+                                }
+                              } catch (err) {
+                                toast.error("Erreur serveur Stripe");
+                              }
+                            }}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-indigo-100 hover:text-indigo-600"
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
                           </button>
                         )}
                         <button

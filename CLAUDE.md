@@ -184,14 +184,13 @@ bun run format   # prettier
 - [x] Intégration calendrier (Google Calendar + Calendly) — **non prévue dans la roadmap d'origine, déjà livrée**
 - [ ] Web-quotes interactifs (options à cocher, curseurs quantité) — à vérifier précisément dans `portail.$id.tsx`
 - [ ] Signature eIDAS — pas trouvé dans le code
-- [ ] Paiement Stripe intégré — pas trouvé dans le code
+- [x] Paiement Stripe intégré (Pour les abonnements au SaaS)
 - [ ] Relances automatisées (déclenchement planifié, pas seulement manuel) — à confirmer
 
 ### Phase 3 — Scale
 
 - [ ] Open Banking (rapprochement bancaire)
 - [ ] OCR factures fournisseurs (Mindee / AWS Textract)
-- [ ] Relances SMS (Twilio)
 
 ### Phase 4 — Enterprise
 
@@ -253,9 +252,8 @@ audit_logs (PAF — piste d'audit fiable)
 | **Google OAuth**        | Authentification / Google Calendar          | ✅ Fait (`api/auth/google/*`, `api/calendar/*`)    |
 | **Calendly**            | Prise de RDV                                | ✅ Fait (`api/auth/calendly/*`, `api/calendly/*`) — non prévu à l'origine |
 | **SIRENE / Pappers**    | Auto-complétion SIRET → données entreprise  | ⏳ À vérifier (siret.ts existe, source à confirmer) |
-| **Stripe**              | Paiement carte + virement                   | ❌ Pas trouvé dans le code                          |
+| **Stripe**              | Paiement carte + virement (Abonnements SaaS)| ✅ Fait (`api/stripe/checkout.ts`, `webhook.ts`) |
 | **GoCardless**          | Prélèvement SEPA                            | ❌ Pas trouvé dans le code                          |
-| **Twilio**              | SMS de relance                              | ❌ Pas trouvé dans le code                          |
 | **Mindee**              | OCR factures fournisseurs                   | ❌ Pas trouvé dans le code                          |
 | **OpenAI GPT-4o**       | IA rédaction devis, traduction, analyse     | ⏳ À vérifier (widget "AIQuoteWidget" présent — source du modèle à confirmer) |
 | **eIDAS (DocuSeal)**     | Signature électronique (SES/AES/QES)        | 📋 Décidé le 2026-08-18 — voir note ci-dessous       |

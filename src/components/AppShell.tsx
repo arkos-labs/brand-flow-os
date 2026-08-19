@@ -27,10 +27,12 @@ import {
   LogOut,
   Calendar,
   Archive,
+  Plus,
+  Building2,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { useI18n, type Key } from "@/lib/i18n";
-import { useData } from "@/lib/data-context";
+import { useData } from "@/lib/supabase-context";
 import { useTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -38,6 +40,17 @@ import { formatNavigationBadge } from "@/lib/navigation-badge";
 import { GlobalSearch } from "./GlobalSearch";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Search as SearchIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const groups: {
   section: Key;
@@ -256,12 +269,17 @@ function ThemeToggle() {
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { t, lang, setLang } = useI18n();
-  const { invoices, quotes, company } = useData();
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
+  const { lang, t, setLang } = useI18n();
+  const { invoices, quotes, organization, ownedOrganizations, switchOrganization, createOrganization } = useData();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [createOrgOpen, setCreateOrgOpen] = useState(false);
+  const [upgradeOrgOpen, setUpgradeOrgOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const location = useLocation();
   const locationPath = location.pathname;
 
@@ -496,8 +514,62 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           {/* Recherche + contexte */}
           <div className="hidden min-w-0 flex-1 items-center gap-4 lg:flex">
-            <div className="flex h-8 items-center border-r border-border pr-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Espace de travail
+            <div className="relative">
+              <button
+                onClick={() => setOrgDropdownOpen((v) => !v)}
+                className="flex h-8 items-center gap-2 border-r border-border pr-4 hover:opacity-80 transition-opacity"
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[12px] font-bold text-foreground">
+                    {organization?.name || "Mon Entreprise"}
+                  </span>
+                </div>
+                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", orgDropdownOpen && "rotate-180")} />
+              </button>
+
+              {orgDropdownOpen && (
+                <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-[var(--shape-control)] border-2 border-navy bg-popover p-1.5 shadow-offset">
+                  <p className="px-2.5 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mes entreprises</p>
+                  
+                  {ownedOrganizations.map((org) => (
+                    <button
+                      key={org.id}
+                      onClick={async () => {
+                        setOrgDropdownOpen(false);
+                        if (org.id !== organization?.id) {
+                          await switchOrganization(org.id);
+                        }
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs transition-colors hover:bg-muted",
+                        org.id === organization?.id && "bg-primary/10 text-primary font-bold",
+                      )}
+                    >
+                      <span className="flex-1 truncate">{org.name}</span>
+                      {org.id === organization?.id && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+
+                  <div className="my-1 border-t border-border" />
+                  
+                  <button
+                    onClick={() => {
+                      setOrgDropdownOpen(false);
+                      if (organization?.plan_tier !== "agency") {
+                        setUpgradeOrgOpen(true);
+                        return;
+                      }
+                      setNewOrgName("");
+                      setCreateOrgOpen(true);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Créer une entreprise
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setSearchOpen(true)}
@@ -589,6 +661,76 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+
+      {/* Modal - Upgrade Required */}
+      <Dialog open={upgradeOrgOpen} onOpenChange={setUpgradeOrgOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-warning">
+              <AlertTriangle className="h-5 w-5" />
+              Mise à niveau requise
+            </DialogTitle>
+            <DialogDescription className="pt-3">
+              La gestion multi-sociétés est une fonctionnalité exclusive du forfait <strong>Agency</strong>. 
+              Veuillez mettre à niveau votre abonnement pour pouvoir créer et gérer plusieurs entreprises avec le même compte.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setUpgradeOrgOpen(false)}>Annuler</Button>
+            <Button asChild>
+              <Link to="/parametres" onClick={() => setUpgradeOrgOpen(false)}>Voir mon abonnement</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal - Create Organization */}
+      <Dialog open={createOrgOpen} onOpenChange={setCreateOrgOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Créer une entreprise</DialogTitle>
+            <DialogDescription>
+              Entrez le nom de la nouvelle entreprise que vous souhaitez gérer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="org-name">Nom de l'entreprise</Label>
+              <Input
+                id="org-name"
+                value={newOrgName}
+                onChange={(e) => setNewOrgName(e.target.value)}
+                placeholder="Ex: Ma Deuxième SARL"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOrgOpen(false)} disabled={isCreatingOrg}>
+              Annuler
+            </Button>
+            <Button 
+              disabled={isCreatingOrg || !newOrgName.trim()} 
+              onClick={async () => {
+                if (!newOrgName.trim()) return;
+                setIsCreatingOrg(true);
+                try {
+                  await createOrganization(newOrgName.trim());
+                  setCreateOrgOpen(false);
+                } catch (err: any) {
+                  // Optionnel : afficher l'erreur proprement si besoin
+                  console.error(err);
+                } finally {
+                  setIsCreatingOrg(false);
+                }
+              }}
+            >
+              {isCreatingOrg ? "Création..." : "Créer l'entreprise"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

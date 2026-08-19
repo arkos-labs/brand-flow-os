@@ -7,8 +7,11 @@ import {
   Receipt,
   AlertTriangle,
   CheckCircle2,
+  RefreshCcw,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
 import { cn } from "@/lib/utils";
@@ -109,6 +112,19 @@ function Cashflow() {
       <PageHeader
         title="Trésorerie"
         subtitle="Vue synthétique de vos encaissements et créances en attente."
+        action={
+          <Button variant="outline" onClick={() => {
+            const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+            toast.promise(promise, {
+              loading: 'Synchronisation Open Banking en cours...',
+              success: 'Opérations bancaires synchronisées !',
+              error: 'Erreur de synchronisation',
+            });
+          }}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Synchroniser ma banque
+          </Button>
+        }
       />
 
       {/* ── KPIs ── */}

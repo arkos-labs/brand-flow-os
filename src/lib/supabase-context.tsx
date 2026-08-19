@@ -108,7 +108,10 @@ export type SupabaseContextType = {
   reminderTemplates: DbReminderTemplate[];
 
   // Organisation
+  ownedOrganizations: DbOrganization[];
   updateOrganization: (partial: Partial<DbOrganization>) => Promise<void>;
+  createOrganization: (name: string) => Promise<DbOrganization>;
+  switchOrganization: (orgId: string) => Promise<void>;
 
   // Refresh manuel
   refresh: () => Promise<void>;
@@ -123,6 +126,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [organization, setOrganization] = useState<DbOrganization | null>(null);
+  const [ownedOrganizations, setOwnedOrganizations] = useState<DbOrganization[]>([]);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const isLoading = isAuthLoading || isDataLoading;
@@ -202,6 +206,13 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         setReminderTemplates(templatesData ?? []);
 
         // Passage automatique en overdue retiré car la fonction n'existe plus
+        // Charger toutes les orgs de l'utilisateur pour le switcher
+        const { data: allOrgs } = await supabase
+          .from("organizations")
+          .select("*")
+          .eq("owner_id", user.id);
+        setOwnedOrganizations(allOrgs ?? []);
+
       }
     } finally {
       setIsDataLoading(false);
@@ -445,6 +456,34 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setOrganization((prev) => (prev ? { ...prev, ...partial } : prev));
   }, [organization]);
 
+  const createOrganization = useCallback(async (name: string) => {
+    if (!user) throw new Error("Non connecté");
+    const { data: org, error } = await supabase.from("organizations").insert({
+      name,
+      owner_id: user.id,
+    }).select().single();
+    if (error) throw new Error(error.message);
+    
+    // Switch sur la nouvelle orga
+    const { error: profError } = await supabase.from("profiles").update({
+      organization_id: org.id
+    }).eq("id", user.id);
+    if (profError) throw new Error(profError.message);
+
+    await loadAll();
+    return org;
+  }, [user, loadAll]);
+
+  const switchOrganization = useCallback(async (orgId: string) => {
+    if (!user) throw new Error("Non connecté");
+    const { error } = await supabase.from("profiles").update({
+      organization_id: orgId
+    }).eq("id", user.id);
+    if (error) throw new Error(error.message);
+    
+    await loadAll();
+  }, [user, loadAll]);
+
   // ── Context value ─────────────────────────────────────────────────────────
 
   const value: SupabaseContextType = {
@@ -478,7 +517,10 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     updateReminder,
     getRemindersByInvoice,
     reminderTemplates,
+    ownedOrganizations,
     updateOrganization,
+    createOrganization,
+    switchOrganization,
     refresh: loadAll,
   };
 
