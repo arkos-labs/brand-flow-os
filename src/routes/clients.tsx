@@ -46,6 +46,7 @@ import { ErrorBoundary } from "@/lib/ErrorBoundary";
 import { searchCompanyBySiret } from "@/lib/siret";
 import { ReminderModal } from "@/components/ReminderModal";
 import { QuoteEditorDialog } from "@/components/QuoteEditorDialog";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { exportQuotePdf } from "@/lib/pdf-export";
 import { getClientQuoteActions } from "@/lib/quote-actions";
 
@@ -117,7 +118,7 @@ type Tab = "info" | "quotes" | "invoices";
 
 function ClientsPage() {
   const { t, tv, money, date, lang } = useI18n();
-  const { clients, addClient, updateClient, deleteClient, quotes, invoices, products, company, updateQuote, updateInvoice } = useData();
+  const { clients, addClient, updateClient, deleteClient, quotes, invoices, products, company, updateQuote, updateInvoice, profile } = useData();
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -134,6 +135,7 @@ function ClientsPage() {
   const [actionNotice, setActionNotice] = useState("");
   const [reminderInvoice, setReminderInvoice] = useState<import("@/lib/data-context").Invoice | null>(null);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
 
@@ -228,6 +230,11 @@ function ClientsPage() {
   };
 
   const openNew = () => {
+    const plan = profile?.plan_tier || "solo";
+    if (plan === "solo" && clients.length >= 1) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
     setEditingClient(null);
     setForm(EMPTY_CLIENT);
     setIsFormOpen(true);
@@ -628,7 +635,7 @@ function ClientsPage() {
                               onClick={async () => {
                                 setExportingQuote(q.number);
                                 try {
-                                  await exportQuotePdf(q, company);
+                                  await exportQuotePdf(q, company, profile?.plan_tier);
                                   setActionNotice(`PDF ${q.number} téléchargé.`);
                                 } catch {
                                   setActionNotice("Impossible de générer le PDF pour le moment.");
@@ -735,6 +742,14 @@ function ClientsPage() {
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Limite de clients atteinte"
+        description="Le forfait Solo est limité à 1 client actif. Passez au forfait Pro pour débloquer l'ajout de clients en illimité."
+        requiredPlan="pro"
+      />
 
       {/* ── Sheet Formulaire ──────────────────────────────────────────────────── */}
       <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -1130,7 +1145,7 @@ function ClientsPage() {
                 if (!previewQuote) return;
                 setExportingQuote(previewQuote.number);
                 try {
-                  await exportQuotePdf(previewQuote, company);
+                  await exportQuotePdf(previewQuote, company, profile?.plan_tier);
                 } finally {
                   setExportingQuote(null);
                 }

@@ -54,7 +54,7 @@ function latestDate(...dates: (string | undefined)[]): string {
 function ArchivesPage() {
   const { money, date } = useI18n();
   const navigate = useNavigate();
-  const { invoices, quotes, company } = useData();
+  const { invoices, quotes, company, profile } = useData();
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -142,7 +142,7 @@ function ArchivesPage() {
   const handleDownloadQuote = async (q: Quote) => {
     setExporting(q.number);
     try {
-      await exportQuotePdf(q, company);
+      await exportQuotePdf(q, company, profile?.plan_tier);
     } finally {
       setExporting(null);
     }
@@ -151,7 +151,7 @@ function ArchivesPage() {
   const handleDownloadInvoice = async (inv: Invoice) => {
     setExporting(inv.number);
     try {
-      await exportInvoicePdf(inv, company);
+      await exportInvoicePdf(inv, company, profile?.plan_tier);
     } finally {
       setExporting(null);
     }

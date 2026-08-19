@@ -167,6 +167,7 @@ const PER_PAGE = 450;
 
 import { ErrorBoundary } from "@/lib/ErrorBoundary";
 import { canEditQuote } from "@/lib/document-workflow";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 function Quotes() {
   return (
@@ -192,6 +193,7 @@ function QuotesInner() {
     products,
     clients,
     addClient,
+    profile,
   } = useData();
   const [exporting, setExporting] = useState<string | null>(null);
 
@@ -318,6 +320,7 @@ function QuotesInner() {
 
   // New Quote Full Form State
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Empêcher la perte de données si on change de page par erreur
   useBlocker({
@@ -634,11 +637,28 @@ function QuotesInner() {
         title={t("quotes.title")}
         subtitle={t("quotes.subtitle")}
         action={
-          <Sheet open={isQuoteOpen} onOpenChange={setIsQuoteOpen}>
-            <SheetTrigger asChild>
-              <Button>Nouveau Devis Complet</Button>
-            </SheetTrigger>
-            <SheetContent className="sm:max-w-2xl w-[90vw] p-0 flex flex-col">
+          <>
+            <Button onClick={() => {
+              const plan = profile?.plan_tier || "solo";
+              if (plan === "solo") {
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                const quotesThisMonth = quotes.filter(q => {
+                  const d = new Date(q.date);
+                  return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                });
+                if (quotesThisMonth.length >= 3) {
+                  setIsUpgradeModalOpen(true);
+                  return;
+                }
+              }
+              setEditingQuote(null);
+              setIsQuoteOpen(true);
+            }}>
+              Nouveau Devis Complet
+            </Button>
+            <Sheet open={isQuoteOpen} onOpenChange={setIsQuoteOpen}>
+              <SheetContent className="sm:max-w-2xl w-[90vw] p-0 flex flex-col">
               <SheetHeader className="p-6 pb-2 border-b">
                 <SheetTitle>{editingQuote ? `Modifier le devis ${editingQuote.number}` : "Créer un devis détaillé"}</SheetTitle>
               </SheetHeader>
@@ -1065,8 +1085,17 @@ function QuotesInner() {
               </SheetFooter>
             </SheetContent>
           </Sheet>
-        }
-      />
+        </>
+      }
+    />
+
+    <UpgradeModal
+      isOpen={isUpgradeModalOpen}
+      onClose={() => setIsUpgradeModalOpen(false)}
+      title="Limite de devis atteinte"
+      description="Le forfait Solo est limité à 3 devis par mois. Passez au forfait Pro pour créer des devis en illimité."
+      requiredPlan="pro"
+    />
 
       <AIQuoteWidget
         products={products}
@@ -1361,7 +1390,7 @@ function QuotesInner() {
                   disabled={exporting === q.number}
                   onClick={async () => {
                     setExporting(q.number);
-                    await exportQuotePdf(q, company);
+                    await exportQuotePdf(q, company, profile?.plan_tier);
                     setExporting(null);
                   }}
                   className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
@@ -1618,7 +1647,7 @@ function QuotesInner() {
                 <ScaledDocument>
                   <DocumentTemplate
                     doc={quoteToDocumentData(previewQuote)}
-                    company={companyToDocCompany(company)}
+                    company={companyToDocCompany(company, profile?.plan_tier)}
                   />
                 </ScaledDocument>
               )}
@@ -1668,7 +1697,7 @@ function QuotesInner() {
               onClick={async () => {
                 if (!previewQuote) return;
                 setExporting(previewQuote.number);
-                await exportQuotePdf(previewQuote, company);
+                await exportQuotePdf(previewQuote, company, profile?.plan_tier);
                 setExporting(null);
               }}
             >
@@ -1771,7 +1800,7 @@ function QuotesInner() {
                   }
 
                   // 1. Generate PDF
-                  const pdfBase64 = await generateQuotePdfBase64(quoteForEmail, company);
+                  const pdfBase64 = await generateQuotePdfBase64(quoteForEmail, company, profile?.plan_tier);
                   const currentOrgId = await getMyOrgId() || "";
                   const html = generateQuoteEmailHtml(quoteForEmail, company, emailTemplateId, window.location.origin, currentOrgId);
 

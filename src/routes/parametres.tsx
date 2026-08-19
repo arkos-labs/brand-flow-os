@@ -20,10 +20,15 @@ import {
   Search,
   CreditCard,
   ExternalLink,
+  Download,
+  Users,
+  Paintbrush,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
-import { useData } from "@/lib/data-context";
+import { useData, Invoice } from "@/lib/data-context";
+import { generateAccountingExportCSV, downloadCSV } from "@/lib/export-compta";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { usePrefs, useTheme, type Theme } from "@/lib/theme";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +67,7 @@ const LEGAL_FORMS = [
   "Autre",
 ];
 
-type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs" | "integrations" | "subscription";
+type Section = "identity" | "contact" | "logo" | "docs" | "bank" | "prefs" | "integrations" | "subscription" | "export_compta" | "team" | "brand";
 
 function SectionHeader({
   icon: Icon,
@@ -170,7 +175,7 @@ function PrefToggleRow({
 
 function SettingsPage() {
   const { t, lang } = useI18n();
-  const { company, updateCompany } = useData();
+  const { company, updateCompany, invoices } = useData();
   const { profile, organization, ownedOrganizations, createOrganization, switchOrganization } = useSupabaseData();
   const [newOrgName, setNewOrgName] = useState("");
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
@@ -271,10 +276,52 @@ function SettingsPage() {
     { id: "logo", icon: ImagePlus, label: "Logo" },
     { id: "docs", icon: FileText, label: lang === "fr" ? "Documents" : "Documents" },
     { id: "bank", icon: Landmark, label: lang === "fr" ? "Bancaire" : "Bank" },
+    { id: "export_compta", icon: Download, label: lang === "fr" ? "Export Comptable" : "Accounting Export" as any },
+    { id: "team", icon: Users, label: lang === "fr" ? "Équipe" : "Team" as any },
+    { id: "brand", icon: Paintbrush, label: lang === "fr" ? "Marque Blanche" : "White Label" as any },
     { id: "integrations", icon: SlidersHorizontal, label: "Intégrations" },
     { id: "subscription", icon: CreditCard, label: "Abonnement" },
     { id: "prefs", icon: Palette, label: t("pref.title") },
   ];
+
+  const plan = profile?.plan_tier || "solo";
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [requiredPlan, setRequiredPlan] = useState<"pro" | "agency">("pro");
+  const [exportMonth, setExportMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const handleExportCSV = () => {
+    const [year = "0", month = "0"] = exportMonth.split("-");
+    const filteredInvoices = invoices.filter((inv: Invoice) => {
+      if (!inv.date) return false;
+      const d = new Date(inv.date);
+      return d.getFullYear() === parseInt(year) && (d.getMonth() + 1) === parseInt(month);
+    });
+    
+    if (filteredInvoices.length === 0) {
+      alert(lang === "fr" ? "Aucune facture sur ce mois." : "No invoices for this month.");
+      return;
+    }
+    
+    const csv = generateAccountingExportCSV(filteredInvoices);
+    downloadCSV(csv, `export_compta_${exportMonth}.csv`);
+  };
+
+  const handleSectionClick = (id: Section) => {
+    if (id === "export_compta" && plan === "solo") {
+      setRequiredPlan("pro");
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    if ((id === "team" || id === "brand") && (plan === "solo" || plan === "pro")) {
+      setRequiredPlan("agency");
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    setActiveSection(id);
+  };
 
   return (
     <>
@@ -331,7 +378,7 @@ function SettingsPage() {
                 icon={s.icon}
                 label={s.label}
                 active={activeSection === s.id}
-                onClick={setActiveSection}
+                onClick={handleSectionClick}
               />
             ))}
           </div>
@@ -345,7 +392,7 @@ function SettingsPage() {
               <button
                 key={s.id}
                 type="button"
-                onClick={() => setActiveSection(s.id)}
+                onClick={() => handleSectionClick(s.id)}
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
                   activeSection === s.id
@@ -1047,6 +1094,72 @@ function SettingsPage() {
             </div>
           )}
 
+          {/* ── Export Comptable ── */}
+          {activeSection === "export_compta" && (
+            <div className="card-elevated p-6 space-y-5">
+              <h2 className="text-sm font-semibold">{lang === "fr" ? "Export Comptable (FEC, CSV)" : "Accounting Export (CSV)"}</h2>
+              <div className="flex flex-col gap-4 max-w-md">
+                <p className="text-sm text-muted-foreground">
+                  {lang === "fr"
+                    ? "Générez un export compatible avec votre logiciel comptable (Pennylane, Tiime, etc.)."
+                    : "Generate an export compatible with your accounting software."}
+                </p>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1.5 block">{lang === "fr" ? "Mois à exporter" : "Month to export"}</Label>
+                    <Input
+                      type="month"
+                      value={exportMonth}
+                      onChange={(e) => setExportMonth(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    className="flex h-10 items-center gap-2 rounded-[var(--shape-control)] border-2 border-navy bg-primary px-4 text-sm font-bold text-white shadow-offset transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-offset-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    {lang === "fr" ? "Télécharger" : "Download"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Équipe ── */}
+          {activeSection === "team" && (
+            <div className="card-elevated p-6 space-y-5">
+              <h2 className="text-sm font-semibold">{lang === "fr" ? "Gestion de l'équipe" : "Team Management"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {lang === "fr"
+                  ? "Invitez jusqu'à 5 utilisateurs, gérez leurs rôles et permissions."
+                  : "Invite up to 5 users, manage their roles and permissions."}
+              </p>
+              <div className="rounded-lg border border-border p-8 text-center text-muted-foreground bg-muted/20">
+                <Users className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">{lang === "fr" ? "Fonctionnalité en cours de développement" : "Feature under development"}</p>
+                <p className="text-xs mt-1">{lang === "fr" ? "La gestion fine des accès arrive bientôt." : "Granular access control is coming soon."}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Marque Blanche ── */}
+          {activeSection === "brand" && (
+            <div className="card-elevated p-6 space-y-5">
+              <h2 className="text-sm font-semibold">{lang === "fr" ? "Marque Blanche" : "White Label"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {lang === "fr"
+                  ? "Personnalisez le domaine du portail client et les adresses d'expédition d'emails."
+                  : "Customize the client portal domain and email sending addresses."}
+              </p>
+              <div className="rounded-lg border border-border p-8 text-center text-muted-foreground bg-muted/20">
+                <Paintbrush className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">{lang === "fr" ? "Fonctionnalité en cours de configuration" : "Feature being configured"}</p>
+                <p className="text-xs mt-1">{lang === "fr" ? "Contactez votre account manager pour configurer vos DNS." : "Contact your account manager to set up your DNS."}</p>
+              </div>
+            </div>
+          )}
+
           {/* ── Préférences ── */}
           {activeSection === "prefs" && (
             <div className="space-y-5">
@@ -1185,6 +1298,12 @@ function SettingsPage() {
           )}
         </div>
       </div>
+      
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        requiredPlan={requiredPlan}
+      />
     </>
   );
 }

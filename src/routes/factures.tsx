@@ -51,6 +51,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ReminderModal } from "@/components/ReminderModal";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export const Route = createFileRoute("/factures")({
   head: () => ({
@@ -101,13 +102,14 @@ function daysSince(iso: string) {
 function Invoices() {
   const { t, money, date, lang } = useI18n();
   const navigate = useNavigate();
-  const { invoices, addInvoice, updateInvoice, company, updateCompany, clients, addClient, quotes, updateQuote } = useData();
+  const { invoices, addInvoice, updateInvoice, company, updateCompany, clients, addClient, quotes, updateQuote, profile } = useData();
   const [filter, setFilter] = useState<InvoiceStatus | "all">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
   
   const [isNewOpen, setIsNewOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [newClientType, setNewClientType] = useState<"pro" | "particulier">("pro");
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
@@ -233,6 +235,20 @@ function Invoices() {
 
   const handleCreateInvoiceFromQuote = (status: InvoiceStatus = "draft") => {
     if (!quoteToInvoice || selectedQuoteLines.length === 0) return;
+    const plan = profile?.plan_tier || "solo";
+    if (plan === "solo") {
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const invoicesThisMonth = invoices.filter(inv => {
+        const d = new Date(inv.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      if (invoicesThisMonth.length >= 3) {
+        setIsUpgradeModalOpen(true);
+        return;
+      }
+    }
+
     const today = new Date();
     const due = new Date(today);
     due.setDate(today.getDate() + (company.paymentTermsDays || 30));
@@ -309,7 +325,7 @@ function Invoices() {
     }
     setIsSendingEmail(true);
     try {
-      const pdfBase64 = await generateInvoicePdfBase64(emailInvoice, company);
+      const pdfBase64 = await generateInvoicePdfBase64(emailInvoice, company, profile?.plan_tier);
       const html = generateInvoiceEmailHtml(emailInvoice, company, emailTemplateId);
       const res = await fetch("/api/quotes/send", {
         method: "POST",
@@ -479,6 +495,20 @@ function Invoices() {
 
   // Dupliquer une facture
   const handleDuplicate = (inv: Invoice) => {
+    const plan = profile?.plan_tier || "solo";
+    if (plan === "solo") {
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const invoicesThisMonth = invoices.filter(i => {
+        const d = new Date(i.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      if (invoicesThisMonth.length >= 3) {
+        setIsUpgradeModalOpen(true);
+        return;
+      }
+    }
+
     const today = new Date();
     const due = new Date(today);
     due.setDate(today.getDate() + (company.paymentTermsDays || 30));
@@ -579,12 +609,25 @@ function Invoices() {
             </Dialog>
 
             <Dialog open={isNewOpen} onOpenChange={setIsNewOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {lang === "fr" ? "Nouvelle Facture" : "New Invoice"}
-                </Button>
-              </DialogTrigger>
+              <Button onClick={() => {
+                const plan = profile?.plan_tier || "solo";
+                if (plan === "solo") {
+                  const currentMonth = new Date().getMonth();
+                  const currentYear = new Date().getFullYear();
+                  const invoicesThisMonth = invoices.filter(inv => {
+                    const d = new Date(inv.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                  });
+                  if (invoicesThisMonth.length >= 3) {
+                    setIsUpgradeModalOpen(true);
+                    return;
+                  }
+                }
+                setIsNewOpen(true);
+              }}>
+                <Plus className="mr-2 h-4 w-4" />
+                {lang === "fr" ? "Nouvelle Facture" : "New Invoice"}
+              </Button>
               <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Créer une facture</DialogTitle>
@@ -1133,7 +1176,7 @@ function Invoices() {
                           disabled={exporting === inv.number}
                           onClick={async () => {
                             setExporting(inv.number);
-                            await exportInvoicePdf(inv, company);
+                            await exportInvoicePdf(inv, company, profile?.plan_tier);
                             setExporting(null);
                           }}
                           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
@@ -1308,10 +1351,18 @@ function Invoices() {
 
       {/* ReminderModal */}
       <ReminderModal
-        invoice={reminderInvoice}
         isOpen={isReminderOpen}
         onClose={() => setIsReminderOpen(false)}
-        onSend={handleSendReminder}
+        invoiceNumber={reminderInvoice?.number || ""}
+        onSend={(type) => handleSendReminder(reminderInvoice?.number || "", type)}
+      />
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="Limite de factures atteinte"
+        description="Le forfait Solo est limité à 3 factures par mois. Passez au forfait Pro pour créer des factures en illimité."
+        requiredPlan="pro"
       />
 
       {/* ── Modal Envoi Facture par Email ───────────────────────────────── */}

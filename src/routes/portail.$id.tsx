@@ -177,10 +177,10 @@ function ClientPortalPremium() {
   // l'artisan qui prévisualise son propre devis, on utilise la même source
   // de vérité pour éviter toute divergence d'affichage.
   const quote = liveQuote;
-  const company: { name?: string; email?: string; logoBase64?: string } = liveCompany ?? {};
+  const company: any = liveCompany ?? {};
 
   const docData = quote ? quoteToDocumentData(quote) : null;
-  const docCompany = company ? companyToDocCompany(company) : null;
+  const docCompany = company ? companyToDocCompany(company, company.plan) : null;
 
   // Un devis est "signé" soit via Supabase (status string DB), soit via payload (objet {fr,en}), soit localement
   const statusStr = typeof quote?.status === "string" ? quote.status : quote?.status?.fr ?? "";
@@ -232,7 +232,7 @@ function ClientPortalPremium() {
 
   const handleDownload = async () => {
     setExporting(true);
-    await exportQuotePdf(quote, company);
+    await exportQuotePdf(quote, company, company.plan);
     setExporting(false);
   };
 

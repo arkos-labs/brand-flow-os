@@ -84,10 +84,20 @@ export const Route = createFileRoute("/api/quotes/get")({
             });
           }
 
+          let planTier = "solo";
+          if (org.owner_id) {
+            const { data: profile } = await admin
+              .from("profiles")
+              .select("plan_tier")
+              .eq("id", org.owner_id)
+              .maybeSingle();
+            if (profile) planTier = profile.plan_tier || "solo";
+          }
+
           return new Response(
             JSON.stringify({
               quote: dbQuoteToLegacyQuote(quote),
-              company: dbOrgToCompanySettings(org),
+              company: { ...dbOrgToCompanySettings(org), plan: planTier },
               docusealEnabled: isDocusealEnabled(),
             }),
             { status: 200, headers: { "Content-Type": "application/json" } },

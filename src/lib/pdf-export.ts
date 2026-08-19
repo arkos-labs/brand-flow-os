@@ -21,7 +21,7 @@ import type { CompanySettings, Quote, Invoice } from "./data-context";
 
 // ─── Convertisseurs de types ──────────────────────────────────────────────────
 
-export function companyToDocCompany(c: CompanySettings): DocumentCompany {
+export function companyToDocCompany(c: CompanySettings, plan: string = "pro"): DocumentCompany {
   return {
     name:              c.name || "Mon Entreprise",
     legalForm:         c.legalForm,
@@ -36,7 +36,7 @@ export function companyToDocCompany(c: CompanySettings): DocumentCompany {
     vatNumber:         c.vatNumber,
     capital:           c.capital,
     rcs:               c.rcs,
-    logoBase64:        c.logoBase64,
+    logoBase64:        plan === "solo" ? undefined : c.logoBase64,
     bankName:          c.bankName,
     iban:              c.iban,
     bic:               c.bic,
@@ -44,7 +44,7 @@ export function companyToDocCompany(c: CompanySettings): DocumentCompany {
     lateInterestRate:  c.lateInterestRate,
     recoveryFee:       c.recoveryFee,
     footerNote:        c.footerNote,
-    primaryColor:      c.primaryColor,
+    primaryColor:      plan === "solo" ? undefined : c.primaryColor,
   };
 }
 
@@ -243,9 +243,9 @@ function addDays(iso: string, days: number): string {
 /**
  * Génère le devis en format PDF (Base64) pour l'envoi par e-mail.
  */
-export async function generateQuotePdfBase64(quote: Quote, company: CompanySettings): Promise<string> {
+export async function generateQuotePdfBase64(quote: Quote, company: CompanySettings, plan: string = "pro"): Promise<string> {
   const docData    = quoteToDocumentData(quote);
-  const docCompany = companyToDocCompany(company);
+  const docCompany = companyToDocCompany(company, plan);
 
   // 1. HTML
   const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
@@ -312,9 +312,9 @@ export async function generateQuotePdfBase64(quote: Quote, company: CompanySetti
  * Exporte un devis en PDF en le téléchargeant directement.
  * Embarque le XML Factur-X à l'intérieur du fichier PDF généré.
  */
-export async function exportQuotePdf(quote: Quote, company: CompanySettings): Promise<void> {
+export async function exportQuotePdf(quote: Quote, company: CompanySettings, plan: string = "pro"): Promise<void> {
   const docData    = quoteToDocumentData(quote);
-  const docCompany = companyToDocCompany(company);
+  const docCompany = companyToDocCompany(company, plan);
 
   // ── 1. Générer le code HTML ──────────────────────────────
   const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
@@ -371,9 +371,9 @@ export async function exportQuotePdf(quote: Quote, company: CompanySettings): Pr
 /**
  * Exporte une facture en PDF (même template que l'aperçu) + télécharge le XML Factur-X.
  */
-export async function exportInvoicePdf(invoice: Invoice, company: CompanySettings): Promise<void> {
+export async function exportInvoicePdf(invoice: Invoice, company: CompanySettings, plan: string = "pro"): Promise<void> {
   const docData    = invoiceToDocumentData(invoice);
-  const docCompany = companyToDocCompany(company);
+  const docCompany = companyToDocCompany(company, plan);
 
   // ── 1. Générer le code HTML ──────────────────────────────
   const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
@@ -430,9 +430,9 @@ export async function exportInvoicePdf(invoice: Invoice, company: CompanySetting
 /**
  * Génère une facture en PDF et retourne le contenu encodé en base64 (pour envoi email).
  */
-export async function generateInvoicePdfBase64(invoice: Invoice, company: CompanySettings): Promise<string> {
+export async function generateInvoicePdfBase64(invoice: Invoice, company: CompanySettings, plan: string = "pro"): Promise<string> {
   const docData    = invoiceToDocumentData(invoice);
-  const docCompany = companyToDocCompany(company);
+  const docCompany = companyToDocCompany(company, plan);
 
   const element = createElement(DocumentTemplate, { doc: docData, company: docCompany, id: "print-doc" });
   const html    = renderToStaticMarkup(element);
