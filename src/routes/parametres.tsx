@@ -38,6 +38,16 @@ import { cn } from "@/lib/utils";
 import { searchCompanyBySiret, checkVatNumber, type VatCheckResult } from "@/lib/siret";
 import { useSupabaseData } from "@/lib/supabase-context";
 import { Plus } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/parametres")({
   head: () => ({
@@ -287,6 +297,87 @@ function SettingsPage() {
   const plan = profile?.plan_tier || "solo";
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [requiredPlan, setRequiredPlan] = useState<"pro" | "agency">("pro");
+  const [downgradePlanId, setDowngradePlanId] = useState<string | null>(null);
+  const [cancelPlanAlert, setCancelPlanAlert] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+
+  useEffect(() => {
+    if (profile?.plan_tier && profile.plan_tier !== "solo") {
+      fetch("/api/stripe/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profile.id }),
+      })
+      .then(r => r.json())
+      .then(data => {
+         if (!data.error) setSubscriptionStatus(data);
+      })
+      .catch(() => {});
+    }
+  }, [profile?.plan_tier, profile?.id]);
+
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/stripe/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profile?.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la résiliation");
+      
+      alert("Votre abonnement a été résilié et se terminera à la fin de la période de facturation en cours.");
+      setCancelPlanAlert(false);
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la résiliation");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handlePlanChange = async (targetPlanId: string) => {
+    try {
+      if ((!profile?.plan_tier || profile?.plan_tier === "solo") && targetPlanId !== "solo") {
+        const stripePriceId = targetPlanId === "pro" 
+          ? (import.meta.env.VITE_STRIPE_PRICE_PRO || "price_REPLACE_WITH_PRO_PRICE_ID")
+          : (import.meta.env.VITE_STRIPE_PRICE_AGENCY || "price_REPLACE_WITH_AGENCY_PRICE_ID");
+
+        const res = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            priceId: stripePriceId,
+            planName: targetPlanId,
+            email: profile?.email,
+            userId: profile?.id,
+            successUrl: window.location.origin + "/parametres?payment=success",
+            cancelUrl: window.location.origin + "/parametres?payment=cancelled",
+          }),
+        });
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+        else throw new Error(data.error);
+      } else {
+        const res = await fetch("/api/stripe/portal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerId: organization?.stripe_customer_id,
+            userId: profile?.id,
+            returnUrl: window.location.href,
+          }),
+        });
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+        else throw new Error(data.error || "Lien introuvable. Avez-vous déjà un abonnement ?");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur de redirection");
+    }
+  };
   const [exportMonth, setExportMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -966,69 +1057,116 @@ function SettingsPage() {
             <div className="card-elevated p-6 space-y-5">
               <h2 className="text-sm font-semibold">Gérer mon abonnement</h2>
               <p className="text-xs text-muted-foreground">
-                Gérez votre abonnement, passez au forfait supérieur (Pro, Agency) pour débloquer de nouvelles fonctionnalités ou mettez à jour votre moyen de paiement.
+                Choisissez votre forfait. La facturation est ajustée automatiquement (au prorata) lors d'un changement.
               </p>
 
-              <div className="rounded-lg border border-border p-5 bg-card flex flex-col items-start gap-4">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-bold text-foreground">Portail Client Sécurisé</h3>
-                    <p className="text-xs text-muted-foreground">Propulsé par Stripe</p>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                {[
+                  { id: "solo", name: "Solo", price: "0 €", desc: "Pour démarrer", features: ["3 documents / mois", "Support basique"] },
+                  { id: "pro", name: "Pro", price: "19,99 €", desc: "Freelances & indépendants", features: ["Documents illimités", "Relances", "Signature"] },
+                  { id: "agency", name: "Agency", price: "49,99 €", desc: "Agences & équipes", features: ["Multi-sociétés", "5 utilisateurs", "Marque blanche"] },
+                ].map((p) => {
+                  const isActive = profile?.plan_tier === p.id || (!profile?.plan_tier && p.id === "solo");
+                  return (
+                    <div key={p.id} className={cn("border rounded-xl p-4 flex flex-col transition-all", isActive ? "border-blue-500 bg-blue-50/50 shadow-sm" : "border-border hover:border-blue-300")}>
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-foreground">{p.name}</h3>
+                        {isActive && <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Actuel</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{p.desc}</p>
+                      <div className="text-lg font-black mb-4 text-foreground">{p.price}<span className="text-xs text-muted-foreground font-normal"> /mois</span></div>
+                      <ul className="text-xs space-y-1.5 flex-1 mb-4 text-foreground">
+                        {p.features.map(f => (
+                          <li key={f} className="flex gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" /> {f}</li>
+                        ))}
+                      </ul>
+                      
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (profile?.plan_tier === "agency" && p.id !== "agency" && ownedOrganizations.length > 1) {
+                            setDowngradePlanId(p.id);
+                            return;
+                          }
+                          const btn = e.currentTarget;
+                          const originalText = btn.innerHTML;
+                          btn.innerHTML = "Patientez...";
+                          btn.disabled = true;
+                          await handlePlanChange(p.id);
+                          btn.innerHTML = originalText;
+                          btn.disabled = false;
+                        }}
+                        className={cn(
+                          "w-full py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center",
+                          isActive ? "bg-muted text-muted-foreground cursor-default" : "bg-blue-600 text-white hover:bg-blue-700"
+                        )}
+                        disabled={isActive}
+                      >
+                        {isActive ? "Plan actif" : "Choisir ce forfait"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="w-full">
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Vous allez être redirigé vers l'interface sécurisée Stripe où vous pourrez gérer vos factures, changer de carte bancaire, et ajuster votre plan (options multi-sociétés, utilisateurs supplémentaires, etc.).
-                  </p>
-                  
-                  <button
-                    type="button"
-                    onClick={async (e) => {
+              {(profile?.plan_tier && profile?.plan_tier !== "solo") && (
+                 <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg border border-border">
+                   <div>
+                     <h4 className="text-sm font-semibold">Portail de facturation Stripe</h4>
+                     <p className="text-xs text-muted-foreground mt-0.5">Téléchargez vos factures, mettez à jour votre CB ou résiliez.</p>
+                     {subscriptionStatus?.cancel_at && (
+                       <p className="text-xs font-bold text-destructive mt-1">
+                         ⚠️ Votre abonnement se terminera le {new Date(subscriptionStatus.cancel_at * 1000).toLocaleDateString()}.
+                       </p>
+                     )}
+                   </div>
+                   <div className="flex items-center gap-2">
+                     {!subscriptionStatus?.cancel_at && (
+                       <button
+                        type="button"
+                        onClick={() => setCancelPlanAlert(true)}
+                        className="text-sm bg-destructive/10 text-destructive border border-destructive/20 px-3 py-2 rounded-lg font-medium hover:bg-destructive hover:text-white transition-colors"
+                       >
+                         Résilier l'abonnement
+                       </button>
+                     )}
+                     <button
+                      type="button"
+                      onClick={async (e) => {
                       e.preventDefault();
                       const btn = e.currentTarget;
-                      const originalText = btn.innerHTML;
-                      btn.innerHTML = "Redirection...";
-                      btn.disabled = true;
-                      
+                      const orig = btn.innerHTML;
+                      btn.innerHTML = "...";
                       try {
-                        // On passe un org ID ou customerId si dispo, sinon le backend le trouvera
                         const res = await fetch("/api/stripe/portal", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            customerId: organization?.stripe_customer_id, // Depuis organizations table
-                            returnUrl: window.location.href,
+                          body: JSON.stringify({ 
+                            customerId: organization?.stripe_customer_id, 
+                            userId: profile?.id,
+                            returnUrl: window.location.href 
                           }),
                         });
-                        
                         const data = await res.json();
-                        if (!res.ok) throw new Error(data.error || "Erreur lors de l'accès au portail");
-                        if (data.url) {
-                          window.location.href = data.url;
-                        } else {
-                          throw new Error("Lien introuvable");
-                        }
-                      } catch (err: any) {
-                        alert(err.message || "Impossible d'ouvrir le portail d'abonnement. Avez-vous déjà souscrit ?");
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
+                        if (data.url) window.location.href = data.url;
+                      } catch {
+                        btn.innerHTML = orig;
                       }
                     }}
-                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-blue-700"
-                  >
-                    Ouvrir le portail d'abonnement <ExternalLink className="w-4 h-4" />
-                  </button>
-                  {!organization?.stripe_customer_id && (
-                    <p className="mt-2 text-xs text-warning-foreground font-medium">
-                      ⚠️ Aucun abonnement actif rattaché à cette organisation. Souscrivez depuis l'onglet Tarifs.
-                    </p>
-                  )}
-                </div>
-              </div>
+                    className="text-sm bg-background border border-border px-3 py-2 rounded-lg font-medium hover:bg-muted transition-colors flex items-center gap-1.5"
+                   >
+                     Accéder au portail <ExternalLink className="w-3.5 h-3.5" />
+                   </button>
+                 </div>
+                 </div>
+              )}
+              
+              {(!profile?.plan_tier || profile?.plan_tier === "solo") && (
+                <p className="mt-2 text-xs text-warning-foreground font-medium">
+                  ⚠️ Vous êtes actuellement sur le plan gratuit Solo.
+                </p>
+              )}
 
               {/* ── Gestion multi-entreprises (plan Agency) ── */}
               {(organization?.plan_tier === "agency") && (
@@ -1304,6 +1442,77 @@ function SettingsPage() {
         onClose={() => setIsUpgradeModalOpen(false)}
         requiredPlan={requiredPlan}
       />
+      <AlertDialog open={!!downgradePlanId} onOpenChange={(open) => !open && setDowngradePlanId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Rétrogradation de forfait
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Vous êtes sur le point de passer à un forfait inférieur alors que vous possédez <strong>plusieurs entreprises</strong>.
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Les données de vos entreprises supplémentaires seront <strong>supprimées dans un délai de 2 mois</strong>.</li>
+                <li>D'ici là, l'accès à ces entreprises sera restreint et <strong>non modifiable</strong> (lecture seule).</li>
+                <li>Si vous passez en Solo, vous ne pourrez créer des devis que sur <strong>un seul</strong> des comptes.</li>
+              </ul>
+              <p>
+                Êtes-vous sûr de vouloir continuer vers le portail de gestion pour changer de forfait ?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (downgradePlanId) {
+                  handlePlanChange(downgradePlanId);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              Compris, continuer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={cancelPlanAlert} onOpenChange={(open) => !isCancelling && setCancelPlanAlert(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Résilier mon abonnement
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Vous êtes sur le point d'<strong>annuler définitivement votre abonnement</strong>.
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Votre facturation sera immédiatement interrompue pour le prochain cycle.</li>
+                <li>Vous conserverez l'accès aux fonctionnalités premium jusqu'à la fin de la période déjà payée.</li>
+                <li>À l'expiration, votre compte passera sur le forfait gratuit Solo (avec les limites associées).</li>
+              </ul>
+              <p>Êtes-vous sûr de vouloir résilier ?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancelSubscription();
+              }}
+              disabled={isCancelling}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {isCancelling ? "Résiliation..." : "Confirmer la résiliation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

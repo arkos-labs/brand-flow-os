@@ -7,9 +7,25 @@ export const Route = createFileRoute("/api/stripe/portal")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { customerId, returnUrl } = body;
+          const { customerId, userId, returnUrl } = body;
+          let finalCustomerId = customerId;
 
-          if (!customerId) {
+          if (!finalCustomerId && userId) {
+            const { getSupabaseAdmin } = await import("@/lib/supabase-admin");
+            const supabase = getSupabaseAdmin();
+            const { data: org } = await supabase
+              .from("organizations")
+              .select("stripe_customer_id")
+              .eq("owner_id", userId)
+              .not("stripe_customer_id", "is", null)
+              .limit(1)
+              .single();
+            if (org?.stripe_customer_id) {
+              finalCustomerId = org.stripe_customer_id;
+            }
+          }
+
+          if (!finalCustomerId) {
             return new Response(JSON.stringify({ error: "Client Stripe introuvable." }), {
               status: 400,
               headers: { "Content-Type": "application/json" },

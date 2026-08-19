@@ -24,19 +24,35 @@ export const Route = createFileRoute("/api/stripe/checkout")({
             });
           }
 
+          let hasCustomer = false;
+          let customerId = undefined;
+          
+          if (userId) {
+            const supabase = getSupabaseAdmin();
+            const { data: org } = await supabase
+              .from("organizations")
+              .select("stripe_customer_id")
+              .eq("owner_id", userId)
+              .single();
+              
+            if (org?.stripe_customer_id) {
+              hasCustomer = true;
+              customerId = org.stripe_customer_id;
+            }
+          }
+
           const sessionOptions: any = {
             payment_method_types: ["card"],
             line_items: [
               {
-                price: priceId, // ID du prix Stripe (ex: price_1Pox...)
+                price: priceId,
                 quantity: 1,
               },
             ],
             mode: "subscription",
-            subscription_data: planName === "pro" || planName === "agency" ? {
+            subscription_data: (planName === "pro" || planName === "agency") && !hasCustomer ? {
               trial_period_days: 15,
             } : undefined,
-            customer_email: email, // Pré-remplir l'email si disponible
             success_url: successUrl || request.headers.get("referer") || "http://localhost:5173",
             cancel_url: cancelUrl || request.headers.get("referer") || "http://localhost:5173",
             metadata: {
@@ -44,6 +60,12 @@ export const Route = createFileRoute("/api/stripe/checkout")({
               plan_tier: planName || "pro",
             },
           };
+          
+          if (customerId) {
+            sessionOptions.customer = customerId;
+          } else if (email) {
+            sessionOptions.customer_email = email;
+          }
           
           if (userId) {
             sessionOptions.client_reference_id = userId;

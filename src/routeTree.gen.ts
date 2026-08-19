@@ -51,8 +51,10 @@ import { Route as ApiQuotesGetRouteImport } from './routes/api/quotes/get'
 import { Route as ApiQuotesRefuseRouteImport } from './routes/api/quotes/refuse'
 import { Route as ApiQuotesSendRouteImport } from './routes/api/quotes/send'
 import { Route as ApiQuotesSignRouteImport } from './routes/api/quotes/sign'
+import { Route as ApiStripeCancelRouteImport } from './routes/api/stripe/cancel'
 import { Route as ApiStripeCheckoutRouteImport } from './routes/api/stripe/checkout'
 import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
+import { Route as ApiStripeStatusRouteImport } from './routes/api/stripe/status'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthCalendlyCallbackRouteImport } from './routes/api/auth/calendly/callback'
@@ -272,6 +274,11 @@ const ApiQuotesSignRoute = ApiQuotesSignRouteImport.update({
   path: '/api/quotes/sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeCancelRoute = ApiStripeCancelRouteImport.update({
+  id: '/api/stripe/cancel',
+  path: '/api/stripe/cancel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeCheckoutRoute = ApiStripeCheckoutRouteImport.update({
   id: '/api/stripe/checkout',
   path: '/api/stripe/checkout',
@@ -280,6 +287,11 @@ const ApiStripeCheckoutRoute = ApiStripeCheckoutRouteImport.update({
 const ApiStripePortalRoute = ApiStripePortalRouteImport.update({
   id: '/api/stripe/portal',
   path: '/api/stripe/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeStatusRoute = ApiStripeStatusRouteImport.update({
+  id: '/api/stripe/status',
+  path: '/api/stripe/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
@@ -362,8 +374,10 @@ export interface FileRoutesByFullPath {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/cancel': typeof ApiStripeCancelRoute
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
@@ -415,8 +429,10 @@ export interface FileRoutesByTo {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/cancel': typeof ApiStripeCancelRoute
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
@@ -469,8 +485,10 @@ export interface FileRoutesById {
   '/api/quotes/refuse': typeof ApiQuotesRefuseRoute
   '/api/quotes/send': typeof ApiQuotesSendRoute
   '/api/quotes/sign': typeof ApiQuotesSignRoute
+  '/api/stripe/cancel': typeof ApiStripeCancelRoute
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
+  '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
@@ -524,8 +542,10 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/cancel'
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
@@ -577,8 +597,10 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/cancel'
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
@@ -630,8 +652,10 @@ export interface FileRouteTypes {
     | '/api/quotes/refuse'
     | '/api/quotes/send'
     | '/api/quotes/sign'
+    | '/api/stripe/cancel'
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
+    | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/calendly/callback'
@@ -684,8 +708,10 @@ export interface RootRouteChildren {
   ApiQuotesRefuseRoute: typeof ApiQuotesRefuseRoute
   ApiQuotesSendRoute: typeof ApiQuotesSendRoute
   ApiQuotesSignRoute: typeof ApiQuotesSignRoute
+  ApiStripeCancelRoute: typeof ApiStripeCancelRoute
   ApiStripeCheckoutRoute: typeof ApiStripeCheckoutRoute
   ApiStripePortalRoute: typeof ApiStripePortalRoute
+  ApiStripeStatusRoute: typeof ApiStripeStatusRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthCalendlyCallbackRoute: typeof ApiAuthCalendlyCallbackRoute
@@ -991,6 +1017,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuotesSignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/cancel': {
+      id: '/api/stripe/cancel'
+      path: '/api/stripe/cancel'
+      fullPath: '/api/stripe/cancel'
+      preLoaderRoute: typeof ApiStripeCancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/checkout': {
       id: '/api/stripe/checkout'
       path: '/api/stripe/checkout'
@@ -1003,6 +1036,13 @@ declare module '@tanstack/react-router' {
       path: '/api/stripe/portal'
       fullPath: '/api/stripe/portal'
       preLoaderRoute: typeof ApiStripePortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/status': {
+      id: '/api/stripe/status'
+      path: '/api/stripe/status'
+      fullPath: '/api/stripe/status'
+      preLoaderRoute: typeof ApiStripeStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/stripe/webhook': {
@@ -1100,8 +1140,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuotesRefuseRoute: ApiQuotesRefuseRoute,
   ApiQuotesSendRoute: ApiQuotesSendRoute,
   ApiQuotesSignRoute: ApiQuotesSignRoute,
+  ApiStripeCancelRoute: ApiStripeCancelRoute,
   ApiStripeCheckoutRoute: ApiStripeCheckoutRoute,
   ApiStripePortalRoute: ApiStripePortalRoute,
+  ApiStripeStatusRoute: ApiStripeStatusRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthCalendlyCallbackRoute: ApiAuthCalendlyCallbackRoute,
