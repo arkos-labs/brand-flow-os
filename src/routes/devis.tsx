@@ -64,6 +64,7 @@ import {
 } from "@/lib/invoice-from-quote";
 import { AIQuoteWidget, AIQuoteResultItem } from "@/components/AIQuoteWidget";
 import { Sparkles, Bot, FileText, Clock } from "lucide-react";
+import { useSupabaseData } from "@/lib/supabase-context";
 
 function AutocompleteInput({
   value,
@@ -193,8 +194,8 @@ function QuotesInner() {
     products,
     clients,
     addClient,
-    profile,
   } = useData();
+  const { profile } = useSupabaseData();
   const [exporting, setExporting] = useState<string | null>(null);
 
   // Preview Quote State
@@ -645,7 +646,7 @@ function QuotesInner() {
                 const currentYear = new Date().getFullYear();
                 // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
                 const quotesThisMonth = quotes.filter(q => {
-                  const d = new Date(q.issue_date);
+                  const d = new Date(q.date);
                   return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                 });
                 const invoicesThisMonth = invoices.filter(i => {
@@ -1118,7 +1119,7 @@ function QuotesInner() {
             const currentMonth = new Date().getMonth();
             const currentYear = new Date().getFullYear();
             const quotesThisMonth = quotes.filter(q => {
-              const d = new Date(q.issue_date);
+              const d = new Date(q.date);
               return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             });
             const invoicesThisMonth = invoices.filter(i => {
@@ -1284,7 +1285,7 @@ function QuotesInner() {
                   const currentMonth = new Date().getMonth();
                   const currentYear = new Date().getFullYear();
                   const quotesThisMonth = quotes.filter(q => {
-                    const d = new Date(q.issue_date);
+                    const d = new Date(q.date);
                     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                   });
                   const invoicesThisMonth = invoices.filter(i => {
@@ -1472,7 +1473,7 @@ function QuotesInner() {
                         const currentMonth = new Date().getMonth();
                         const currentYear = new Date().getFullYear();
                         const quotesThisMonth = quotes.filter(quote => {
-                          const d = new Date(quote.issue_date);
+                          const d = new Date(quote.date);
                           return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                         });
                         const invoicesThisMonth = invoices.filter(i => {
@@ -1726,7 +1727,7 @@ function QuotesInner() {
                     const currentMonth = new Date().getMonth();
                     const currentYear = new Date().getFullYear();
                     const quotesThisMonth = quotes.filter(quote => {
-                      const d = new Date(quote.issue_date);
+                      const d = new Date(quote.date);
                       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                     });
                     const invoicesThisMonth = invoices.filter(i => {
