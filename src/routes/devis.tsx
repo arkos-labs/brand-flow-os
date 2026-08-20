@@ -648,7 +648,11 @@ function QuotesInner() {
                   const d = new Date(q.issue_date);
                   return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                 });
-                if (quotesThisMonth.length >= 3) {
+                const invoicesThisMonth = invoices.filter(i => {
+                  const d = new Date(i.issue_date || i.date);
+                  return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                });
+                if (quotesThisMonth.length + invoicesThisMonth.length >= 3) {
                   setIsUpgradeModalOpen(true);
                   return;
                 }
@@ -1094,7 +1098,7 @@ function QuotesInner() {
       isOpen={isUpgradeModalOpen}
       onClose={() => setIsUpgradeModalOpen(false)}
       title="Limite de devis atteinte"
-      description="Le forfait Solo est limité à 3 devis par mois. Passez au forfait Pro pour créer des devis en illimité."
+      description="Le forfait Solo est limité à 3 documents (devis ou factures) par mois. Passez au forfait Pro pour en créer en illimité."
       requiredPlan="pro"
     />
 

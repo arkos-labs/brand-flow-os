@@ -241,10 +241,14 @@ function Invoices() {
       const currentYear = new Date().getFullYear();
       // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
       const invoicesThisMonth = invoices.filter(inv => {
-        const d = new Date(inv.issue_date);
+        const d = new Date(inv.issue_date || inv.date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
-      if (invoicesThisMonth.length >= 3) {
+      const quotesThisMonth = quotes.filter(q => {
+        const d = new Date(q.issue_date || q.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      if (invoicesThisMonth.length + quotesThisMonth.length >= 3) {
         setIsUpgradeModalOpen(true);
         return;
       }
@@ -502,10 +506,14 @@ function Invoices() {
       const currentYear = new Date().getFullYear();
       // FIX BUG SECONDAIRE : utiliser issue_date (champ DB Supabase) au lieu de date (ancien champ local)
       const invoicesThisMonth = invoices.filter(i => {
-        const d = new Date(i.issue_date);
+        const d = new Date(i.issue_date || i.date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
-      if (invoicesThisMonth.length >= 3) {
+      const quotesThisMonth = quotes.filter(q => {
+        const d = new Date(q.issue_date || q.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      if (invoicesThisMonth.length + quotesThisMonth.length >= 3) {
         setIsUpgradeModalOpen(true);
         return;
       }
@@ -617,10 +625,14 @@ function Invoices() {
                   const currentMonth = new Date().getMonth();
                   const currentYear = new Date().getFullYear();
                   const invoicesThisMonth = invoices.filter(inv => {
-                    const d = new Date(inv.date);
+                    const d = new Date(inv.issue_date || inv.date);
                     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                   });
-                  if (invoicesThisMonth.length >= 3) {
+                  const quotesThisMonth = quotes.filter(q => {
+                    const d = new Date(q.issue_date || q.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                  });
+                  if (invoicesThisMonth.length + quotesThisMonth.length >= 3) {
                     setIsUpgradeModalOpen(true);
                     return;
                   }
@@ -1363,7 +1375,7 @@ function Invoices() {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="Limite de factures atteinte"
-        description="Le forfait Solo est limité à 3 factures par mois. Passez au forfait Pro pour créer des factures en illimité."
+        description="Le forfait Solo est limité à 3 documents (devis ou factures) par mois. Passez au forfait Pro pour en créer en illimité."
         requiredPlan="pro"
       />
 
