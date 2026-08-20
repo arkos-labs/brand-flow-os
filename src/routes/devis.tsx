@@ -1112,7 +1112,26 @@ function QuotesInner() {
       {/* ── AI Hero Card ───────────────────────────────────────────── */}
       <div
         className="card-revenue relative mb-6 cursor-pointer overflow-hidden rounded-xl p-6 transition-all hover:opacity-95 active:scale-[0.995]"
-        onClick={() => setIsAIWidgetOpen(true)}
+        onClick={() => {
+          const plan = profile?.plan_tier || "solo";
+          if (plan === "solo") {
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const quotesThisMonth = quotes.filter(q => {
+              const d = new Date(q.issue_date);
+              return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+            const invoicesThisMonth = invoices.filter(i => {
+              const d = new Date(i.issue_date || i.date);
+              return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+            if (quotesThisMonth.length + invoicesThisMonth.length >= 3) {
+              setIsUpgradeModalOpen(true);
+              return;
+            }
+          }
+          setIsAIWidgetOpen(true);
+        }}
       >
         {/* Background decoration */}
         <div className="pointer-events-none absolute -right-8 -top-8 opacity-[0.06]">
@@ -1260,6 +1279,23 @@ function QuotesInner() {
             <Button
               className="w-full"
               onClick={() => {
+                const plan = profile?.plan_tier || "solo";
+                if (plan === "solo") {
+                  const currentMonth = new Date().getMonth();
+                  const currentYear = new Date().getFullYear();
+                  const quotesThisMonth = quotes.filter(q => {
+                    const d = new Date(q.issue_date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                  });
+                  const invoicesThisMonth = invoices.filter(i => {
+                    const d = new Date(i.issue_date || i.date);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                  });
+                  if (quotesThisMonth.length + invoicesThisMonth.length >= 3) {
+                    setIsUpgradeModalOpen(true);
+                    return;
+                  }
+                }
                 if (!simulatorProduct) return;
                 setQuoteItems([
                   {
@@ -1431,6 +1467,23 @@ function QuotesInner() {
                   <button
                     title="Convertir en facture"
                     onClick={() => {
+                      const plan = profile?.plan_tier || "solo";
+                      if (plan === "solo") {
+                        const currentMonth = new Date().getMonth();
+                        const currentYear = new Date().getFullYear();
+                        const quotesThisMonth = quotes.filter(quote => {
+                          const d = new Date(quote.issue_date);
+                          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                        });
+                        const invoicesThisMonth = invoices.filter(i => {
+                          const d = new Date(i.issue_date || i.date);
+                          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                        });
+                        if (quotesThisMonth.length + invoicesThisMonth.length >= 3) {
+                          setIsUpgradeModalOpen(true);
+                          return;
+                        }
+                      }
                       setConvertingQuote(q);
                       setInvoiceDate(todayStr);
                       setInvoiceDueDate(dueDateStr);
@@ -1668,6 +1721,23 @@ function QuotesInner() {
               <Button
                 className="bg-primary hover:bg-primary/90 text-white"
                 onClick={() => {
+                  const plan = profile?.plan_tier || "solo";
+                  if (plan === "solo") {
+                    const currentMonth = new Date().getMonth();
+                    const currentYear = new Date().getFullYear();
+                    const quotesThisMonth = quotes.filter(quote => {
+                      const d = new Date(quote.issue_date);
+                      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                    });
+                    const invoicesThisMonth = invoices.filter(i => {
+                      const d = new Date(i.issue_date || i.date);
+                      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                    });
+                    if (quotesThisMonth.length + invoicesThisMonth.length >= 3) {
+                      setIsUpgradeModalOpen(true);
+                      return;
+                    }
+                  }
                   setConvertingQuote(previewQuote);
                   setInvoiceDate(todayStr);
                   setInvoiceDueDate(dueDateStr);
