@@ -52,6 +52,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ReminderModal } from "@/components/ReminderModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { useSupabaseData } from "@/lib/supabase-context";
 
 export const Route = createFileRoute("/factures")({
   head: () => ({
@@ -102,7 +103,8 @@ function daysSince(iso: string) {
 function Invoices() {
   const { t, money, date, lang } = useI18n();
   const navigate = useNavigate();
-  const { invoices, addInvoice, updateInvoice, company, updateCompany, clients, addClient, quotes, updateQuote, profile } = useData();
+  const { invoices, addInvoice, updateInvoice, company, updateCompany, clients, addClient, quotes, updateQuote } = useData();
+  const { profile } = useSupabaseData();
   const [filter, setFilter] = useState<InvoiceStatus | "all">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
