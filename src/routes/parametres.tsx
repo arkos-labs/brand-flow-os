@@ -338,12 +338,17 @@ function SettingsPage() {
     }
   };
 
+  // Mapping plan → Stripe price ID (live mode)
+  const PRICE_IDS: Record<string, string> = {
+    pro: "price_1U6E5F7tsPmmReQdupg0eEY2",    // 19.99€/mois
+    agency: "price_1U6E5F7tsPmmReQdP1CVwC6X", // 49.99€/mois
+  };
+
   const handlePlanChange = async (targetPlanId: string) => {
     try {
       if ((!profile?.plan_tier || profile?.plan_tier === "solo") && targetPlanId !== "solo") {
-        const stripePriceId = targetPlanId === "pro" 
-          ? (import.meta.env.VITE_STRIPE_PRICE_PRO || "price_REPLACE_WITH_PRO_PRICE_ID")
-          : (import.meta.env.VITE_STRIPE_PRICE_AGENCY || "price_REPLACE_WITH_AGENCY_PRICE_ID");
+        // Solo → Pro/Agency : nouvelle souscription via Checkout
+        const stripePriceId = PRICE_IDS[targetPlanId] || import.meta.env.VITE_STRIPE_PRICE_PRO;
 
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
@@ -361,13 +366,15 @@ function SettingsPage() {
         if (data.url) window.location.href = data.url;
         else throw new Error(data.error);
       } else {
+        // Pro ↔ Agency : changement avec prorata via Customer Portal (subscription_update_confirm)
+        const targetPriceId = PRICE_IDS[targetPlanId];
         const res = await fetch("/api/stripe/portal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customerId: organization?.stripe_customer_id,
             userId: profile?.id,
-            targetPlanId,
+            targetPriceId,
             returnUrl: window.location.href,
           }),
         });
