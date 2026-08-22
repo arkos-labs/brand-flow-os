@@ -367,6 +367,7 @@ function SettingsPage() {
           body: JSON.stringify({
             customerId: organization?.stripe_customer_id,
             userId: profile?.id,
+            targetPlanId,
             returnUrl: window.location.href,
           }),
         });

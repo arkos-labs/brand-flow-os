@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/stripe/portal")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { customerId, userId, returnUrl } = body;
+          const { customerId, userId, targetPlanId, returnUrl } = body;
           let finalCustomerId = customerId;
 
           if (!finalCustomerId && userId) {
@@ -32,10 +32,45 @@ export const Route = createFileRoute("/api/stripe/portal")({
             });
           }
 
-          const session = await stripe.billingPortal.sessions.create({
+          const portalOptions: Stripe.BillingPortal.SessionCreateParams = {
             customer: finalCustomerId,
             return_url: returnUrl || request.headers.get("referer") || "http://localhost:5173/parametres",
-          });
+          };
+
+          // Redirection directe vers le changement de forfait si un plan cible est fourni
+          if (targetPlanId) {
+            const targetPriceId = targetPlanId === "pro" 
+              ? process.env.VITE_STRIPE_PRICE_PRO 
+              : process.env.VITE_STRIPE_PRICE_AGENCY;
+
+            if (targetPriceId) {
+              const subscriptions = await stripe.subscriptions.list({
+                customer: finalCustomerId,
+                status: "active",
+                limit: 1,
+              });
+
+              if (subscriptions.data.length > 0) {
+                const sub = subscriptions.data[0];
+                // Vérifier que l'abonnement n'est pas en cours d'annulation, car le flux de mise à jour échouerait
+                if (!sub.cancel_at_period_end) {
+                  portalOptions.flow_data = {
+                    type: "subscription_update_confirm",
+                    subscription_update_confirm: {
+                      subscription: sub.id,
+                      items: [{
+                        id: sub.items.data[0].id,
+                        price: targetPriceId,
+                        quantity: 1,
+                      }],
+                    },
+                  };
+                }
+              }
+            }
+          }
+
+          const session = await stripe.billingPortal.sessions.create(portalOptions);
 
           return new Response(JSON.stringify({ url: session.url }), {
             status: 200,
