@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/stripe/portal")({
           }
 
           const session = await stripe.billingPortal.sessions.create({
-            customer: customerId,
+            customer: finalCustomerId,
             return_url: returnUrl || request.headers.get("referer") || "http://localhost:5173/parametres",
           });
 
