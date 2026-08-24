@@ -281,7 +281,7 @@ function ThemeToggle() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { lang, t, setLang } = useI18n();
-  const { invoices, quotes, organization, ownedOrganizations, switchOrganization, createOrganization } = useData();
+  const { invoices, quotes, organization, ownedOrganizations, switchOrganization, createOrganization, user } = useData();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -445,11 +445,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ── User area + Logout ── */}
       <div className="mt-3 flex items-center gap-3 rounded-[var(--shape-control)] border-2 border-sidebar-border/40 bg-sidebar-accent/20 px-3 py-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary-foreground">
-          CM
+          {user?.email ? user.email.substring(0, 2).toUpperCase() : "CM"}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold text-sidebar-foreground/90">
-            Nicolas Cherki
+            {user?.email || "Utilisateur"}
           </p>
           <p className="text-[10px] text-sidebar-foreground/45">Administrateur</p>
         </div>
