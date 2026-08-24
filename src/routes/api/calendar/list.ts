@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { requireAuthenticatedUserId } from '@/lib/auth-server'
 
 async function refreshGoogleToken(refreshToken: string) {
   const clientId =
@@ -35,6 +36,12 @@ export const Route = createFileRoute('/api/calendar/list')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // SÉCURITÉ : on vérifie d'abord la session serveur. Le refresh_token
+        // Google est un secret sensible — seul un utilisateur authentifié peut
+        // l'utiliser pour lister ses calendriers.
+        const auth = await requireAuthenticatedUserId(request);
+        if ("error" in auth) return auth.error;
+
         // Le refresh token voyage dans le corps de la requête, jamais dans
         // l'URL (query string) — évite qu'il finisse dans les logs serveur,
         // l'historique du navigateur ou les headers Referer.

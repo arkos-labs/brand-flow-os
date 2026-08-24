@@ -217,10 +217,13 @@ function Catalogue() {
 
   // ─── Import / Export handlers ─────────────────────────────────────────────
 
-  function handleExportExcel() {
+  async function handleExportExcel() {
     setExportLoading(true);
     try {
-      exportCatalogueToExcel(items);
+      await exportCatalogueToExcel(items);
+    } catch (e) {
+      console.error("Erreur export Excel:", e);
+      alert(lang === "fr" ? "Échec de l'export Excel. Vérifiez la connexion internet (chargement SheetJS)." : "Excel export failed. Check internet connection (SheetJS load).");
     } finally {
       setTimeout(() => setExportLoading(false), 800);
     }

@@ -31,14 +31,16 @@ export const Route = createFileRoute("/api/quotes/docuseal-start")({
         try {
           const admin = getSupabaseAdmin();
 
-          let quote: Record<string, unknown> | null = null;
-          const byToken = await admin.from("quotes").select("id, number, status, payload").filter("payload->>publicToken", "eq", token).maybeSingle();
-          if (!byToken.error && byToken.data) quote = byToken.data;
-          if (!quote) { const byId = await admin.from("quotes").select("id, number, status, payload").eq("id", token).maybeSingle(); if (!byId.error && byId.data) quote = byId.data; }
-          if (!quote) { const byNum = await admin.from("quotes").select("id, number, status, payload").eq("number", token).maybeSingle(); if (!byNum.error && byNum.data) quote = byNum.data; }
-          const error = null;
+          // Recherche STRICTE par publicToken. Aucun repli sur id/number :
+          // ce sont des identifiants devinables qui permettraient de lancer
+          // une signature sur le devis d'un autre compte (IDOR).
+          const { data: quote, error: byTokenError } = await admin
+            .from("quotes")
+            .select("id, number, status, payload")
+            .filter("payload->>publicToken", "eq", token)
+            .maybeSingle();
 
-          if (!quote) {
+          if (byTokenError || !quote) {
             return new Response(JSON.stringify({ error: "not_found" }), {
               status: 404,
               headers: { "Content-Type": "application/json" },

@@ -43,7 +43,6 @@ import { Route as ApiAiGenerateQuoteRouteImport } from './routes/api/ai/generate
 import { Route as ApiAiOcrExpenseRouteImport } from './routes/api/ai/ocr-expense'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCalendarListRouteImport } from './routes/api/calendar/list'
-import { Route as ApiCalendlyEventsRouteImport } from './routes/api/calendly/events'
 import { Route as ApiCronRelancesRouteImport } from './routes/api/cron/relances'
 import { Route as ApiDocumentsDocusealWebhookRouteImport } from './routes/api/documents/docuseal-webhook'
 import { Route as ApiQuotesDocusealStartRouteImport } from './routes/api/quotes/docuseal-start'
@@ -57,8 +56,6 @@ import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
 import { Route as ApiStripeStatusRouteImport } from './routes/api/stripe/status'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
-import { Route as ApiAuthCalendlyCallbackRouteImport } from './routes/api/auth/calendly/callback'
-import { Route as ApiAuthCalendlyLoginRouteImport } from './routes/api/auth/calendly/login'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
 import { Route as ApiAuthGoogleConsumeTokenRouteImport } from './routes/api/auth/google/consume-token'
 import { Route as ApiAuthGoogleLoginRouteImport } from './routes/api/auth/google/login'
@@ -233,11 +230,6 @@ const ApiCalendarListRoute = ApiCalendarListRouteImport.update({
   path: '/api/calendar/list',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCalendlyEventsRoute = ApiCalendlyEventsRouteImport.update({
-  id: '/api/calendly/events',
-  path: '/api/calendly/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiCronRelancesRoute = ApiCronRelancesRouteImport.update({
   id: '/api/cron/relances',
   path: '/api/cron/relances',
@@ -304,16 +296,6 @@ const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
   path: '/api/vies/check',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthCalendlyCallbackRoute = ApiAuthCalendlyCallbackRouteImport.update({
-  id: '/api/auth/calendly/callback',
-  path: '/api/auth/calendly/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthCalendlyLoginRoute = ApiAuthCalendlyLoginRouteImport.update({
-  id: '/api/auth/calendly/login',
-  path: '/api/auth/calendly/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
   id: '/api/auth/google/callback',
   path: '/api/auth/google/callback',
@@ -366,7 +348,6 @@ export interface FileRoutesByFullPath {
   '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
-  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
@@ -380,8 +361,6 @@ export interface FileRoutesByFullPath {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
-  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
-  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -421,7 +400,6 @@ export interface FileRoutesByTo {
   '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
-  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
@@ -435,8 +413,6 @@ export interface FileRoutesByTo {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
-  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
-  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -477,7 +453,6 @@ export interface FileRoutesById {
   '/api/ai/ocr-expense': typeof ApiAiOcrExpenseRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/calendar/list': typeof ApiCalendarListRoute
-  '/api/calendly/events': typeof ApiCalendlyEventsRoute
   '/api/cron/relances': typeof ApiCronRelancesRoute
   '/api/documents/docuseal-webhook': typeof ApiDocumentsDocusealWebhookRoute
   '/api/quotes/docuseal-start': typeof ApiQuotesDocusealStartRoute
@@ -491,8 +466,6 @@ export interface FileRoutesById {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
-  '/api/auth/calendly/callback': typeof ApiAuthCalendlyCallbackRoute
-  '/api/auth/calendly/login': typeof ApiAuthCalendlyLoginRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
   '/api/auth/google/login': typeof ApiAuthGoogleLoginRoute
@@ -534,7 +507,6 @@ export interface FileRouteTypes {
     | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
-    | '/api/calendly/events'
     | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
@@ -548,8 +520,6 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
-    | '/api/auth/calendly/callback'
-    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -589,7 +559,6 @@ export interface FileRouteTypes {
     | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
-    | '/api/calendly/events'
     | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
@@ -603,8 +572,6 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
-    | '/api/auth/calendly/callback'
-    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -644,7 +611,6 @@ export interface FileRouteTypes {
     | '/api/ai/ocr-expense'
     | '/api/calendar/events'
     | '/api/calendar/list'
-    | '/api/calendly/events'
     | '/api/cron/relances'
     | '/api/documents/docuseal-webhook'
     | '/api/quotes/docuseal-start'
@@ -658,8 +624,6 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/webhook'
     | '/api/vies/check'
-    | '/api/auth/calendly/callback'
-    | '/api/auth/calendly/login'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
     | '/api/auth/google/login'
@@ -700,7 +664,6 @@ export interface RootRouteChildren {
   ApiAiOcrExpenseRoute: typeof ApiAiOcrExpenseRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCalendarListRoute: typeof ApiCalendarListRoute
-  ApiCalendlyEventsRoute: typeof ApiCalendlyEventsRoute
   ApiCronRelancesRoute: typeof ApiCronRelancesRoute
   ApiDocumentsDocusealWebhookRoute: typeof ApiDocumentsDocusealWebhookRoute
   ApiQuotesDocusealStartRoute: typeof ApiQuotesDocusealStartRoute
@@ -714,8 +677,6 @@ export interface RootRouteChildren {
   ApiStripeStatusRoute: typeof ApiStripeStatusRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
-  ApiAuthCalendlyCallbackRoute: typeof ApiAuthCalendlyCallbackRoute
-  ApiAuthCalendlyLoginRoute: typeof ApiAuthCalendlyLoginRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
   ApiAuthGoogleConsumeTokenRoute: typeof ApiAuthGoogleConsumeTokenRoute
   ApiAuthGoogleLoginRoute: typeof ApiAuthGoogleLoginRoute
@@ -961,13 +922,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCalendarListRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/calendly/events': {
-      id: '/api/calendly/events'
-      path: '/api/calendly/events'
-      fullPath: '/api/calendly/events'
-      preLoaderRoute: typeof ApiCalendlyEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/cron/relances': {
       id: '/api/cron/relances'
       path: '/api/cron/relances'
@@ -1059,20 +1013,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiViesCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/calendly/callback': {
-      id: '/api/auth/calendly/callback'
-      path: '/api/auth/calendly/callback'
-      fullPath: '/api/auth/calendly/callback'
-      preLoaderRoute: typeof ApiAuthCalendlyCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/calendly/login': {
-      id: '/api/auth/calendly/login'
-      path: '/api/auth/calendly/login'
-      fullPath: '/api/auth/calendly/login'
-      preLoaderRoute: typeof ApiAuthCalendlyLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/auth/google/callback': {
       id: '/api/auth/google/callback'
       path: '/api/auth/google/callback'
@@ -1132,7 +1072,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiOcrExpenseRoute: ApiAiOcrExpenseRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCalendarListRoute: ApiCalendarListRoute,
-  ApiCalendlyEventsRoute: ApiCalendlyEventsRoute,
   ApiCronRelancesRoute: ApiCronRelancesRoute,
   ApiDocumentsDocusealWebhookRoute: ApiDocumentsDocusealWebhookRoute,
   ApiQuotesDocusealStartRoute: ApiQuotesDocusealStartRoute,
@@ -1146,8 +1085,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStripeStatusRoute: ApiStripeStatusRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
-  ApiAuthCalendlyCallbackRoute: ApiAuthCalendlyCallbackRoute,
-  ApiAuthCalendlyLoginRoute: ApiAuthCalendlyLoginRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
   ApiAuthGoogleConsumeTokenRoute: ApiAuthGoogleConsumeTokenRoute,
   ApiAuthGoogleLoginRoute: ApiAuthGoogleLoginRoute,

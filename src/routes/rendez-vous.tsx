@@ -17,9 +17,9 @@ import { fr } from "date-fns/locale";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData } from "@/lib/data-context";
-import { getMyOrgId } from "@/lib/supabase";
+import { getMyOrgId, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, authHeaders } from "@/lib/utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -217,9 +217,10 @@ function RendezVousPage() {
     queryFn: async () => {
       // Le refresh token passe dans le corps de la requête POST, jamais
       // dans l'URL — évite qu'il finisse dans les logs / l'historique.
+      const { data: session } = await supabase.auth.getSession();
       const res = await fetch("/api/calendar/list", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
         body: JSON.stringify({ refresh_token: company.google_refresh_token }),
       });
       const json = await res.json();
@@ -240,9 +241,10 @@ function RendezVousPage() {
     queryFn: async () => {
       // Le refresh token passe dans le corps de la requête POST, jamais
       // dans l'URL — évite qu'il finisse dans les logs / l'historique.
+      const { data: session } = await supabase.auth.getSession();
       const res = await fetch("/api/calendar/events", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           refresh_token: company.google_refresh_token,
           calendar_id: selectedCalendarId,

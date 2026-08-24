@@ -3,10 +3,15 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { dbQuoteToLegacyQuote, dbOrgToCompanySettings } from "@/lib/portal-adapters";
 import { isDocusealEnabled } from "@/lib/docuseal";
 
-// Route publique (pas d'authentification). Le devis est identifié par son
-// `payload->>publicToken` (uuid aléatoire généré à l'envoi), avec repli sur
-// `id` puis sur `number` pour compatibilité avec d'anciens liens. Jamais de
-// filtre par organization_id ici : seul le token fait foi.
+// Route publique (pas d'authentification). Le devis est identifié UNIQUEMENT
+// par son `payload->>publicToken` (uuid aléatoire généré à l'envoi).
+//
+// ⚠️ SÉCURITÉ : on NE recherche JAMAIS par `id` ni par `number`. Ces deux
+// identifiants sont devinables/énumérables (numéros séquentiels DV-YYYY-NNN,
+// UUID de la base) et permettraient à un attaquant d'accéder à n'importe quel
+// devis d'un autre compte sans posséder le lien public. Seul le token aléatoire
+// (présent dans l'email client) donne accès. C'est un correctif de faille IDOR
+// (Broken Object Level Authorization).
 export const Route = createFileRoute("/api/quotes/get")({
   server: {
     handlers: {
@@ -14,8 +19,7 @@ export const Route = createFileRoute("/api/quotes/get")({
         const url = new URL(request.url);
         const token = url.searchParams.get("token");
 
-        // Le token vient de l'URL publique : on borne strictement son
-        // format avant de l'injecter dans un filtre PostgREST `.or()`.
+        // Le token vient de l'URL publique : on borne strictement son format.
         if (!token || !/^[A-Za-z0-9_-]{1,64}$/.test(token)) {
           return new Response(JSON.stringify({ error: "missing_token" }), {
             status: 400,
@@ -26,45 +30,15 @@ export const Route = createFileRoute("/api/quotes/get")({
         try {
           const admin = getSupabaseAdmin();
 
-          // Cherche d'abord par token dans le payload JSON (cas normal — lien
-          // envoyé par email). Si non trouvé, repli sur id (UUID) puis number
-          // (compatibilité anciens liens). `.or()` PostgREST ne supporte pas
-          // les filtres JSONB dans la même clause — on enchaîne les requêtes.
-          let quote: Record<string, unknown> | null = null;
-          let quoteError: { message: string } | null = null;
-
-          // 1. Recherche par publicToken (champ JSONB payload->>'publicToken')
-          const byToken = await admin
+          // Recherche STRICTE par publicToken (champ JSONB payload->>'publicToken').
+          // Aucun repli sur id/number : c'est volontaire (voir en-tête).
+          const { data: quote, error: byTokenError } = await admin
             .from("quotes")
             .select("*")
             .filter("payload->>publicToken", "eq", token)
             .maybeSingle();
-          if (!byToken.error && byToken.data) {
-            quote = byToken.data;
-          }
 
-          // 2. Repli : id UUID exact
-          if (!quote) {
-            const byId = await admin
-              .from("quotes")
-              .select("*")
-              .eq("id", token)
-              .maybeSingle();
-            if (!byId.error && byId.data) quote = byId.data;
-          }
-
-          // 3. Repli : numéro de devis (ex. DV-2026-001)
-          if (!quote) {
-            const byNumber = await admin
-              .from("quotes")
-              .select("*")
-              .eq("number", token)
-              .maybeSingle();
-            if (!byNumber.error && byNumber.data) quote = byNumber.data;
-            else quoteError = byNumber.error;
-          }
-
-          if (quoteError || !quote) {
+          if (byTokenError || !quote) {
             return new Response(JSON.stringify({ error: "not_found" }), {
               status: 404,
               headers: { "Content-Type": "application/json" },

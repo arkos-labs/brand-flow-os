@@ -35,7 +35,7 @@ Application (authentifiée) :
 - `/paiements` → Suivi paiements + relances
 - `/archives` → Documents archivés
 - `/abonnements` → Abonnements / MRR
-- `/rendez-vous` → RDV (intégration Google Calendar + Calendly)
+- `/rendez-vous` → RDV (intégration Google Calendar)
 - `/tresorerie` → Cashflow prédictif
 - `/parametres` → Paramètres workspace, SIRET/TVA, préférences
 
@@ -181,7 +181,7 @@ bun run format   # prettier
 ### Phase 2 — Growth
 
 - [x] Relances (manuelles) — `ReminderModal.tsx`, `email-templates.ts`, `paiements.tsx`
-- [x] Intégration calendrier (Google Calendar + Calendly) — **non prévue dans la roadmap d'origine, déjà livrée**
+- [x] Intégration calendrier (Google Calendar) — Calendly retiré
 - [ ] Web-quotes interactifs (options à cocher, curseurs quantité) — à vérifier précisément dans `portail.$id.tsx`
 - [ ] Signature eIDAS — pas trouvé dans le code
 - [x] Paiement Stripe intégré (Pour les abonnements au SaaS)
@@ -250,7 +250,7 @@ audit_logs (PAF — piste d'audit fiable)
 | ---------------------- | ------------------------------------------- | -------------------------------------------------- |
 | **VIES (EU)**          | Validation numéro TVA intracommunautaire    | ✅ Fait (`api/vies/check.ts`)                      |
 | **Google OAuth**        | Authentification / Google Calendar          | ✅ Fait (`api/auth/google/*`, `api/calendar/*`)    |
-| **Calendly**            | Prise de RDV                                | ✅ Fait (`api/auth/calendly/*`, `api/calendly/*`) — non prévu à l'origine |
+| **Google Calendar**   | Prise de RDV                                | ✅ Fait (`api/calendar/*`, `api/auth/google/*`) |
 | **SIRENE / Pappers**    | Auto-complétion SIRET → données entreprise  | ⏳ À vérifier (siret.ts existe, source à confirmer) |
 | **Stripe**              | Paiement carte + virement (Abonnements SaaS)| ✅ Fait (`api/stripe/checkout.ts`, `webhook.ts`) |
 | **GoCardless**          | Prélèvement SEPA                            | ❌ Pas trouvé dans le code                          |
@@ -308,11 +308,11 @@ src/
     paiements.tsx                   ← Paiements / relances
     archives.tsx                     ← Documents archivés
     abonnements.tsx                    ← Abonnements / MRR
-    rendez-vous.tsx                      ← RDV (Google Calendar / Calendly)
+    rendez-vous.tsx                      ← RDV (Google Calendar)
     tresorerie.tsx                         ← Cashflow
     parametres.tsx                          ← Paramètres workspace
     portail.$id.tsx                           ← Portail client
-    api/                                       ← Endpoints serveur (auth Google/Calendly, calendar, VIES)
+    api/                                       ← Endpoints serveur (auth Google, calendar, VIES)
 ```
 
 > ⚠️ Il n'existe pas de route `/temps` (time-tracking) ni de fichier associé — l'ancienne référence a été retirée.

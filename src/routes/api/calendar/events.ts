@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { requireAuthenticatedUserId } from '@/lib/auth-server'
 
 // Rafraîchit l'access token Google à partir du refresh_token stocké
 // (le même token que celui utilisé pour l'envoi d'emails Gmail, avec en
@@ -36,6 +37,11 @@ export const Route = createFileRoute('/api/calendar/events')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // SÉCURITÉ : on vérifie d'abord la session serveur avant d'utiliser
+        // le refresh_token Google (secret sensible).
+        const auth = await requireAuthenticatedUserId(request);
+        if ("error" in auth) return auth.error;
+
         // Le refresh token voyage dans le corps de la requête, jamais dans
         // l'URL (query string) — évite qu'il finisse dans les logs serveur,
         // l'historique du navigateur ou les headers Referer.

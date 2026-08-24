@@ -1,21 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { stripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/stripe/cancel")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = await request.json();
-          const { userId } = body;
-
-          if (!userId) {
-            return new Response(JSON.stringify({ error: "Utilisateur non fourni." }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
+          // Vérifie la session serveur : on utilise l'id authentifié, jamais
+          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
+          const auth = await requireAuthenticatedUserId(request);
+          if ("error" in auth) return auth.error;
+          const userId = auth.userId;
 
           const supabase = getSupabaseAdmin();
           const { data: org } = await supabase

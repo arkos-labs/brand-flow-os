@@ -3,8 +3,46 @@
  * Import CSV et Export Excel (.xlsx) du catalogue de prestations
  */
 
-import * as XLSX from "xlsx";
+// ⚠️ SÉCURITÉ : le package npm `xlsx` (SheetJS) est abandonné et contient des
+// vulnérabilités connues SANS correctif (Prototype Pollution GHSA-4r6h-8v6p-xvw6,
+// ReDoS GHSA-5pgg-2g8v-p4x9). La version sûre est distribuée via le CDN officiel
+// SheetJS. On la charge dynamiquement à la demande au lieu d'importer le package.
+// L'import catalogue reste en CSV natif (ci-dessous) — le CDN ne sert que l'export Excel.
 import type { Product, ProductCategory, ProductUnit, VatRate } from "./demo-data";
+
+// Version SheetJS officielle sûre (le package npm ne doit pas être réinstallé).
+const SHEETJS_CDN_URL =
+  "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+
+let sheetjsPromise: Promise<any> | null = null;
+
+/**
+ * Charge SheetJS depuis le CDN officiel (une seule fois, mis en cache).
+ * Retourne l'objet global `XLSX` prêt à l'emploi.
+ */
+function loadSheetJS(): Promise<any> {
+  if (sheetjsPromise) return sheetjsPromise;
+  sheetjsPromise = new Promise((resolve, reject) => {
+    if (typeof document === "undefined") {
+      reject(new Error("SheetJS CDN n'est disponible que dans le navigateur."));
+      return;
+    }
+    if ((window as any).XLSX) {
+      resolve((window as any).XLSX);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = SHEETJS_CDN_URL;
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).XLSX) resolve((window as any).XLSX);
+      else reject(new Error("SheetJS chargé mais XLSX introuvable."));
+    };
+    script.onerror = () => reject(new Error("Impossible de charger SheetJS (CDN)."));
+    document.head.appendChild(script);
+  });
+  return sheetjsPromise;
+}
 
 // ── Colonnes CSV/Excel ────────────────────────────────────────────────────────
 
@@ -44,7 +82,10 @@ export interface ExportRow {
   Actif: string;
 }
 
-export function exportCatalogueToExcel(products: Product[], filename = "catalogue-prestations.xlsx") {
+export async function exportCatalogueToExcel(products: Product[], filename = "catalogue-prestations.xlsx") {
+  // Charge SheetJS depuis le CDN officiel (version sûre, pas le package npm vulnérable).
+  const XLSX = await loadSheetJS();
+
   // Feuille 1 : données
   const rows: ExportRow[] = products.map((p) => ({
     Référence: p.ref,

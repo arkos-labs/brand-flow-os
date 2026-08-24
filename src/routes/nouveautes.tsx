@@ -74,13 +74,6 @@ function NouveautesPage() {
             
             {[
               {
-                version: "Nouveau Module",
-                title: "Intégration Calendly",
-                date: "Aujourd'hui",
-                features: ["Synchronisation automatique de vos rendez-vous", "Liens Google Meet directement accessibles", "Ajout des contacts au CRM"],
-                desc: "Découvrez notre nouvelle intégration Calendly ! Vous pouvez désormais retrouver tous vos appels de découverte et vos démonstrations directement depuis votre espace de travail ClearQuote, sans avoir à jongler entre les applications."
-              },
-              {
                 version: "Mise à jour d'Août 2026",
                 title: "Nouveau tableau de bord de trésorerie",
                 date: "14 Août 2026",

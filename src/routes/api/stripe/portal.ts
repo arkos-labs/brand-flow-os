@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { stripe } from "@/lib/stripe";
+import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/stripe/portal")({
   server: {
@@ -7,7 +8,14 @@ export const Route = createFileRoute("/api/stripe/portal")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { customerId, userId, targetPlanId, returnUrl } = body;
+          const { customerId, targetPlanId, returnUrl } = body;
+
+          // Vérifie la session serveur : on utilise l'id authentifié, jamais
+          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
+          const auth = await requireAuthenticatedUserId(request);
+          if ("error" in auth) return auth.error;
+          const userId = auth.userId;
+
           let finalCustomerId = customerId;
 
           if (!finalCustomerId && userId) {

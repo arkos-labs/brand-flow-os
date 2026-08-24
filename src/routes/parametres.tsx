@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn, authHeaders } from "@/lib/utils";
 import { searchCompanyBySiret, checkVatNumber, type VatCheckResult } from "@/lib/siret";
 import { useSupabaseData } from "@/lib/supabase-context";
 import { Plus } from "lucide-react";
@@ -186,7 +186,7 @@ function PrefToggleRow({
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { company, updateCompany, invoices } = useData();
-  const { profile, organization, ownedOrganizations, createOrganization, switchOrganization } = useSupabaseData();
+  const { profile, session, organization, ownedOrganizations, createOrganization, switchOrganization } = useSupabaseData();
   const [newOrgName, setNewOrgName] = useState("");
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const { prefs, setPrefs } = usePrefs();
@@ -306,8 +306,8 @@ function SettingsPage() {
     if (profile?.plan_tier && profile.plan_tier !== "solo") {
       fetch("/api/stripe/status", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: profile.id }),
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
+        body: JSON.stringify({}),
       })
       .then(r => r.json())
       .then(data => {
@@ -322,8 +322,8 @@ function SettingsPage() {
     try {
       const res = await fetch("/api/stripe/cancel", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: profile?.id }),
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors de la résiliation");
@@ -352,12 +352,11 @@ function SettingsPage() {
 
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders(session, { "Content-Type": "application/json" }),
           body: JSON.stringify({
             priceId: stripePriceId,
             planName: targetPlanId,
             email: profile?.email,
-            userId: profile?.id,
             successUrl: window.location.origin + "/parametres?payment=success",
             cancelUrl: window.location.origin + "/parametres?payment=cancelled",
           }),
@@ -370,10 +369,9 @@ function SettingsPage() {
         const targetPriceId = PRICE_IDS[targetPlanId];
         const res = await fetch("/api/stripe/portal", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders(session, { "Content-Type": "application/json" }),
           body: JSON.stringify({
             customerId: organization?.stripe_customer_id,
-            userId: profile?.id,
             targetPriceId,
             returnUrl: window.location.href,
           }),
@@ -1149,10 +1147,9 @@ function SettingsPage() {
                       try {
                         const res = await fetch("/api/stripe/portal", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
+                          headers: authHeaders(session, { "Content-Type": "application/json" }),
                           body: JSON.stringify({ 
                             customerId: organization?.stripe_customer_id, 
-                            userId: profile?.id,
                             returnUrl: window.location.href 
                           }),
                         });

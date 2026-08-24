@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { stripe, isStripeEnabled } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/stripe/checkout")({
   server: {
@@ -15,7 +16,13 @@ export const Route = createFileRoute("/api/stripe/checkout")({
 
         try {
           const body = await request.json();
-          const { priceId, planName, email, userId, successUrl, cancelUrl } = body;
+          const { priceId, planName, email, successUrl, cancelUrl } = body;
+
+          // Vérifie la session serveur : on utilise l'id authentifié, jamais
+          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
+          const auth = await requireAuthenticatedUserId(request);
+          if ("error" in auth) return auth.error;
+          const userId = auth.userId;
 
           if (!priceId) {
             return new Response(JSON.stringify({ error: "priceId manquant (le forfait n'a pas été spécifié)" }), {

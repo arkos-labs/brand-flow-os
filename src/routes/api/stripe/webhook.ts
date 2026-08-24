@@ -87,7 +87,8 @@ export const Route = createFileRoute("/api/stripe/webhook")({
           return new Response(JSON.stringify({ received: true }), { status: 200 });
         } catch (err: any) {
           console.error("Webhook Error:", err.message);
-          return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+          // Ne pas exposer les détails internes (err.message) au client.
+          return new Response("Webhook Error", { status: 400 });
         }
       },
     },

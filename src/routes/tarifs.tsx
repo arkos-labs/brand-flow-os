@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ArrowRight, Zap, ShieldCheck, Menu, X } from "lucide-react";
 import React, { useState } from "react";
 import { useSupabaseData } from "@/lib/supabase-context";
+import { authHeaders } from "@/lib/utils";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Footer } from "@/components/Footer";
@@ -199,12 +200,11 @@ function TarifsPage() {
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           priceId: plan.stripePriceId,
           planName: plan.name.toLowerCase(), // On envoie le nom du plan (pro ou agency)
           email: session.user?.email,
-          userId: session.user?.id,
           successUrl: window.location.origin + "/tableau-de-bord?payment=success",
           cancelUrl: window.location.origin + "/tarifs?payment=cancelled",
         }),
