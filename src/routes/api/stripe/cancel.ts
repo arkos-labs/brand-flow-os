@@ -49,13 +49,15 @@ export const Route = createFileRoute("/api/stripe/cancel")({
           );
 
           if (!active) {
-            return new Response(
-              JSON.stringify({ error: "Aucun abonnement actif trouvé." }),
-              {
-                status: 404,
-                headers: { "Content-Type": "application/json" },
-              }
-            );
+            // Pas de subscription Stripe — downgrade direct en DB (compte test ou plan manuel)
+            await Promise.all([
+              supabase.from("organizations").update({ plan_tier: "solo" }).eq("owner_id", userId),
+              supabase.from("profiles").update({ plan_tier: "solo" }).eq("id", userId),
+            ]);
+            return new Response(JSON.stringify({ ok: true, fallback: true }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           // Résiliation à la fin de la période en cours (pas immédiate)
