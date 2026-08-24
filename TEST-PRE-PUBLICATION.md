@@ -1,4 +1,5 @@
-# PROMPT DE TEST PRE-PUBLICATION — ClearQuote (InvoicePro / Brand Flow OS)
+# PRtion. Ne conclus PAS "publiable" si tu as le moindre doute sur les limites de plan côté serveur, la conformité Factur-X/PAF, ou l'isolation multi-comptes.
+OMPT DE TEST PRE-PUBLICATION — ClearQuote (InvoicePro / Brand Flow OS)
 
 > Copie-colle le bloc suivant (entre les marqueurs `<<<PROMPT>>>` et `<<</PROMPT>>>`) à Claude.
 > Ce prompt lance un audit de pré-publication complet : connexion, 3 formules, restrictions par compte,
@@ -99,8 +100,7 @@ Pour chaque plan, teste côté app (UI) **ET** côté API (requête directe) :
 5. **✅ Ce qui est OK** (pour rassurer sur ce qui tient).
 6. Pour chaque élément bloquant, une correction concrète et actionnable.
 
-Sois impitoyable et factuel. Un SaaS de facturation conforme ne pardonne pas l'approximation. Ne conclus PAS "publiable" si tu as le moindre doute sur les limites de plan côté serveur, la conformité Factur-X/PAF, ou l'isolation multi-comptes.
-
+Sois impitoyable et factuel. Un SaaS de facturation conforme ne pardonne pas l'approxima
 <<</PROMPT>>>
 
 ---
