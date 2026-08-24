@@ -30,6 +30,20 @@ export const STATUS_MAP: Record<DbQuote["status"], { fr: string; en: string }> =
 
 export function dbQuoteToLegacyQuote(row: DbQuote): Quote {
   const payload = (row.payload ?? {}) as Partial<Quote>;
+
+  // FIX M2: Ne JAMAIS retomber sur row.id comme publicToken.
+  // row.id est l'UUID Supabase — un identifiant devinable / listable via
+  // d'autres endpoints. Le publicToken doit être un token opaque généré par
+  // l'artisan au moment de l'envoi. Si le payload n'en contient pas, c'est
+  // un devis qui n'a jamais été envoyé et qui ne devrait pas être accessible
+  // via le portail public.
+  const publicToken = payload.publicToken;
+  if (!publicToken) {
+    throw new Error(
+      `Quote ${row.number} n'a pas de publicToken — ce devis n'a jamais été envoyé et ne peut pas être exposé sur le portail public.`
+    );
+  }
+
   return {
     number: row.number,
     client: "Client",
@@ -40,7 +54,7 @@ export function dbQuoteToLegacyQuote(row: DbQuote): Quote {
     // de signature mettent à jour) ; on ne retombe sur le payload que si
     // elle est absente pour une raison quelconque.
     status: STATUS_MAP[row.status] ?? payload.status ?? STATUS_MAP.draft,
-    publicToken: payload.publicToken || row.id,
+    publicToken,
   } as Quote;
 }
 

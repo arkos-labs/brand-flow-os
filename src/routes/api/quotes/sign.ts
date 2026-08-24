@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/quotes/sign")({
           // un devis d'un autre compte sans posséder le lien public (IDOR).
           const { data: quote, error: byTokenError } = await admin
             .from("quotes")
-            .select("id, status, payload")
+            .select("id, status, payload, organization_id")
             .filter("payload->>publicToken", "eq", token)
             .maybeSingle();
 
@@ -62,6 +62,25 @@ export const Route = createFileRoute("/api/quotes/sign")({
             .eq("id", quote.id);
 
           if (updateError) throw new Error(updateError.message);
+
+          // PAF: audit log obligatoire — signature est un acte irréversible (anti-fraude France 2026)
+          try {
+            const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+            await admin.rpc("insert_audit_log", {
+              p_user_id: null, // action client (pas d'auth JWT côté portail public)
+              p_action: "quote_signed",
+              p_resource_type: "quote",
+              p_resource_id: quote.id,
+              p_metadata: {
+                signerName: signatureData.signerName,
+                signedAt,
+                token,
+              },
+              p_ip_address: ip,
+            });
+          } catch (auditErr) {
+            console.error("Audit log failed (sign):", auditErr);
+          }
 
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,

@@ -60,6 +60,21 @@ export const Route = createFileRoute("/api/quotes/refuse")({
 
           if (updateError) throw new Error(updateError.message);
 
+          // PAF: audit log — refus d'un devis (acte client traçable)
+          try {
+            const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+            await admin.rpc("insert_audit_log", {
+              p_user_id: null,
+              p_action: "quote_refused",
+              p_resource_type: "quote",
+              p_resource_id: quote.id,
+              p_metadata: { refusedAt, reason, token },
+              p_ip_address: ip,
+            });
+          } catch (auditErr) {
+            console.error("Audit log failed (refuse):", auditErr);
+          }
+
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,
             headers: { "Content-Type": "application/json" },

@@ -20,4 +20,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // FIX B1: passer le preset nitro explicitement dans defineConfig pour ne pas être
+  // silencieusement écrasé par la valeur par défaut "cloudflare" de @lovable.dev/vite-tanstack-config.
+  // Sans ça, toutes les routes /api/* renvoient 404 en production Vercel.
+  nitro: {
+    preset: process.env['VERCEL'] ? 'vercel' : 'node-server',
+  },
 });
