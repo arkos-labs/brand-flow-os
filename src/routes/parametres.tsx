@@ -340,8 +340,8 @@ function SettingsPage() {
 
   // Mapping plan → Stripe price ID (live mode)
   const PRICE_IDS: Record<string, string> = {
-    pro: "price_1U6E5F7tsPmmReQdupg0eEY2",    // 19.99€/mois
-    agency: "price_1U6E5F7tsPmmReQdP1CVwC6X", // 49.99€/mois
+    pro: import.meta.env['VITE_STRIPE_PRICE_PRO'] || "price_1U6E5F7tsPmmReQdupg0eEY2",
+    agency: import.meta.env['VITE_STRIPE_PRICE_AGENCY'] || "price_1U6E5F7tsPmmReQdP1CVwC6X",
   };
 
   const handlePlanChange = async (targetPlanId: string) => {
