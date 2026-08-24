@@ -346,10 +346,20 @@ function SettingsPage() {
 
   const handlePlanChange = async (targetPlanId: string) => {
     try {
-      if ((!profile?.plan_tier || profile?.plan_tier === "solo") && targetPlanId !== "solo") {
+      const currentPlan = profile?.plan_tier || "solo";
+
+      // Clic sur le plan déjà actif → rien
+      if (targetPlanId === currentPlan) return;
+
+      // Pro/Agency → Solo : résiliation (= retour plan gratuit)
+      if (targetPlanId === "solo") {
+        setCancelPlanAlert(true);
+        return;
+      }
+
+      if (currentPlan === "solo") {
         // Solo → Pro/Agency : nouvelle souscription via Checkout
         const stripePriceId = PRICE_IDS[targetPlanId] || import.meta.env['VITE_STRIPE_PRICE_PRO'];
-
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
           headers: authHeaders(session, { "Content-Type": "application/json" }),
@@ -365,7 +375,7 @@ function SettingsPage() {
         if (data.url) window.location.href = data.url;
         else throw new Error(data.error);
       } else {
-        // Pro ↔ Agency : changement avec prorata via Customer Portal (subscription_update_confirm)
+        // Pro ↔ Agency : changement via Customer Portal
         const targetPriceId = PRICE_IDS[targetPlanId];
         const res = await fetch("/api/stripe/portal", {
           method: "POST",
