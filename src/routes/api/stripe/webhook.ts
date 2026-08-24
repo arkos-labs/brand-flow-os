@@ -1,155 +1,184 @@
+// src/routes/api/stripe/webhook.ts
 import { createFileRoute } from "@tanstack/react-router";
 import { stripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-// Helper : met à jour plan_tier sur profiles + organization associée
-async function updatePlanTier(userId: string, planTier: string, stripeCustomerId?: string | null, stripeSubscriptionId?: string | null) {
-  const supabaseAdmin = getSupabaseAdmin();
-  const updateData: Record<string, unknown> = { plan_tier: planTier };
-  if (stripeCustomerId !== undefined) updateData.stripe_customer_id = stripeCustomerId;
-  if (stripeSubscriptionId !== undefined) updateData.stripe_subscription_id = stripeSubscriptionId;
+// Map price IDs → plan tier (côté serveur, pas d'env VITE_ ici)
+const PRICE_TO_PLAN: Record<string, string> = {
+  [process.env['VITE_STRIPE_PRICE_PRO'] ?? ""]: "pro",
+  [process.env['VITE_STRIPE_PRICE_AGENCY'] ?? ""]: "agency",
+};
 
-  const { data: updatedProfile, error } = await supabaseAdmin
-    .from("profiles")
-    .update(updateData)
-    .eq("id", userId)
-    .select("organization_id")
-    .single();
-
-  if (error) {
-    console.error("Erreur mise à jour profiles:", error.message);
-    return;
-  }
-  console.log(`✅ profiles.plan_tier = ${planTier} pour user ${userId}`);
-
-  if (updatedProfile?.organization_id) {
-    const { error: orgError } = await supabaseAdmin
-      .from("organizations")
-      .update({ plan_tier: planTier })
-      .eq("id", updatedProfile.organization_id);
-    if (orgError) {
-      console.error("Erreur mise à jour organizations:", orgError.message);
-    } else {
-      console.log(`✅ organizations.plan_tier = ${planTier}`);
-    }
-  }
+function getPlanFromPriceId(priceId: string | undefined): string | null {
+  if (!priceId) return null;
+  return PRICE_TO_PLAN[priceId] ?? null;
 }
 
-// Helper : retrouver userId depuis stripe_customer_id quand client_reference_id absent
-async function userIdFromCustomer(customerId: string): Promise<string | null> {
+// ──────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────
+
+// FIX : stripe_customer_id est sur la table organizations, pas profiles
+async function getUserIdFromCustomer(customerId: string): Promise<string | null> {
   const { data } = await getSupabaseAdmin()
-    .from("profiles")
-    .select("id")
+    .from("organizations")
+    .select("owner_id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
-  return data?.id ?? null;
+  return data?.owner_id ?? null;
 }
+
+async function syncPlanTier(userId: string, planTier: string) {
+  const supabase = getSupabaseAdmin();
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    supabase.from("profiles").update({ plan_tier: planTier }).eq("id", userId),
+    supabase.from("organizations").update({ plan_tier: planTier }).eq("owner_id", userId),
+  ]);
+  if (e1) console.error("syncPlanTier profiles:", e1.message);
+  if (e2) console.error("syncPlanTier organizations:", e2.message);
+  console.log(`✅ Plan sync: user=${userId} → ${planTier}`);
+}
+
+// ──────────────────────────────────────────────
+// Route
+// ──────────────────────────────────────────────
 
 export const Route = createFileRoute("/api/stripe/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const sig = request.headers.get("stripe-signature");
+        const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'];
+
+        if (!sig || !webhookSecret) {
+          console.error("Webhook: signature ou secret manquant");
+          return new Response("Missing signature", { status: 400 });
+        }
+
+        const rawBody = await request.text();
+        let event: any;
+
         try {
-          const body = await request.text();
-          const signature = request.headers.get("stripe-signature");
+          event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+        } catch (err: any) {
+          console.error("Webhook signature invalide:", err.message);
+          return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+        }
 
-          if (!signature) {
-            return new Response("No signature", { status: 400 });
-          }
+        const supabase = getSupabaseAdmin();
 
-          const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'];
-          if (!webhookSecret) {
-            console.warn("⚠️ STRIPE_WEBHOOK_SECRET non configuré.");
-            return new Response("Webhook secret not configured", { status: 400 });
-          }
-
-          const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-
+        try {
           switch (event.type) {
-            // ─── Nouveau checkout réussi ─────────────────────────────────────
             case "checkout.session.completed": {
               const session = event.data.object;
               const userId = session.client_reference_id || session.metadata?.['user_id'];
-              const planTier = session.metadata?.['plan_tier'] || "pro";
+              const customerId = session.customer as string;
 
-              console.log("✅ checkout.session.completed:", session.customer_email, "→", planTier);
+              if (!userId) {
+                console.warn("⚠️ checkout.session.completed: userId manquant");
+                break;
+              }
 
-              if (userId) {
-                await updatePlanTier(userId, planTier, session.customer as string, session.subscription as string);
-              } else {
-                console.warn("⚠️ userId manquant dans la session Stripe.");
+              if (customerId) {
+                await supabase
+                  .from("organizations")
+                  .update({ stripe_customer_id: customerId })
+                  .eq("owner_id", userId);
+              }
+
+              if (session.subscription) {
+                const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+                const priceId = sub.items.data[0]?.price.id;
+                const planTier = getPlanFromPriceId(priceId) || session.metadata?.['plan_tier'] || "pro";
+                console.log(`✅ checkout.session.completed: user=${userId} → ${planTier}`);
+                await syncPlanTier(userId, planTier);
               }
               break;
             }
 
-            // ─── Abonnement mis à jour (downgrade / upgrade) ─────────────────
-            // FIX B4 : gérer les changements de plan en cours d'abonnement
             case "customer.subscription.updated": {
               const sub = event.data.object;
               const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
-              const userId = await userIdFromCustomer(customerId);
+              const userId = await getUserIdFromCustomer(customerId);
 
               if (!userId) {
-                console.warn("⚠️ customer.subscription.updated : aucun profil trouvé pour customer", customerId);
+                console.warn("⚠️ subscription.updated: aucun user pour customer", customerId);
                 break;
               }
 
-              // Lire le plan depuis les métadonnées ou l'item de prix
-              const planTier: string = (sub.metadata?.['plan_tier']) ||
-                (sub.items?.data?.[0]?.price?.id === process.env['VITE_STRIPE_PRICE_AGENCY'] ? "agency" :
-                  sub.items?.data?.[0]?.price?.id === process.env['VITE_STRIPE_PRICE_PRO'] ? "pro" : "solo");
+              if (sub.cancel_at_period_end) {
+                console.log(`Subscription ${sub.id} annulée en fin de période — plan conservé`);
+                break;
+              }
 
-              console.log("🔄 customer.subscription.updated → plan:", planTier, "status:", sub.status);
+              const priceId = sub.items?.data?.[0]?.price?.id;
+              const planTier = getPlanFromPriceId(priceId) || sub.metadata?.['plan_tier'];
 
-              // Remettre en solo si l'abonnement est suspendu / incomplet
-              const effectivePlan = (sub.status === "active" || sub.status === "trialing") ? planTier : "solo";
-              await updatePlanTier(userId, effectivePlan);
+              if (!planTier) {
+                console.warn("⚠️ subscription.updated: priceId inconnu:", priceId);
+                break;
+              }
+
+              const effectivePlan = (sub.status === "active" || sub.status === "trialing")
+                ? planTier
+                : "solo";
+
+              console.log(`🔄 subscription.updated: user=${userId} → ${effectivePlan} (status: ${sub.status})`);
+              await syncPlanTier(userId, effectivePlan);
               break;
             }
 
-            // ─── Abonnement résilié ──────────────────────────────────────────
-            // FIX B4 : sans ce handler, les utilisateurs gardent Pro/Agency à vie
-            // après résiliation — CRITIQUE pour le modèle freemium.
             case "customer.subscription.deleted": {
               const sub = event.data.object;
               const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
-              const userId = await userIdFromCustomer(customerId);
+              const userId = await getUserIdFromCustomer(customerId);
 
               if (!userId) {
-                console.warn("⚠️ customer.subscription.deleted : aucun profil trouvé pour customer", customerId);
+                console.warn("⚠️ subscription.deleted: aucun user pour customer", customerId);
                 break;
               }
 
-              console.log("❌ customer.subscription.deleted : retour en solo pour user", userId);
-              await updatePlanTier(userId, "solo", undefined, null);
+              console.log(`❌ subscription.deleted: user=${userId} → solo`);
+              await syncPlanTier(userId, "solo");
               break;
             }
 
-            // ─── Facture payée (renouvellement mensuel) ──────────────────────
             case "invoice.paid": {
               const invoice = event.data.object;
-              console.log("✅ Facture d'abonnement payée pour:", invoice.customer_email);
+              console.log("✅ Facture payée pour:", invoice.customer_email);
               break;
             }
 
-            // ─── Échec de paiement ───────────────────────────────────────────
             case "invoice.payment_failed": {
               const invoice = event.data.object;
-              // TODO phase 2 : envoyer un email de relance de paiement via Resend
-              console.error("❌ Échec du paiement pour:", invoice.customer_email);
+              const customerId = invoice.customer as string;
+              const userId = await getUserIdFromCustomer(customerId);
+              console.error(`❌ Échec paiement pour: ${invoice.customer_email}`);
+
+              if (userId) {
+                await supabase.rpc("insert_audit_log", {
+                  p_user_id: userId,
+                  p_action: "payment_failed",
+                  p_resource_type: "organization",
+                  p_resource_id: null,
+                  p_metadata: { invoice_id: invoice.id, amount_due: invoice.amount_due },
+                  p_ip_address: "stripe-webhook",
+                }).catch(() => {});
+              }
               break;
             }
 
             default:
-              console.log(`Unhandled event type ${event.type}`);
+              console.log(`Unhandled event: ${event.type}`);
           }
-
-          return new Response(JSON.stringify({ received: true }), { status: 200 });
         } catch (err: any) {
-          console.error("Webhook Error:", err.message);
-          // Ne pas exposer les détails internes au client.
-          return new Response("Webhook Error", { status: 400 });
+          console.error(`Erreur traitement webhook ${event.type}:`, err);
         }
+
+        return new Response(JSON.stringify({ received: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       },
     },
   },
