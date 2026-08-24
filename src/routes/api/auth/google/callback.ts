@@ -9,7 +9,8 @@ function safeReturnTo(value: string): string {
 function parseCookie(header: string | null, name: string): string | null {
   if (!header) return null
   const match = header.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : null
+  const value = match?.[1]
+  return value ? decodeURIComponent(value) : null
 }
 
 export const Route = createFileRoute('/api/auth/google/callback')({
@@ -59,10 +60,10 @@ export const Route = createFileRoute('/api/auth/google/callback')({
         }
 
         const clientId =
-          process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID
-        const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+          process.env['GOOGLE_CLIENT_ID'] || process.env['VITE_GOOGLE_CLIENT_ID']
+        const clientSecret = process.env['GOOGLE_CLIENT_SECRET']
         const redirectUri =
-          process.env.GOOGLE_REDIRECT_URI || process.env.VITE_GOOGLE_REDIRECT_URI
+          process.env['GOOGLE_REDIRECT_URI'] || process.env['VITE_GOOGLE_REDIRECT_URI']
 
         if (!clientId || !clientSecret || !redirectUri) {
           return new Response('Missing Google Client Credentials', {

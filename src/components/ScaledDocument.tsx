@@ -6,7 +6,7 @@ export function ScaledDocument({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
-      const { width } = entries[0].contentRect;
+      const { width } = entries[0]?.contentRect ?? { width: 0 };
       const docWidth = 1050; // Largeur fixe du DocumentTemplate
       const padding = 32; // 16px de chaque côté
       const availableWidth = width - padding;

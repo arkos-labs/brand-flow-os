@@ -14,15 +14,24 @@
 
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DocumentTemplate, type DocumentData, type DocumentCompany } from "@/components/DocumentTemplate";
+import { DocumentTemplate, type DocumentData, type DocumentCompany, type DocumentClient } from "@/components/DocumentTemplate";
 import { generateFacturxXml, type FxDocument, type FxLineItem } from "./facturx-xml";
 import { downloadBlob } from "./facturx-embed";
 import type { CompanySettings, Quote, Invoice } from "./data-context";
 
 // ─── Convertisseurs de types ──────────────────────────────────────────────────
 
+/** Retire les clés dont la valeur est `undefined` (compatible exactOptionalPropertyTypes). */
+function defined<T extends Record<string, unknown>>(o: T): Partial<T> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (v !== undefined) out[k] = v;
+  }
+  return out as Partial<T>;
+}
+
 export function companyToDocCompany(c: CompanySettings, plan: string = "pro"): DocumentCompany {
-  return {
+  return defined({
     name:              c.name || "Mon Entreprise",
     legalForm:         c.legalForm,
     address:           c.address || "",
@@ -45,7 +54,7 @@ export function companyToDocCompany(c: CompanySettings, plan: string = "pro"): D
     recoveryFee:       c.recoveryFee,
     footerNote:        c.footerNote,
     primaryColor:      plan === "solo" ? undefined : c.primaryColor,
-  };
+  }) as DocumentCompany;
 }
 
 export function quoteToDocumentData(quote: Quote): DocumentData {
@@ -87,7 +96,7 @@ export function quoteToDocumentData(quote: Quote): DocumentData {
     date:             quote.date,
     dueOrValidUntil,
     serviceAddress:   details?.serviceAddress,
-    client: {
+    client: defined({
       name:        quote.client,
       address:     details?.address,
       postalCode:  details?.postalCode,
@@ -95,7 +104,7 @@ export function quoteToDocumentData(quote: Quote): DocumentData {
       phone:       details?.phone,
       email:       details?.email,
       siret:       details?.siret,
-    },
+    }) as DocumentClient,
     items,
     ...(quote.signatureData ? {
       signature: {
@@ -104,7 +113,7 @@ export function quoteToDocumentData(quote: Quote): DocumentData {
         image: quote.signatureData.image,
       }
     } : {}),
-  };
+  } as DocumentData;
 }
 
 export function invoiceToDocumentData(invoice: Invoice): DocumentData {
@@ -132,12 +141,12 @@ export function invoiceToDocumentData(invoice: Invoice): DocumentData {
         vatRate,
       }];
 
-  return {
+  const doc: DocumentData = defined({
     type:            "facture",
     number:          invoice.number,
     date:            invoice.date,
     dueOrValidUntil: invoice.due,
-    client: {
+    client: defined({
       name:       invoice.client,
       siret:      invoice.details?.siret || (invoice as Invoice & { clientSiret?: string }).clientSiret,
       address:    invoice.details?.address,
@@ -145,12 +154,13 @@ export function invoiceToDocumentData(invoice: Invoice): DocumentData {
       city:       invoice.details?.city,
       email:      invoice.details?.email,
       phone:      invoice.details?.phone,
-    },
+    }) as DocumentClient,
     items,
-    depositPaid:     invoice.paidAmount && invoice.paidAmount < totalTTC
+    depositPaid: invoice.paidAmount && invoice.paidAmount < totalTTC
       ? invoice.paidAmount
       : undefined,
-  };
+  }) as DocumentData;
+  return doc;
 }
 
 import * as htmlToImage from 'html-to-image';
@@ -300,7 +310,7 @@ export async function generateQuotePdfBase64(quote: Quote, company: CompanySetti
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = (reader.result as string).split(',')[1];
-      resolve(base64data);
+      resolve(base64data ?? "");
     };
     reader.onerror = reject;
     reader.readAsDataURL(finalPdfBlob);
@@ -482,7 +492,7 @@ export async function generateInvoicePdfBase64(invoice: Invoice, company: Compan
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = (reader.result as string).split(',')[1];
-      resolve(base64data);
+      resolve(base64data ?? "");
     };
     reader.onerror = reject;
     reader.readAsDataURL(finalPdfBlob);

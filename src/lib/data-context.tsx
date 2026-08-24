@@ -337,6 +337,7 @@ export type QuoteItem = {
   label: string;
   priceHT: number | string;
   qty: number | string;
+  unit?: string;
 };
 
 export type QuoteDetails = {
@@ -346,6 +347,9 @@ export type QuoteDetails = {
   companyName?: string;
   siret?: string;
   address: string;
+  postalCode?: string;
+  city?: string;
+  email?: string;
   phone: string;
   serviceAddress: string;
   items: QuoteItem[];
@@ -377,6 +381,8 @@ export type Quote = {
   amount: number;
   status: Bi;
   date: string;
+  /** Date du devis (alias DB `issue_date`, parfois utilisé par le code). */
+  issue_date?: string;
   /** Date/heure à laquelle le devis a été transmis au client. */
   sentAt?: string;
   signedAt?: string;
@@ -399,6 +405,8 @@ export type Invoice = {
   client: string;
   clientId?: string;
   date: string;
+  /** Date de facturation (alias DB `issue_date`, parfois utilisé par le code). */
+  issue_date?: string;
   /** Date/heure à laquelle la facture a été envoyée au client. */
   sentAt?: string;
   paidAt?: string;
@@ -413,6 +421,14 @@ export type Invoice = {
   sourceQuoteNumber?: string;
   sourceSubscriptionId?: string;
   items?: import("./invoice-from-quote").InvoiceLine[];
+  details?: {
+    siret?: string;
+    address?: string;
+    postalCode?: string;
+    city?: string;
+    email?: string;
+    phone?: string;
+  };
   reminders?: { date: string; type: "J+7" | "J+15" | "J+30" }[];
   /** Historique complet de tous les emails envoyés */
   emailsSent?: EmailSend[];

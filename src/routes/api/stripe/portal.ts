@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { stripe } from "@/lib/stripe";
+import type Stripe from "stripe";
 import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/stripe/portal")({
@@ -48,8 +49,8 @@ export const Route = createFileRoute("/api/stripe/portal")({
           // Redirection directe vers le changement de forfait si un plan cible est fourni
           if (targetPlanId) {
             const targetPriceId = targetPlanId === "pro" 
-              ? process.env.VITE_STRIPE_PRICE_PRO 
-              : process.env.VITE_STRIPE_PRICE_AGENCY;
+              ? process.env['VITE_STRIPE_PRICE_PRO'] 
+              : process.env['VITE_STRIPE_PRICE_AGENCY'];
 
             if (targetPriceId) {
               const subscriptions = await stripe.subscriptions.list({
@@ -58,16 +59,16 @@ export const Route = createFileRoute("/api/stripe/portal")({
                 limit: 1,
               });
 
-              if (subscriptions.data.length > 0) {
-                const sub = subscriptions.data[0];
-                // Vérifier que l'abonnement n'est pas en cours d'annulation, car le flux de mise à jour échouerait
-                if (!sub.cancel_at_period_end) {
+              const sub = subscriptions.data[0];
+              if (sub && !sub.cancel_at_period_end) {
+                const item = sub.items?.data?.[0];
+                if (item) {
                   portalOptions.flow_data = {
                     type: "subscription_update_confirm",
                     subscription_update_confirm: {
                       subscription: sub.id,
                       items: [{
-                        id: sub.items.data[0].id,
+                        id: item.id,
                         price: targetPriceId,
                         quantity: 1,
                       }],

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/quotes/sign")({
         const token = typeof body?.token === "string" ? body.token : null;
         const signatureData = body?.signatureData ?? null;
 
-        if (!token || !/^[A-Za-z0-9_-]{1,64}$/.test(token) || !signatureData?.signerName) {
+        if (!token || !/^[A-Za-z0-9_-]{1,64}$/.test(token) || !signatureData?.signerName || signatureData.consent !== true) {
           return new Response(JSON.stringify({ error: "invalid_input" }), {
             status: 400,
             headers: { "Content-Type": "application/json" },

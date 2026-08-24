@@ -10,10 +10,6 @@ import {
   PauseCircle,
   PlayCircle,
   Calendar,
-  Landmark,
-  Calculator,
-  Bell,
-  CreditCard,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
@@ -258,74 +254,6 @@ function SubscriptionsPage() {
               )}
             </TableBody>
           </Table>
-        </div>
-      </div>
-
-      {/* ── Stratégie & Produit — Fonctionnalités Core à venir ── */}
-      <div className="mt-8">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {lang === "fr" ? "Stratégie & Produit — Fonctionnalités Core" : "Product Roadmap — Core Features"}
-          </span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            {
-              icon: Landmark,
-              color: "bg-blue-500/10 text-blue-600",
-              title: lang === "fr" ? "Synchronisation Bancaire" : "Bank Sync (Open Banking)",
-              tag: "Open Banking · Bridge / Tink",
-              desc: lang === "fr"
-                ? "Rapprochement bancaire automatique dans Trésorerie & Paiements pour lettrer les factures sans saisie manuelle."
-                : "Automatic bank reconciliation in Cashflow & Payments to match invoices without manual entry.",
-            },
-            {
-              icon: Calculator,
-              color: "bg-amber-500/10 text-amber-600",
-              title: lang === "fr" ? "Tableau de Bord Fiscal & URSSAF" : "Tax & Social Charges Dashboard",
-              tag: lang === "fr" ? "TVA prévisionnelle · Cotisations" : "VAT forecast · Social charges",
-              desc: lang === "fr"
-                ? "Encart prévisionnel de TVA à décaisser et cotisations sociales estimées basées sur le CA encaissé."
-                : "Estimated VAT payable and social charges forecast based on collected revenue.",
-            },
-            {
-              icon: Bell,
-              color: "bg-rose-500/10 text-rose-600",
-              title: lang === "fr" ? "Automatisation des Relances" : "Automated Follow-ups",
-              tag: "J+3 · J+7 · J+15",
-              desc: lang === "fr"
-                ? "Scénarios de relance automatique par email à J+3, J+7 et J+15 pour les factures en retard."
-                : "Automated email reminder workflows at D+3, D+7 and D+15 for overdue invoices.",
-            },
-            {
-              icon: CreditCard,
-              color: "bg-emerald-500/10 text-emerald-600",
-              title: lang === "fr" ? "Paiement en Ligne" : "Online Payment",
-              tag: "Stripe · GoCardless",
-              desc: lang === "fr"
-                ? "Liens de paiement sur devis (acomptes) et factures pour accélérer l'encaissement via Stripe ou GoCardless."
-                : "Payment links on quotes (deposits) and invoices to speed up collection via Stripe or GoCardless.",
-            },
-          ].map(({ icon: Icon, color, title, tag, desc }) => (
-            <div key={title} className="card-elevated relative overflow-hidden rounded-xl p-4">
-              <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ${color}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <span className="mb-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                {tag}
-              </span>
-              <h3 className="mt-1 text-sm font-semibold text-foreground">{title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{desc}</p>
-              <div className="mt-3 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                <span className="text-[10px] font-medium text-muted-foreground">
-                  {lang === "fr" ? "Phase 2 — Roadmap" : "Phase 2 — Roadmap"}
-                </span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

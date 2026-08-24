@@ -348,7 +348,7 @@ function SettingsPage() {
     try {
       if ((!profile?.plan_tier || profile?.plan_tier === "solo") && targetPlanId !== "solo") {
         // Solo → Pro/Agency : nouvelle souscription via Checkout
-        const stripePriceId = PRICE_IDS[targetPlanId] || import.meta.env.VITE_STRIPE_PRICE_PRO;
+        const stripePriceId = PRICE_IDS[targetPlanId] || import.meta.env['VITE_STRIPE_PRICE_PRO'];
 
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
@@ -1445,6 +1445,12 @@ function SettingsPage() {
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
+        title={requiredPlan === "agency" ? "Forfait Agency requis" : "Forfait Pro requis"}
+        description={
+          requiredPlan === "agency"
+            ? "Cette fonctionnalité nécessite le forfait Agency (multi-sociétés, marque blanche, rôles avancés)."
+            : "Cette fonctionnalité nécessite le forfait Pro. Passez à Pro pour débloquer les devis et factures illimités."
+        }
         requiredPlan={requiredPlan}
       />
       <AlertDialog open={!!downgradePlanId} onOpenChange={(open) => !open && setDowngradePlanId(null)}>

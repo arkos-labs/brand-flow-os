@@ -1432,7 +1432,7 @@ function QuotesInner() {
                   disabled={exporting === q.number}
                   onClick={async () => {
                     setExporting(q.number);
-                    await exportQuotePdf(q, company, profile?.plan_tier);
+                    await exportQuotePdf(q, company, profile?.plan_tier || undefined);
                     setExporting(null);
                   }}
                   className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
@@ -1706,7 +1706,7 @@ function QuotesInner() {
                 <ScaledDocument>
                   <DocumentTemplate
                     doc={quoteToDocumentData(previewQuote)}
-                    company={companyToDocCompany(company, profile?.plan_tier)}
+                    company={companyToDocCompany(company, profile?.plan_tier || undefined)}
                   />
                 </ScaledDocument>
               )}
@@ -1773,7 +1773,7 @@ function QuotesInner() {
               onClick={async () => {
                 if (!previewQuote) return;
                 setExporting(previewQuote.number);
-                await exportQuotePdf(previewQuote, company, profile?.plan_tier);
+                await exportQuotePdf(previewQuote, company, profile?.plan_tier || undefined);
                 setExporting(null);
               }}
             >
@@ -1835,7 +1835,9 @@ function QuotesInner() {
               <iframe
                 className="flex-1 w-full bg-white"
                 srcDoc={
-                  emailQuote ? generateQuoteEmailHtml(emailQuote, company, emailTemplateId) : ""
+                  emailQuote
+                    ? generateQuoteEmailHtml(emailQuote, company, emailTemplateId, window.location.origin)
+                    : ""
                 }
                 title="Prévisualisation de l'e-mail"
               />
@@ -1876,7 +1878,7 @@ function QuotesInner() {
                   }
 
                   // 1. Generate PDF
-                  const pdfBase64 = await generateQuotePdfBase64(quoteForEmail, company, profile?.plan_tier);
+                  const pdfBase64 = await generateQuotePdfBase64(quoteForEmail, company, profile?.plan_tier || undefined);
                   const currentOrgId = await getMyOrgId() || "";
                   const html = generateQuoteEmailHtml(quoteForEmail, company, emailTemplateId, window.location.origin, currentOrgId);
 

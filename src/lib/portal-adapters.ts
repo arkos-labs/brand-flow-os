@@ -57,7 +57,7 @@ export function dbInvoiceToLegacyInvoice(row: DbInvoice): any {
 }
 
 export function dbOrgToCompanySettings(org: DbOrganization): CompanySettings {
-  return {
+  const settings: CompanySettings = {
     name: org.name,
     legalForm: org.legal_form ?? "",
     siret: org.siret ?? "",
@@ -68,8 +68,6 @@ export function dbOrgToCompanySettings(org: DbOrganization): CompanySettings {
     country: org.country ?? "France",
     phone: org.phone ?? "",
     email: org.email ?? "",
-    website: org.website ?? undefined,
-    logoBase64: org.logo_url ?? undefined,
     quotePrefix: org.quote_prefix,
     invoicePrefix: org.invoice_prefix,
     nextQuoteNumber: 1,
@@ -77,5 +75,9 @@ export function dbOrgToCompanySettings(org: DbOrganization): CompanySettings {
     paymentTermsDays: org.default_payment_days,
     lateInterestRate: org.late_penalty_rate != null ? String(org.late_penalty_rate) : "",
     recoveryFee: org.late_penalty_flat != null ? String(org.late_penalty_flat) : "",
+    footerNote: org.legal_notice ?? "",
   };
+  if (org.website) settings.website = org.website;
+  if (org.logo_url) settings.logoBase64 = org.logo_url;
+  return settings;
 }

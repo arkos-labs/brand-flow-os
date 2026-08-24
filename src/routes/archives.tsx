@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useData, type Quote, type Invoice } from "@/lib/data-context";
+import { useSupabaseData } from "@/lib/supabase-context";
 import { exportQuotePdf, exportInvoicePdf } from "@/lib/pdf-export";
 import {
   ChevronDown,
@@ -54,7 +55,8 @@ function latestDate(...dates: (string | undefined)[]): string {
 function ArchivesPage() {
   const { money, date } = useI18n();
   const navigate = useNavigate();
-  const { invoices, quotes, company, profile } = useData();
+  const { invoices, quotes, company } = useData();
+  const { profile } = useSupabaseData();
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -142,7 +144,7 @@ function ArchivesPage() {
   const handleDownloadQuote = async (q: Quote) => {
     setExporting(q.number);
     try {
-      await exportQuotePdf(q, company, profile?.plan_tier);
+      await exportQuotePdf(q, company, profile?.plan_tier || undefined);
     } finally {
       setExporting(null);
     }
@@ -151,7 +153,7 @@ function ArchivesPage() {
   const handleDownloadInvoice = async (inv: Invoice) => {
     setExporting(inv.number);
     try {
-      await exportInvoicePdf(inv, company, profile?.plan_tier);
+      await exportInvoicePdf(inv, company, profile?.plan_tier || undefined);
     } finally {
       setExporting(null);
     }

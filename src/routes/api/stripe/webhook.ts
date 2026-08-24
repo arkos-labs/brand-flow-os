@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/stripe/webhook")({
             return new Response("No signature", { status: 400 });
           }
 
-          const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+          const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'];
           if (!webhookSecret) {
             console.warn("⚠️ STRIPE_WEBHOOK_SECRET non configuré.");
             return new Response("Webhook secret not configured", { status: 400 });
@@ -27,8 +27,8 @@ export const Route = createFileRoute("/api/stripe/webhook")({
               const session = event.data.object;
               // C'est ici que l'on pourra enregistrer que l'utilisateur a payé son abonnement
               // dans Supabase (par exemple, en mettant à jour la table "organizations" ou "profiles").
-              const userId = session.client_reference_id || session.metadata?.user_id;
-              const planTier = session.metadata?.plan_tier || "pro";
+              const userId = session.client_reference_id || session.metadata?.['user_id'];
+              const planTier = session.metadata?.['plan_tier'] || "pro";
 
               console.log("✅ Checkout session completed pour l'email:", session.customer_email);
               console.log("Subscription ID:", session.subscription);

@@ -21,6 +21,7 @@ import {
 import { PageHeader } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useData, Client, ClientType } from "@/lib/data-context";
+import { useSupabaseData } from "@/lib/supabase-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,7 +119,8 @@ type Tab = "info" | "quotes" | "invoices";
 
 function ClientsPage() {
   const { t, tv, money, date, lang } = useI18n();
-  const { clients, addClient, updateClient, deleteClient, quotes, invoices, products, company, updateQuote, updateInvoice, profile } = useData();
+  const { clients, addClient, updateClient, deleteClient, quotes, invoices, products, company, updateQuote, updateInvoice } = useData();
+  const { profile } = useSupabaseData();
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -635,7 +637,7 @@ function ClientsPage() {
                               onClick={async () => {
                                 setExportingQuote(q.number);
                                 try {
-                                  await exportQuotePdf(q, company, profile?.plan_tier);
+                                  await exportQuotePdf(q, company, profile?.plan_tier || undefined);
                                   setActionNotice(`PDF ${q.number} téléchargé.`);
                                 } catch {
                                   setActionNotice("Impossible de générer le PDF pour le moment.");
@@ -1145,7 +1147,7 @@ function ClientsPage() {
                 if (!previewQuote) return;
                 setExportingQuote(previewQuote.number);
                 try {
-                  await exportQuotePdf(previewQuote, company, profile?.plan_tier);
+                  await exportQuotePdf(previewQuote, company, profile?.plan_tier || undefined);
                 } finally {
                   setExportingQuote(null);
                 }

@@ -92,7 +92,7 @@ const PLANS = [
       "Support prioritaire",
     ],
     disabled: [],
-    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_PRO || "price_REPLACE_WITH_PRO_PRICE_ID",
+    stripePriceId: import.meta.env['VITE_STRIPE_PRICE_PRO'] || "price_REPLACE_WITH_PRO_PRICE_ID",
   },
   {
     name: "Agency",
@@ -118,7 +118,7 @@ const PLANS = [
       "Account manager dédié",
     ],
     disabled: [],
-    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_AGENCY || "price_REPLACE_WITH_AGENCY_PRICE_ID",
+    stripePriceId: import.meta.env['VITE_STRIPE_PRICE_AGENCY'] || "price_REPLACE_WITH_AGENCY_PRICE_ID",
   },
 ];
 

@@ -1,10 +1,10 @@
-if (!process.env.VERCEL) {
-  process.env.NITRO_PRESET = 'node-server';
+if (!process.env['VERCEL']) {
+  process.env['NITRO_PRESET'] = 'node-server';
 } else {
   // Force Node.js lambda runtime on Vercel (pas Edge) pour les routes qui utilisent
   // des packages Node.js-only comme `stripe` — sinon Vercel retourne du HTML 404
   // au lieu de JSON, causant "Unexpected token 'T'... not valid JSON".
-  process.env.NITRO_PRESET = 'vercel';
+  process.env['NITRO_PRESET'] = 'vercel';
 }
 // @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
 // or the app will break with duplicate plugins:

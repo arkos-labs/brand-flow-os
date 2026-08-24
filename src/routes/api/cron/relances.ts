@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/cron/relances")({
         const url = new URL(request.url);
         const secret = url.searchParams.get("secret");
         
-        if (secret !== process.env.CRON_SECRET) {
+        if (secret !== process.env['CRON_SECRET']) {
           return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401 });
         }
 

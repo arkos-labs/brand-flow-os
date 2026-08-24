@@ -16,13 +16,12 @@ export function generateQuoteEmailHtml(quote: Quote, company: CompanySettings, t
   const totalHT = quote.details?.items.reduce((acc, item) => acc + (Number(item.priceHT) * Number(item.qty)), 0) || 0;
   const tvaAmount = quote.amount - totalHT;
   
-  const qData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(quote)))));
-  const cData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(company)))));
-  
   // Le lien utilise le token public du devis (UUID aléatoire, impossible à
   // deviner) plutôt que son numéro (séquentiel, devinable) — voir /api/quotes/*.
+  // Le portail charge le devis via /api/quotes/get?token=... : on n'encode
+  // JAMAIS le devis ni l'entreprise dans l'URL (fuite de données).
   const portalId = quote.publicToken || quote.number;
-  const portalUrl = baseUrl ? `${baseUrl}/portail/${portalId}?q=${qData}&c=${cData}&org=${orgId}` : `https://brand-flow-os-opal.vercel.app/portail/${portalId}?q=${qData}&c=${cData}&org=${orgId}`;
+  const portalUrl = `${baseUrl || "https://brand-flow-os-opal.vercel.app"}/portail/${portalId}`;
 
   if (templateId === "modele-relance") {
     return `
@@ -165,7 +164,7 @@ export function generateInvoiceEmailHtml(
 
   const totalHT = invoice.totalHT ?? Math.round((invoice.amount / 1.2) * 100) / 100;
   const totalVAT = invoice.totalVAT ?? (invoice.amount - totalHT);
-  const isLate = invoice.status === "late" || invoice.status === "overdue";
+  const isLate = invoice.status === "late";
 
   if (templateId === "modele-relance") {
     return `<!DOCTYPE html>

@@ -332,7 +332,7 @@ function Invoices() {
     }
     setIsSendingEmail(true);
     try {
-      const pdfBase64 = await generateInvoicePdfBase64(emailInvoice, company, profile?.plan_tier);
+      const pdfBase64 = await generateInvoicePdfBase64(emailInvoice, company, profile?.plan_tier || undefined);
       const html = generateInvoiceEmailHtml(emailInvoice, company, emailTemplateId);
       const res = await fetch("/api/quotes/send", {
         method: "POST",
@@ -1192,7 +1192,7 @@ function Invoices() {
                           disabled={exporting === inv.number}
                           onClick={async () => {
                             setExporting(inv.number);
-                            await exportInvoicePdf(inv, company, profile?.plan_tier);
+                            await exportInvoicePdf(inv, company, profile?.plan_tier || undefined);
                             setExporting(null);
                           }}
                           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
@@ -1367,10 +1367,10 @@ function Invoices() {
 
       {/* ReminderModal */}
       <ReminderModal
+        invoice={reminderInvoice}
         isOpen={isReminderOpen}
         onClose={() => setIsReminderOpen(false)}
-        invoiceNumber={reminderInvoice?.number || ""}
-        onSend={(type) => handleSendReminder(reminderInvoice?.number || "", type)}
+        onSend={(invoiceNumber, type) => handleSendReminder(invoiceNumber, type)}
       />
 
       <UpgradeModal

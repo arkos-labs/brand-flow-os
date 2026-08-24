@@ -55,8 +55,8 @@ export const Route = createFileRoute("/api/quotes/docuseal-start")({
           }
 
           const payload = (quote.payload as Record<string, any>) ?? {};
-          const clientEmail = payload.clientEmail || payload.details?.email;
-          const clientName = payload.client || "Client";
+          const clientEmail = payload['clientEmail'] || payload['details']?.email;
+          const clientName = payload['client'] || "Client";
 
           if (!clientEmail) {
             return new Response(JSON.stringify({ error: "missing_client_email" }), {

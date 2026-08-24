@@ -98,11 +98,22 @@ function daysSince(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 }
 
-function isQuoteExpired(q: { status: { fr: string }; date: string; sentAt?: string }): boolean {
-  const finalStatuses = ["Signé", "Facturé", "Payé", "Refusé", "Expiré"];
-  if (finalStatuses.includes(q.status.fr)) return q.status.fr === "Expiré";
-  if (!["Envoyé", "Vu"].includes(q.status.fr)) return false;
-  return q.sentAt ? daysSince(q.sentAt) > QUOTE_VALIDITY_DAYS : false;
+function isQuoteExpired(q: {
+  status: string | { fr: string };
+  date?: string;
+  sentAt?: string;
+  issue_date?: string;
+  payload?: { status?: { fr?: string }; sentAt?: string } | null;
+}): boolean {
+  const payloadStatus = typeof q.payload?.status === "string" ? q.payload.status : q.payload?.status?.fr ?? "";
+  const status = typeof q.status === "string"
+    ? q.status
+    : q.status?.fr ?? payloadStatus ?? "";
+  const finalStatuses = ["accepted", "invoiced", "paid", "rejected", "expired", "Signé", "Facturé", "Payé", "Refusé", "Expiré"];
+  if (finalStatuses.includes(status)) return status === "expired" || status === "Expiré";
+  if (!["sent", "viewed", "Envoyé", "Vu"].includes(status)) return false;
+  const sentAt = q.sentAt ?? q.payload?.sentAt;
+  return sentAt ? daysSince(sentAt) > QUOTE_VALIDITY_DAYS : false;
 }
 
 // ── NotificationPanel ─────────────────────────────────────────────────────────
@@ -293,6 +304,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, []);
 
   // Public routes don't show the admin shell (login, landing, pricing, etc.)
@@ -303,8 +315,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const filteredGroups = groups;
 
   // ── Compute notification counts ──────────────────────────────────────────
-  const lateInvoiceCount = invoices.filter((i) => i.status === "late").length;
-  const expiredQuoteCount = quotes.filter(isQuoteExpired).length;
+  const lateInvoiceCount = invoices.filter((i) => i.status === "overdue").length;
+  const expiredQuoteCount = quotes.filter((q) => isQuoteExpired(q as unknown as Parameters<typeof isQuoteExpired>[0])).length;
 
   // Badge per route
   const badges: Record<string, number> = {

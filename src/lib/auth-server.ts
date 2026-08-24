@@ -21,7 +21,8 @@ export function getAccessToken(request: Request): string | null {
   }
   const cookie = request.headers.get("cookie") || "";
   const match = cookie.match(/(?:^|;\s*)sb-access-token=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
+  const value = match?.[1];
+  return value ? decodeURIComponent(value) : null;
 }
 
 /**

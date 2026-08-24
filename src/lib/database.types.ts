@@ -187,6 +187,7 @@ export type Database = {
           notes: string | null
           number: string
           organization_id: string
+          payload: Json | null
           payment_terms: string | null
           quote_id: string | null
           status: Database["public"]["Enums"]["invoice_status"]
@@ -208,6 +209,7 @@ export type Database = {
           notes?: string | null
           number: string
           organization_id: string
+          payload?: Json | null
           payment_terms?: string | null
           quote_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -229,6 +231,7 @@ export type Database = {
           notes?: string | null
           number?: string
           organization_id?: string
+          payload?: Json | null
           payment_terms?: string | null
           quote_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -337,6 +340,7 @@ export type Database = {
           quote_prefix: string
           siret: string | null
           updated_at: string
+          vat_number: string | null
           website: string | null
           google_refresh_token: string | null
           stripe_customer_id: string | null
@@ -459,25 +463,31 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           organization_id: string | null
+          plan_tier: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           organization_id?: string | null
+          plan_tier?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           organization_id?: string | null
+          plan_tier?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -584,6 +594,7 @@ export type Database = {
           notes: string | null
           number: string
           organization_id: string
+          payload: Json | null
           payment_days: number
           payment_terms: string | null
           status: Database["public"]["Enums"]["quote_status"]
@@ -604,6 +615,7 @@ export type Database = {
           notes?: string | null
           number: string
           organization_id: string
+          payload?: Json | null
           payment_days?: number
           payment_terms?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
@@ -624,6 +636,7 @@ export type Database = {
           notes?: string | null
           number?: string
           organization_id?: string
+          payload?: Json | null
           payment_days?: number
           payment_terms?: string | null
           status?: Database["public"]["Enums"]["quote_status"]

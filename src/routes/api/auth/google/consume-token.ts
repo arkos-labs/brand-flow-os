@@ -3,7 +3,8 @@ import { createFileRoute } from '@tanstack/react-router'
 function parseCookie(header: string | null, name: string): string | null {
   if (!header) return null
   const match = header.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : null
+  const value = match?.[1]
+  return value ? decodeURIComponent(value) : null
 }
 
 // Consomme le cookie httpOnly de très courte durée posé par

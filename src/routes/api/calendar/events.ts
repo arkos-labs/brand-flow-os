@@ -6,9 +6,9 @@ import { requireAuthenticatedUserId } from '@/lib/auth-server'
 // plus le scope calendar.readonly).
 async function refreshGoogleToken(refreshToken: string) {
   const clientId =
-    process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID
+    process.env['VITE_GOOGLE_CLIENT_ID'] || process.env['GOOGLE_CLIENT_ID']
   const clientSecret =
-    process.env.GOOGLE_CLIENT_SECRET
+    process.env['GOOGLE_CLIENT_SECRET']
 
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',

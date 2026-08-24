@@ -23,9 +23,9 @@ export const Route = createFileRoute('/api/auth/google/login')({
         const returnTo = safeReturnTo(url.searchParams.get('returnTo') || '/parametres')
 
         const clientId =
-          process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID
+          process.env['GOOGLE_CLIENT_ID'] || process.env['VITE_GOOGLE_CLIENT_ID']
         const redirectUri =
-          process.env.GOOGLE_REDIRECT_URI || process.env.VITE_GOOGLE_REDIRECT_URI
+          process.env['GOOGLE_REDIRECT_URI'] || process.env['VITE_GOOGLE_REDIRECT_URI']
 
         if (!clientId || !redirectUri) {
           return new Response('Missing Google Client ID or Redirect URI', {

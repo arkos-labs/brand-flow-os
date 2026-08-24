@@ -101,12 +101,12 @@ export function createShowcaseData(): ShowcaseData {
   ];
 
   return {
-    clients: [],
-    quotes: [],
-    invoices: [],
-    expenses: [],
+    clients,
+    quotes,
+    invoices,
+    expenses,
     subscriptions: [],
-    nextQuoteNumber: 1,
-    nextInvoiceNumber: 1,
+    nextQuoteNumber: quotes.length + 1,
+    nextInvoiceNumber: invoices.length + 1,
   };
 }

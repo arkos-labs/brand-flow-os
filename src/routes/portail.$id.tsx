@@ -212,6 +212,9 @@ function ClientPortalPremium() {
   const [refuseReason, setRefuseReason] = useState("");
   const [exporting, setExporting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Date réelle de signature/refus, enregistrée côté serveur.
+  const [signedAt, setSignedAt] = useState<string | null>(null);
+  const [refusedAt, setRefusedAt] = useState<string | null>(null);
 
   const now = new Date();
   const timestamp = `${now.toLocaleDateString("fr-FR")} ${now.toLocaleTimeString("fr-FR")}`;
@@ -239,6 +242,7 @@ function ClientPortalPremium() {
   const handleSign = async () => {
     setIsSubmitting(true);
     const signedAt = new Date().toISOString();
+    setSignedAt(signedAt);
     
     const signaturePayload = {
       signerName: typedName.trim() || quote.client,
@@ -270,7 +274,7 @@ function ClientPortalPremium() {
     setIsSubmitting(false);
     setIsSignOpen(false);
     // Mémoriser la signature localement pour éviter le re-affichage des boutons
-    sessionStorage.setItem(`quote_signed_${quote.number}`, "true");
+    sessionStorage.setItem(`quote_signed_${id}`, "true");
     setLocalSigned(true);
     setStep("signed");
     // Re-fetcher le devis pour avoir le statut à jour depuis Supabase
@@ -337,7 +341,7 @@ function ClientPortalPremium() {
           <h1 className="text-2xl font-bold text-slate-900 mb-3">Devis accepté !</h1>
           <p className="text-slate-500 text-sm mb-8 leading-relaxed">
             Merci {quote.client}. Votre signature a bien été enregistrée.<br />
-            Votre acceptation est enregistrée dans cette version locale. Vous pouvez conserver le PDF ci-dessous.
+            Elle a été transmise au prestataire. Vous pouvez conserver le PDF ci-dessous.
           </p>
           <div className="flex flex-col gap-3">
             <Button
@@ -359,10 +363,10 @@ function ClientPortalPremium() {
           <div className="mt-8 p-4 rounded-xl bg-white border border-slate-100 shadow-sm text-left text-xs text-slate-500">
             <p className="font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              Trace d'acceptation locale
+              Trace d'acceptation
             </p>
             <p>Signé par : <span className="text-slate-800 font-medium">{quote.client}</span></p>
-            <p>Date : <span className="text-slate-800">{timestamp}</span></p>
+            <p>Date : <span className="text-slate-800">{signedAt ? new Date(signedAt).toLocaleString("fr-FR") : timestamp}</span></p>
             <p>Document : <span className="text-slate-800 font-mono">{quote.number}</span></p>
           </div>
         </div>
@@ -470,7 +474,7 @@ function ClientPortalPremium() {
         {/* ── Badge sécurité ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-5">
           <ShieldCheck className="h-4 w-4" />
-          <span>Portail de démonstration · Acceptation conservée dans ce navigateur</span>
+          <span>Signature sécurisée · enregistrée et transmise au prestataire</span>
         </div>
 
         {/* ── CTA (si pas encore signé) ──────────────────────────────────────── */}
@@ -530,7 +534,7 @@ function ClientPortalPremium() {
                 </Label>
                 <p className="text-xs text-slate-400 flex items-center gap-1">
                   <Lock className="h-3 w-3" />
-                  Acceptation enregistrée en mode local
+                  Acceptation enregistrée et transmise au prestataire
                 </p>
               </div>
             </div>

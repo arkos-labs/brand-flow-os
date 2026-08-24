@@ -217,10 +217,10 @@ function RendezVousPage() {
     queryFn: async () => {
       // Le refresh token passe dans le corps de la requête POST, jamais
       // dans l'URL — évite qu'il finisse dans les logs / l'historique.
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       const res = await fetch("/api/calendar/list", {
         method: "POST",
-        headers: authHeaders(session, { "Content-Type": "application/json" }),
+        headers: authHeaders(sessionData?.session ?? null, { "Content-Type": "application/json" }),
         body: JSON.stringify({ refresh_token: company.google_refresh_token }),
       });
       const json = await res.json();
@@ -241,10 +241,10 @@ function RendezVousPage() {
     queryFn: async () => {
       // Le refresh token passe dans le corps de la requête POST, jamais
       // dans l'URL — évite qu'il finisse dans les logs / l'historique.
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       const res = await fetch("/api/calendar/events", {
         method: "POST",
-        headers: authHeaders(session, { "Content-Type": "application/json" }),
+        headers: authHeaders(sessionData?.session ?? null, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           refresh_token: company.google_refresh_token,
           calendar_id: selectedCalendarId,

@@ -57,7 +57,7 @@ export const Route = createFileRoute("/api/stripe/status")({
             plan: activeSub.items.data[0]?.price.id,
             cancel_at: activeSub.cancel_at,
             cancel_at_period_end: activeSub.cancel_at_period_end,
-            current_period_end: activeSub.current_period_end
+            current_period_end: (activeSub as any).current_period_end
           }), {
             status: 200,
             headers: { "Content-Type": "application/json" },

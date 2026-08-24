@@ -12,13 +12,13 @@
  */
 
 export function isDocusealEnabled(): boolean {
-  return !!(process.env.DOCUSEAL_API_URL && process.env.DOCUSEAL_API_KEY && process.env.DOCUSEAL_TEMPLATE_ID);
+  return !!(process.env['DOCUSEAL_API_URL'] && process.env['DOCUSEAL_API_KEY'] && process.env['DOCUSEAL_TEMPLATE_ID']);
 }
 
 function getConfig() {
-  const apiUrl = process.env.DOCUSEAL_API_URL;
-  const apiKey = process.env.DOCUSEAL_API_KEY;
-  const templateId = process.env.DOCUSEAL_TEMPLATE_ID;
+  const apiUrl = process.env['DOCUSEAL_API_URL'];
+  const apiKey = process.env['DOCUSEAL_API_KEY'];
+  const templateId = process.env['DOCUSEAL_TEMPLATE_ID'];
   if (!apiUrl || !apiKey || !templateId) {
     throw new Error("DocuSeal non configuré (DOCUSEAL_API_URL / DOCUSEAL_API_KEY / DOCUSEAL_TEMPLATE_ID manquants).");
   }
@@ -65,6 +65,6 @@ export async function createDocusealSubmission(
 
 /** Compare le `?secret=` de l'URL du webhook à DOCUSEAL_WEBHOOK_SECRET. */
 export function verifyDocusealWebhookSecret(providedSecret: string | null): boolean {
-  const expected = process.env.DOCUSEAL_WEBHOOK_SECRET;
+  const expected = process.env['DOCUSEAL_WEBHOOK_SECRET'];
   return !!expected && !!providedSecret && providedSecret === expected;
 }
