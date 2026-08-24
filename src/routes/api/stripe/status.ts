@@ -1,5 +1,6 @@
+// src/routes/api/stripe/status.ts
 import { createFileRoute } from "@tanstack/react-router";
-import { stripe } from "@/lib/stripe";
+import { stripe, isStripeEnabled } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
@@ -7,9 +8,14 @@ export const Route = createFileRoute("/api/stripe/status")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!isStripeEnabled()) {
+          return new Response(JSON.stringify({ error: "stripe_disabled" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         try {
-          // Vérifie la session serveur : on utilise l'id authentifié, jamais
-          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
           const auth = await requireAuthenticatedUserId(request);
           if ("error" in auth) return auth.error;
           const userId = auth.userId;
@@ -17,54 +23,51 @@ export const Route = createFileRoute("/api/stripe/status")({
           const supabase = getSupabaseAdmin();
           const { data: org } = await supabase
             .from("organizations")
-            .select("stripe_customer_id")
+            .select("stripe_customer_id, plan_tier")
             .eq("owner_id", userId)
-            .not("stripe_customer_id", "is", null)
-            .limit(1)
             .single();
 
-          const customerId = org?.stripe_customer_id;
-
-          if (!customerId) {
-            return new Response(JSON.stringify({ plan: null, cancel_at: null }), {
+          if (!org?.stripe_customer_id) {
+            return new Response(JSON.stringify({ status: "no_customer" }), {
               status: 200,
               headers: { "Content-Type": "application/json" },
             });
           }
 
-          const customer = await stripe.customers.retrieve(customerId, {
-            expand: ["subscriptions"],
+          const subscriptions = await stripe.subscriptions.list({
+            customer: org.stripe_customer_id,
+            status: "all",
+            limit: 5,
           });
 
-          if (customer.deleted) {
-            return new Response(JSON.stringify({ plan: null, cancel_at: null }), {
+          const active = subscriptions.data.find(
+            (s) => s.status === "active" || s.status === "trialing"
+          );
+
+          if (!active) {
+            return new Response(JSON.stringify({ status: "no_active_subscription" }), {
               status: 200,
               headers: { "Content-Type": "application/json" },
             });
           }
 
-          const subscriptions = customer.subscriptions?.data;
-          const activeSub = subscriptions?.find(s => s.status === "active" || s.status === "trialing");
-
-          if (!activeSub) {
-            return new Response(JSON.stringify({ plan: null, cancel_at: null }), {
+          const item = active.items.data[0];
+          return new Response(
+            JSON.stringify({
+              status: active.status,
+              cancelAtPeriodEnd: active.cancel_at_period_end,
+              currentPeriodEnd: active.current_period_end,
+              priceId: item?.price.id,
+              planTier: org.plan_tier,
+            }),
+            {
               status: 200,
               headers: { "Content-Type": "application/json" },
-            });
-          }
-
-          return new Response(JSON.stringify({ 
-            plan: activeSub.items.data[0]?.price.id,
-            cancel_at: activeSub.cancel_at,
-            cancel_at_period_end: activeSub.cancel_at_period_end,
-            current_period_end: (activeSub as any).current_period_end
-          }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
+            }
+          );
         } catch (err: any) {
-          console.error("Stripe status error:", err);
-          return new Response(JSON.stringify({ error: err.message }), {
+          console.error("Erreur /api/stripe/status:", err);
+          return new Response(JSON.stringify({ error: err.message || "server_error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });

@@ -1,93 +1,88 @@
+// src/routes/api/stripe/portal.ts
 import { createFileRoute } from "@tanstack/react-router";
-import { stripe } from "@/lib/stripe";
-import type Stripe from "stripe";
+import { stripe, isStripeEnabled } from "@/lib/stripe";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/stripe/portal")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        try {
-          const body = await request.json();
-          const { customerId, targetPlanId, returnUrl } = body;
+        if (!isStripeEnabled()) {
+          return new Response(JSON.stringify({ error: "stripe_disabled" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
 
-          // Vérifie la session serveur : on utilise l'id authentifié, jamais
-          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
+        try {
           const auth = await requireAuthenticatedUserId(request);
           if ("error" in auth) return auth.error;
           const userId = auth.userId;
 
-          let finalCustomerId = customerId;
+          const body = await request.json().catch(() => ({}));
+          const returnUrl =
+            typeof body?.returnUrl === "string"
+              ? body.returnUrl
+              : request.headers.get("referer") || "https://devie-ia.vercel.app/parametres";
 
-          if (!finalCustomerId && userId) {
-            const { getSupabaseAdmin } = await import("@/lib/supabase-admin");
-            const supabase = getSupabaseAdmin();
-            const { data: org } = await supabase
-              .from("organizations")
-              .select("stripe_customer_id")
-              .eq("owner_id", userId)
-              .not("stripe_customer_id", "is", null)
-              .limit(1)
-              .single();
-            if (org?.stripe_customer_id) {
-              finalCustomerId = org.stripe_customer_id;
-            }
-          }
+          const supabase = getSupabaseAdmin();
+          const { data: org } = await supabase
+            .from("organizations")
+            .select("stripe_customer_id")
+            .eq("owner_id", userId)
+            .single();
 
-          if (!finalCustomerId) {
-            return new Response(JSON.stringify({ error: "Client Stripe introuvable." }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-
-          const portalOptions: Stripe.BillingPortal.SessionCreateParams = {
-            customer: finalCustomerId,
-            return_url: returnUrl || request.headers.get("referer") || "http://localhost:5173/parametres",
-          };
-
-          // Redirection directe vers le changement de forfait si un plan cible est fourni
-          if (targetPlanId) {
-            const targetPriceId = targetPlanId === "pro" 
-              ? process.env['VITE_STRIPE_PRICE_PRO'] 
-              : process.env['VITE_STRIPE_PRICE_AGENCY'];
-
-            if (targetPriceId) {
-              const subscriptions = await stripe.subscriptions.list({
-                customer: finalCustomerId,
-                status: "active",
-                limit: 1,
-              });
-
-              const sub = subscriptions.data[0];
-              if (sub && !sub.cancel_at_period_end) {
-                const item = sub.items?.data?.[0];
-                if (item) {
-                  portalOptions.flow_data = {
-                    type: "subscription_update_confirm",
-                    subscription_update_confirm: {
-                      subscription: sub.id,
-                      items: [{
-                        id: item.id,
-                        price: targetPriceId,
-                        quantity: 1,
-                      }],
-                    },
-                  };
-                }
+          if (!org?.stripe_customer_id) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  "Aucun abonnement actif trouvé. Choisissez un forfait pour créer votre abonnement.",
+              }),
+              {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
               }
-            }
+            );
           }
 
-          const session = await stripe.billingPortal.sessions.create(portalOptions);
+          // Vérifie qu'une subscription active existe avant d'ouvrir le portail
+          const subscriptions = await stripe.subscriptions.list({
+            customer: org.stripe_customer_id,
+            status: "all",
+            limit: 5,
+          });
+
+          const hasActive = subscriptions.data.some(
+            (s) => s.status === "active" || s.status === "trialing"
+          );
+
+          if (!hasActive) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  "Aucun abonnement actif trouvé. Souscrivez d'abord à un forfait payant.",
+              }),
+              {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          // Crée la session Customer Portal Stripe
+          const session = await stripe.billingPortal.sessions.create({
+            customer: org.stripe_customer_id,
+            return_url: returnUrl,
+          });
 
           return new Response(JSON.stringify({ url: session.url }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });
         } catch (err: any) {
-          console.error("Portal error:", err);
-          return new Response(JSON.stringify({ error: err.message }), {
+          console.error("Erreur /api/stripe/portal:", err);
+          return new Response(JSON.stringify({ error: err.message || "server_error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });

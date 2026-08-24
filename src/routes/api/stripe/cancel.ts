@@ -1,5 +1,6 @@
+// src/routes/api/stripe/cancel.ts
 import { createFileRoute } from "@tanstack/react-router";
-import { stripe } from "@/lib/stripe";
+import { stripe, isStripeEnabled } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
@@ -7,9 +8,14 @@ export const Route = createFileRoute("/api/stripe/cancel")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!isStripeEnabled()) {
+          return new Response(JSON.stringify({ error: "stripe_disabled" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         try {
-          // Vérifie la session serveur : on utilise l'id authentifié, jamais
-          // le `userId` du corps (falsifiable). SÉCURITÉ (IDOR).
           const auth = await requireAuthenticatedUserId(request);
           if ("error" in auth) return auth.error;
           const userId = auth.userId;
@@ -17,56 +23,70 @@ export const Route = createFileRoute("/api/stripe/cancel")({
           const supabase = getSupabaseAdmin();
           const { data: org } = await supabase
             .from("organizations")
-            .select("stripe_customer_id")
+            .select("id, stripe_customer_id")
             .eq("owner_id", userId)
-            .not("stripe_customer_id", "is", null)
-            .limit(1)
             .single();
 
-          const customerId = org?.stripe_customer_id;
-
-          if (!customerId) {
-            return new Response(JSON.stringify({ error: "Client Stripe introuvable." }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
+          if (!org?.stripe_customer_id) {
+            return new Response(
+              JSON.stringify({ error: "Aucun abonnement actif trouvé." }),
+              {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
           }
 
-          const customer = await stripe.customers.retrieve(customerId, {
-            expand: ["subscriptions"],
+          // Cherche la subscription active
+          const subscriptions = await stripe.subscriptions.list({
+            customer: org.stripe_customer_id,
+            status: "all",
+            limit: 5,
           });
 
-          if (customer.deleted) {
-            return new Response(JSON.stringify({ error: "Client supprimé." }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
+          const active = subscriptions.data.find(
+            (s) => s.status === "active" || s.status === "trialing"
+          );
+
+          if (!active) {
+            return new Response(
+              JSON.stringify({ error: "Aucun abonnement actif trouvé." }),
+              {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
           }
 
-          const subscriptions = customer.subscriptions?.data;
-          if (!subscriptions || subscriptions.length === 0) {
-            return new Response(JSON.stringify({ error: "Aucun abonnement actif trouvé." }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
+          // Résiliation à la fin de la période en cours (pas immédiate)
+          await stripe.subscriptions.update(active.id, {
+            cancel_at_period_end: true,
+          });
 
-          // Annuler tous les abonnements actifs à la fin de la période
-          for (const sub of subscriptions) {
-            if (sub.status === "active" || sub.status === "trialing") {
-              await stripe.subscriptions.update(sub.id, {
+          // PAF : log de résiliation
+          try {
+            const ip =
+              request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+            await supabase.rpc("insert_audit_log", {
+              p_user_id: userId,
+              p_action: "subscription_cancelled",
+              p_resource_type: "organization",
+              p_resource_id: org.id,
+              p_metadata: {
+                stripe_subscription_id: active.id,
                 cancel_at_period_end: true,
-              });
-            }
-          }
+              },
+              p_ip_address: ip,
+            });
+          } catch (_) {}
 
-          return new Response(JSON.stringify({ success: true }), {
+          return new Response(JSON.stringify({ ok: true }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });
         } catch (err: any) {
-          console.error("Cancel subscription error:", err);
-          return new Response(JSON.stringify({ error: err.message }), {
+          console.error("Erreur /api/stripe/cancel:", err);
+          return new Response(JSON.stringify({ error: err.message || "server_error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });
