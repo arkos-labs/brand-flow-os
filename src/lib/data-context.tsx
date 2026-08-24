@@ -89,7 +89,11 @@ async function upsertClient(client: Client, orgId: string) {
   }, { onConflict: "id" });
   if (error) {
     console.error("UPSERT CLIENT ERROR:", error);
-    toast.error("Erreur de synchro Client : " + error.message);
+    if (error.message.includes("row level security")) {
+      toast.error("Vous avez atteint la limite de clients pour votre abonnement actuel.");
+    } else {
+      toast.error("Erreur de synchro Client : " + error.message);
+    }
   }
 }
 

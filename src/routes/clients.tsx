@@ -267,6 +267,12 @@ function ClientsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const plan = profile?.plan_tier || "solo";
+    if (!editingClient && plan === "solo" && clients.length >= 1) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
     // Calcul du nom d'affichage
     const displayName =
       form.type === "pro"
