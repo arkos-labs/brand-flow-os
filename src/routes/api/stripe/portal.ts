@@ -72,27 +72,29 @@ export const Route = createFileRoute("/api/stripe/portal")({
           }
 
           const flowData: any = {};
-          if (body.targetPriceId) {
-            flowData.flow_data = {
-              type: "subscription_update_confirm",
-              subscription_update_confirm: {
-                subscription: activeSub.id,
-                items: [
-                  {
-                    id: activeSub.items.data[0].id,
-                    price: body.targetPriceId,
-                    quantity: 1,
-                  },
-                ],
-              },
-            };
-          } else if (body.action === "cancel") {
-            flowData.flow_data = {
-              type: "subscription_cancel",
-              subscription_cancel: {
-                subscription: activeSub.id,
-              },
-            };
+          if (!activeSub.cancel_at_period_end) {
+            if (body.targetPriceId) {
+              flowData.flow_data = {
+                type: "subscription_update_confirm",
+                subscription_update_confirm: {
+                  subscription: activeSub.id,
+                  items: [
+                    {
+                      id: activeSub.items.data[0].id,
+                      price: body.targetPriceId,
+                      quantity: 1,
+                    },
+                  ],
+                },
+              };
+            } else if (body.action === "cancel") {
+              flowData.flow_data = {
+                type: "subscription_cancel",
+                subscription_cancel: {
+                  subscription: activeSub.id,
+                },
+              };
+            }
           }
 
           // Crée la session Customer Portal Stripe
