@@ -230,11 +230,11 @@ function SettingsPage() {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
     const payment = params.get("payment");
-    if (sessionId && payment === "success") {
+    if (sessionId && payment === "success" && session?.access_token) {
       window.history.replaceState({}, document.title, window.location.pathname);
       fetch("/api/stripe/verify-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: "Bearer " + session.access_token } : {}) },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({ sessionId }),
       })
         .then((res) => res.json())
@@ -245,8 +245,7 @@ function SettingsPage() {
         })
         .catch((err) => console.error("verify-session error:", err));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session?.access_token, refresh]);
 
   const handleSiretLookup = async (siret: string) => {
     const clean = siret.replace(/\D/g, "");
