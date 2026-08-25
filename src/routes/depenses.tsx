@@ -54,6 +54,7 @@ export const Route = createFileRoute("/depenses")({
     meta: [
       { title: "Dépenses & Achats — ClearQuote" },
       { name: "description", content: "Suivi des frais, achats et sous-traitance." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: ExpensesPage,

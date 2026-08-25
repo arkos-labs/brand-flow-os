@@ -9,7 +9,9 @@ export const Route = createFileRoute("/nouveautes")({
   head: () => ({
     meta: [
       { title: "Nouveautés — ClearQuote" },
+      { name: "description", content: "Découvrez les dernières nouveautés de ClearQuote : trésorerie, signature électronique et conformité Factur-X." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/nouveautes" }],
   }),
   component: NouveautesPage,
 });

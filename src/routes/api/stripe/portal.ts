@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { stripe, isStripeEnabled } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { requireAuthenticatedUserId } from "@/lib/auth-server";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const Route = createFileRoute("/api/stripe/portal")({
   server: {
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/api/stripe/portal")({
           const returnUrl =
             typeof body?.returnUrl === "string"
               ? body.returnUrl
-              : request.headers.get("referer") || "https://devie-ia.vercel.app/parametres";
+              : request.headers.get("referer") || `${getSiteUrl()}/parametres`;
 
           const supabase = getSupabaseAdmin();
           const { data: org } = await supabase

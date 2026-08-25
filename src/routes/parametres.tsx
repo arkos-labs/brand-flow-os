@@ -58,6 +58,7 @@ export const Route = createFileRoute("/parametres")({
         content:
           "Configurez les informations de votre entreprise : SIRET, TVA, coordonnées, logo et numérotation des documents.",
       },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: SettingsPage,

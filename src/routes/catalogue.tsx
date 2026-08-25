@@ -36,6 +36,7 @@ export const Route = createFileRoute("/catalogue")({
       },
       { property: "og:title", content: "Catalogue de prestations — ClearQuote" },
       { property: "og:description", content: "Prestations, tarifs et TVA pour devis rapides." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Catalogue,

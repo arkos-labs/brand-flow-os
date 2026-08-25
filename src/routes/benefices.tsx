@@ -11,7 +11,7 @@ import "./homepage.css";
 export const Route = createFileRoute("/benefices")({
   head: () => ({
     meta: [
-      { title: "Bénéfices — ClearQuote | Pourquoi choisir ClearQuote pour votre activité" },
+      { title: "Bénéfices — ClearQuote | Pourquoi choisir ClearQuote" },
       {
         name: "description",
         content:

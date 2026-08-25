@@ -11,7 +11,7 @@ import "./homepage.css";
 export const Route = createFileRoute("/fonctionnement")({
   head: () => ({
     meta: [
-      { title: "Comment ça marche — ClearQuote | De l'inscription au paiement en 4 étapes" },
+      { title: "Comment ça marche — ClearQuote | Devis en 4 étapes" },
       {
         name: "description",
         content:

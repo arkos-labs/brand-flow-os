@@ -32,6 +32,9 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/portail/$id")({
+  head: () => ({
+    meta: [{ name: "robots", content: "noindex, nofollow" }],
+  }),
   component: ClientPortalPremium,
 });
 

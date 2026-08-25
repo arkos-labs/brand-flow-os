@@ -15,6 +15,7 @@ export const Route = createFileRoute("/connexion")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/connexion" }],
   }),
   component: ConnexionPage,
 });

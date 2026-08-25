@@ -9,7 +9,9 @@ export const Route = createFileRoute("/mises-a-jour")({
   head: () => ({
     meta: [
       { title: "Mises à jour à venir — ClearQuote" },
+      { name: "description", content: "Prochaines mises à jour et améliorations prévues sur ClearQuote." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/mises-a-jour" }],
   }),
   component: MisesAJourPage,
 });

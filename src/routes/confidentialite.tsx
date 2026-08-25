@@ -9,7 +9,9 @@ export const Route = createFileRoute("/confidentialite")({
   head: () => ({
     meta: [
       { title: "Politique de confidentialité — ClearQuote" },
+      { name: "description", content: "Politique de confidentialité de ClearQuote : collecte, traitement et protection de vos données personnelles (RGPD)." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/confidentialite" }],
   }),
   component: ConfidentialitePage,
 });

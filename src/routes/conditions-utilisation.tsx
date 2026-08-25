@@ -9,7 +9,9 @@ export const Route = createFileRoute("/conditions-utilisation")({
   head: () => ({
     meta: [
       { title: "Conditions d'utilisation — ClearQuote" },
+      { name: "description", content: "Conditions d'utilisation du service ClearQuote : devis, facturation électronique Factur-X et gestion commerciale." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/conditions-utilisation" }],
   }),
   component: ConditionsUtilisationPage,
 });

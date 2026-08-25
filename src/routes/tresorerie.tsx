@@ -30,6 +30,7 @@ export const Route = createFileRoute("/tresorerie")({
     meta: [
       { title: "Trésorerie — ClearQuote" },
       { name: "description", content: "Suivi de votre trésorerie et cashflow prédictif." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Cashflow,

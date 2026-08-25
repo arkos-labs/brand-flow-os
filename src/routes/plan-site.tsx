@@ -9,7 +9,9 @@ export const Route = createFileRoute("/plan-site")({
   head: () => ({
     meta: [
       { title: "Plan du site — ClearQuote" },
+      { name: "description", content: "Plan du site ClearQuote : accédez à toutes les pages du logiciel de devis et facturation." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/plan-site" }],
   }),
   component: PlanSitePage,
 });

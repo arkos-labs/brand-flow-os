@@ -32,6 +32,7 @@ export const Route = createFileRoute("/pipeline")({
         name: "description",
         content: "Pipeline Kanban : suivez l'avancement de vos devis.",
       },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Pipeline,

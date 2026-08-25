@@ -21,6 +21,7 @@ export const Route = createFileRoute("/mot-de-passe-oublie")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/mot-de-passe-oublie" }],
   }),
   component: ResetPasswordPage,
 });

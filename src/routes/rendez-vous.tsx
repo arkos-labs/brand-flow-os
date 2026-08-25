@@ -37,6 +37,12 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/rendez-vous")({
+  head: () => ({
+    meta: [
+      { title: "Rendez-vous — ClearQuote" },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: RendezVousPage,
 });
 

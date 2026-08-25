@@ -45,6 +45,7 @@ export const Route = createFileRoute("/abonnements")({
     meta: [
       { title: "Abonnements — ClearQuote" },
       { name: "description", content: "Gestion des factures récurrentes." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: SubscriptionsPage,

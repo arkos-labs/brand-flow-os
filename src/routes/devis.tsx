@@ -158,6 +158,7 @@ export const Route = createFileRoute("/devis")({
         property: "og:description",
         content: "Simulateur d'upsell et suivi des propositions envoyées.",
       },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Quotes,

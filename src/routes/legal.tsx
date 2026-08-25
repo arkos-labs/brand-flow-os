@@ -9,7 +9,9 @@ export const Route = createFileRoute("/legal")({
   head: () => ({
     meta: [
       { title: "Mentions légales — ClearQuote" },
+      { name: "description", content: "Mentions légales de ClearQuote : éditeur du service, contact et informations légales." },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/legal" }],
   }),
   component: LegalPage,
 });

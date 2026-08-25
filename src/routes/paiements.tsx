@@ -19,6 +19,12 @@ import { cn } from "@/lib/utils";
 import { getInvoicePaymentState, markInvoiceAsPaid } from "@/lib/document-workflow";
 
 export const Route = createFileRoute("/paiements")({
+  head: () => ({
+    meta: [
+      { title: "Paiements & Relances — ClearQuote" },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: PaymentsPage,
 });
 

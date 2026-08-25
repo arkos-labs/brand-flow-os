@@ -17,6 +17,12 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/archives")({
+  head: () => ({
+    meta: [
+      { title: "Archives — ClearQuote" },
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: ArchivesPage,
 });
 

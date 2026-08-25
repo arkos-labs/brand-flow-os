@@ -22,6 +22,7 @@ export const Route = createFileRoute("/inscription")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://clearquote.fr/inscription" }],
   }),
   component: InscriptionPage,
 });

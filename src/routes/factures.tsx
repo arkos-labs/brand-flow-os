@@ -68,6 +68,7 @@ export const Route = createFileRoute("/factures")({
         property: "og:description",
         content: "Suivi des factures, échéances et statuts de paiement.",
       },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Invoices,

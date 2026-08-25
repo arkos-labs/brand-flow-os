@@ -39,6 +39,7 @@ export const Route = createFileRoute("/tableau-de-bord")({
       { name: "description", content: "Dashboard ClearQuote — suivez votre activité, vos devis, factures et trésorerie." },
       { property: "og:title", content: "Tableau de bord — ClearQuote" },
       { property: "og:description", content: "Dashboard ClearQuote — suivez votre activité, vos devis, factures et trésorerie." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: Dashboard,

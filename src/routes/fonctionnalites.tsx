@@ -12,7 +12,7 @@ import "./homepage.css";
 export const Route = createFileRoute("/fonctionnalites")({
   head: () => ({
     meta: [
-      { title: "Fonctionnalités — ClearQuote | Devis, Facturation, CRM et Trésorerie" },
+      { title: "Fonctionnalités — ClearQuote | Devis, Facturation, CRM" },
       {
         name: "description",
         content:
