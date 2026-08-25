@@ -59,6 +59,7 @@ export const Route = createFileRoute("/clients")({
         name: "description",
         content: "Carnet d'adresses clients avec historique des devis et factures.",
       },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: () => (
