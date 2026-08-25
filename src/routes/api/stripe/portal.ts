@@ -54,11 +54,11 @@ export const Route = createFileRoute("/api/stripe/portal")({
             limit: 5,
           });
 
-          const hasActive = subscriptions.data.some(
+          const activeSub = subscriptions.data.find(
             (s) => s.status === "active" || s.status === "trialing"
           );
 
-          if (!hasActive) {
+          if (!activeSub) {
             return new Response(
               JSON.stringify({
                 error:
@@ -71,10 +71,35 @@ export const Route = createFileRoute("/api/stripe/portal")({
             );
           }
 
+          const flowData: any = {};
+          if (body.targetPriceId) {
+            flowData.flow_data = {
+              type: "subscription_update_confirm",
+              subscription_update_confirm: {
+                subscription: activeSub.id,
+                items: [
+                  {
+                    id: activeSub.items.data[0].id,
+                    price: body.targetPriceId,
+                    quantity: 1,
+                  },
+                ],
+              },
+            };
+          } else if (body.action === "cancel") {
+            flowData.flow_data = {
+              type: "subscription_cancel",
+              subscription_cancel: {
+                subscription: activeSub.id,
+              },
+            };
+          }
+
           // Crée la session Customer Portal Stripe
           const session = await stripe.billingPortal.sessions.create({
             customer: org.stripe_customer_id,
             return_url: returnUrl,
+            ...flowData,
           });
 
           return new Response(JSON.stringify({ url: session.url }), {
