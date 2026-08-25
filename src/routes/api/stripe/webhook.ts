@@ -5,8 +5,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 // Map price IDs → plan tier (côté serveur, pas d'env VITE_ ici)
 const PRICE_TO_PLAN: Record<string, string> = {
-  [process.env['VITE_STRIPE_PRICE_PRO'] ?? ""]: "pro",
-  [process.env['VITE_STRIPE_PRICE_AGENCY'] ?? ""]: "agency",
+  [process.env['VITE_STRIPE_PRICE_PRO'] || "price_1U6E5F7tsPmmReQdupg0eEY2"]: "pro",
+  [process.env['VITE_STRIPE_PRICE_AGENCY'] || "price_1U6E5F7tsPmmReQdP1CVwC6X"]: "agency",
 };
 
 function getPlanFromPriceId(priceId: string | undefined): string | null {
