@@ -7,6 +7,7 @@ import { requireAuthenticatedUserId } from "@/lib/auth-server";
 const PRICE_TO_PLAN: Record<string, string> = {
   [process.env['VITE_STRIPE_PRICE_PRO'] || "price_1U6E5F7tsPmmReQdupg0eEY2"]: "pro",
   [process.env['VITE_STRIPE_PRICE_AGENCY'] || "price_1U6E5F7tsPmmReQdP1CVwC6X"]: "agency",
+  "price_1U8SWn7tsPmmReQdfSCfN8II": "agency", // Test Agency ID fallback
 };
 
 export const Route = createFileRoute("/api/stripe/verify-session")({
