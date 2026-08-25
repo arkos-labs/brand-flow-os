@@ -57,9 +57,7 @@ export const Route = createFileRoute("/api/stripe/checkout")({
               },
             ],
             mode: "subscription",
-            subscription_data: (planName === "pro" || planName === "agency") && !hasCustomer ? {
-              trial_period_days: 15,
-            } : undefined,
+            subscription_data: (planName === "pro" || planName === "agency") && !hasCustomer ? {} : undefined,
             success_url: successUrl || request.headers.get("referer") || "http://localhost:5173",
             cancel_url: cancelUrl || request.headers.get("referer") || "http://localhost:5173",
             metadata: {
