@@ -81,10 +81,13 @@ function formatDuration(start: string, end: string) {
 // comme &#39; pour l'apostrophe…). On les nettoie pour n'afficher que du
 // texte lisible, sans aucune balise ni caractère d'échappement parasite.
 function cleanDescription(raw: string): string {
-  if (typeof window === "undefined") return raw;
-  const div = document.createElement("div");
-  div.innerHTML = raw.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
-  const text = div.textContent || div.innerText || "";
+  if (typeof window === "undefined" || typeof DOMParser === "undefined") return raw;
+  // On utilise DOMParser (qui n'exécute aucun script) plutôt qu'innerHTML pour
+  // extraire le texte : la description Google Calendar est semi-fiables mais
+  // pourrait contenir du HTML hostile → parsing sans exécution (safe XSS).
+  const normalized = raw.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
+  const doc = new DOMParser().parseFromString(normalized, "text/html");
+  const text = doc.body.textContent || "";
   return text.replace(/\n{3,}/g, "\n\n").trim();
 }
 

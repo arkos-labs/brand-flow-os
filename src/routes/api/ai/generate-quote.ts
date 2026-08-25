@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { openai, isOpenAIEnabled } from "@/lib/openai";
+import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/ai/generate-quote")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Auth obligatoire : cet endpoint appelle l'API OpenAI (coût par requête).
+        // Sans vérification, n'importe qui pourrait épuiser les crédits du compte.
+        const auth = await requireAuthenticatedUserId(request);
+        if ("error" in auth) return auth.error;
+
         if (!isOpenAIEnabled()) {
           return new Response(JSON.stringify({ error: "OpenAI non configuré" }), {
             status: 400,

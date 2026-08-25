@@ -54,6 +54,7 @@ import { Route as ApiStripeCancelRouteImport } from './routes/api/stripe/cancel'
 import { Route as ApiStripeCheckoutRouteImport } from './routes/api/stripe/checkout'
 import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
 import { Route as ApiStripeStatusRouteImport } from './routes/api/stripe/status'
+import { Route as ApiStripeVerifySessionRouteImport } from './routes/api/stripe/verify-session'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
@@ -286,6 +287,11 @@ const ApiStripeStatusRoute = ApiStripeStatusRouteImport.update({
   path: '/api/stripe/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeVerifySessionRoute = ApiStripeVerifySessionRouteImport.update({
+  id: '/api/stripe/verify-session',
+  path: '/api/stripe/verify-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -359,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/stripe/status': typeof ApiStripeStatusRoute
+  '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -411,6 +418,7 @@ export interface FileRoutesByTo {
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/stripe/status': typeof ApiStripeStatusRoute
+  '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/api/stripe/checkout': typeof ApiStripeCheckoutRoute
   '/api/stripe/portal': typeof ApiStripePortalRoute
   '/api/stripe/status': typeof ApiStripeStatusRoute
+  '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
     | '/api/stripe/status'
+    | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -570,6 +580,7 @@ export interface FileRouteTypes {
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
     | '/api/stripe/status'
+    | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -622,6 +633,7 @@ export interface FileRouteTypes {
     | '/api/stripe/checkout'
     | '/api/stripe/portal'
     | '/api/stripe/status'
+    | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
     | '/api/vies/check'
     | '/api/auth/google/callback'
@@ -675,6 +687,7 @@ export interface RootRouteChildren {
   ApiStripeCheckoutRoute: typeof ApiStripeCheckoutRoute
   ApiStripePortalRoute: typeof ApiStripePortalRoute
   ApiStripeStatusRoute: typeof ApiStripeStatusRoute
+  ApiStripeVerifySessionRoute: typeof ApiStripeVerifySessionRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
@@ -999,6 +1012,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/verify-session': {
+      id: '/api/stripe/verify-session'
+      path: '/api/stripe/verify-session'
+      fullPath: '/api/stripe/verify-session'
+      preLoaderRoute: typeof ApiStripeVerifySessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -1083,6 +1103,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStripeCheckoutRoute: ApiStripeCheckoutRoute,
   ApiStripePortalRoute: ApiStripePortalRoute,
   ApiStripeStatusRoute: ApiStripeStatusRoute,
+  ApiStripeVerifySessionRoute: ApiStripeVerifySessionRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,

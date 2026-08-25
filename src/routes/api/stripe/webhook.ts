@@ -156,14 +156,19 @@ export const Route = createFileRoute("/api/stripe/webhook")({
               console.error(`❌ Échec paiement pour: ${invoice.customer_email}`);
 
               if (userId) {
-                await supabase.rpc("insert_audit_log", {
-                  p_user_id: userId,
-                  p_action: "payment_failed",
-                  p_resource_type: "organization",
-                  p_resource_id: null,
-                  p_metadata: { invoice_id: invoice.id, amount_due: invoice.amount_due },
-                  p_ip_address: "stripe-webhook",
-                }).catch(() => {});
+                try {
+                  await supabase.rpc("insert_audit_log", {
+                    p_user_id: userId,
+                    p_action: "payment_failed",
+                    p_resource_type: "organization",
+                    p_resource_id: null,
+                    p_metadata: { invoice_id: invoice.id, amount_due: invoice.amount_due },
+                    p_ip_address: "stripe-webhook",
+                  });
+                } catch (auditErr) {
+                  // Log d'audit best-effort : on ne bloque pas le webhook.
+                  console.error("Audit log failed (payment_failed):", auditErr);
+                }
               }
               break;
             }

@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { openai, isOpenAIEnabled } from "@/lib/openai";
+import { requireAuthenticatedUserId } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/ai/ocr-expense")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Auth obligatoire : l'endpoint appelle l'API OpenAI (coût) et peut
+        // analyser une URL arbitraire. Seuls les utilisateurs connectés le font.
+        const auth = await requireAuthenticatedUserId(request);
+        if ("error" in auth) return auth.error;
+
         if (!isOpenAIEnabled()) {
           return new Response(JSON.stringify({ error: "OpenAI non configuré" }), {
             status: 400,
@@ -16,6 +22,19 @@ export const Route = createFileRoute("/api/ai/ocr-expense")({
           const { imageUrl } = await request.json(); // Base64 ou URL publique
           if (!imageUrl) {
             return new Response(JSON.stringify({ error: "Image manquante" }), { status: 400 });
+          }
+
+          // Sécurité : on n'accepte que du base64 (data:image/...) ou des URLs https.
+          // Refuse file://, http://, gopher://… → empêche l'abus SSRF/coût via OpenAI
+          // (OpenAI télécharge l'URL côté serveur).
+          const isDataUri =
+            typeof imageUrl === "string" && /^data:image\/[a-z0-9.+-]+;base64,/i.test(imageUrl);
+          const isHttps = typeof imageUrl === "string" && /^https:\/\//i.test(imageUrl);
+          if (!isDataUri && !isHttps) {
+            return new Response(JSON.stringify({ error: "unsupported_image_url" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
           const response = await openai.chat.completions.create({

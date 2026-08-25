@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/stripe/status")({
             JSON.stringify({
               status: active.status,
               cancelAtPeriodEnd: active.cancel_at_period_end,
-              currentPeriodEnd: active.current_period_end,
+              currentPeriodEnd: (active as { current_period_end?: number }).current_period_end ?? null,
               priceId: item?.price.id,
               planTier: org.plan_tier,
             }),

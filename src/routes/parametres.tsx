@@ -187,7 +187,7 @@ function PrefToggleRow({
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { company, updateCompany, invoices } = useData();
-  const { profile, session, organization, ownedOrganizations, createOrganization, switchOrganization } = useSupabaseData();
+  const { profile, session, organization, ownedOrganizations, createOrganization, switchOrganization, refresh } = useSupabaseData();
   const [newOrgName, setNewOrgName] = useState("");
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const { prefs, setPrefs } = usePrefs();
@@ -223,6 +223,29 @@ function SettingsPage() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync plan immédiatement au retour du checkout Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const payment = params.get("payment");
+    if (sessionId && payment === "success") {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      fetch("/api/stripe/verify-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: "Bearer " + session.access_token } : {}) },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.plan_tier) {
+            refresh();
+          }
+        })
+        .catch((err) => console.error("verify-session error:", err));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSiretLookup = async (siret: string) => {
@@ -368,7 +391,7 @@ function SettingsPage() {
             priceId: stripePriceId,
             planName: targetPlanId,
             email: profile?.email,
-            successUrl: window.location.origin + "/parametres?payment=success",
+            successUrl: window.location.origin + "/parametres?payment=success&session_id={CHECKOUT_SESSION_ID}",
             cancelUrl: window.location.origin + "/parametres?payment=cancelled",
           }),
         });
