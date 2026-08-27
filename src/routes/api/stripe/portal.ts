@@ -74,6 +74,19 @@ export const Route = createFileRoute("/api/stripe/portal")({
             return await downgradeToSoloAndReload();
           }
 
+          if (body.action === "cancel") {
+            // Résiliation IMMÉDIATE
+            await stripe.subscriptions.cancel(activeSub.id);
+            await Promise.all([
+              supabase.from("organizations").update({ plan_tier: "solo", stripe_customer_id: null }).eq("owner_id", userId),
+              supabase.from("profiles").update({ plan_tier: "solo" }).eq("id", userId),
+            ]);
+            return new Response(JSON.stringify({ url: body.returnUrl || "http://localhost:5173/parametres" }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           const flowData: any = {};
           if (!activeSub.cancel_at_period_end) {
             if (body.targetPriceId) {
@@ -88,13 +101,6 @@ export const Route = createFileRoute("/api/stripe/portal")({
                       quantity: 1,
                     },
                   ],
-                },
-              };
-            } else if (body.action === "cancel") {
-              flowData.flow_data = {
-                type: "subscription_cancel",
-                subscription_cancel: {
-                  subscription: activeSub.id,
                 },
               };
             }
