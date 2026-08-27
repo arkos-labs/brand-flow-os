@@ -103,6 +103,19 @@ export const Route = createFileRoute("/api/stripe/portal")({
             });
           }
 
+          if (body.action === "cancel") {
+            // Résiliation IMMÉDIATE
+            await stripe.subscriptions.cancel(activeSub.id);
+            await Promise.all([
+              supabase.from("organizations").update({ plan_tier: "solo", stripe_customer_id: null }).eq("owner_id", userId),
+              supabase.from("profiles").update({ plan_tier: "solo" }).eq("id", userId),
+            ]);
+            return new Response(JSON.stringify({ url: body.returnUrl || "http://localhost:5173/parametres" }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           // Crée la session Customer Portal Stripe (uniquement pour accéder au portail général maintenant)
           const session = await stripe.billingPortal.sessions.create({
             customer: org.stripe_customer_id,
