@@ -568,23 +568,27 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </button>
                   ))}
 
-                  <div className="my-1 border-t border-border" />
-                  
-                  <button
-                    onClick={() => {
-                      setOrgDropdownOpen(false);
-                      if (organization?.plan_tier !== "agency") {
-                        setUpgradeOrgOpen(true);
-                        return;
-                      }
-                      setNewOrgName("");
-                      setCreateOrgOpen(true);
-                    }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Créer une entreprise
-                  </button>
+                  {currentUserRole === 'admin' && (
+                    <>
+                      <div className="my-1 border-t border-border" />
+                      
+                      <button
+                        onClick={() => {
+                          setOrgDropdownOpen(false);
+                          if (organization?.plan_tier !== "agency") {
+                            setUpgradeOrgOpen(true);
+                            return;
+                          }
+                          setNewOrgName("");
+                          setCreateOrgOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Créer une entreprise
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
