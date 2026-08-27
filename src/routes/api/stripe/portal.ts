@@ -48,11 +48,25 @@ export const Route = createFileRoute("/api/stripe/portal")({
           }
 
           // Vérifie qu'une subscription active existe avant d'ouvrir le portail
-          const subscriptions = await stripe.subscriptions.list({
-            customer: org.stripe_customer_id,
-            status: "all",
-            limit: 5,
-          });
+          let subscriptions;
+          try {
+            subscriptions = await stripe.subscriptions.list({
+              customer: org.stripe_customer_id,
+              status: "all",
+              limit: 5,
+            });
+          } catch (err: any) {
+            if (err.message && err.message.includes("No such customer")) {
+              await supabase.from("organizations").update({ stripe_customer_id: null }).eq("owner_id", userId);
+              return new Response(
+                JSON.stringify({
+                  error: "Aucun abonnement actif trouvé. Choisissez un forfait pour créer votre abonnement.",
+                }),
+                { status: 404, headers: { "Content-Type": "application/json" } }
+              );
+            }
+            throw err;
+          }
 
           const activeSub = subscriptions.data.find(
             (s) => s.status === "active" || s.status === "trialing"

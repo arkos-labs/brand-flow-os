@@ -38,11 +38,21 @@ export const Route = createFileRoute("/api/stripe/cancel")({
           }
 
           // Cherche la subscription active
-          const subscriptions = await stripe.subscriptions.list({
-            customer: org.stripe_customer_id,
-            status: "all",
-            limit: 5,
-          });
+          let subscriptions;
+          try {
+            subscriptions = await stripe.subscriptions.list({
+              customer: org.stripe_customer_id,
+              status: "all",
+              limit: 5,
+            });
+          } catch (err: any) {
+            if (err.message && err.message.includes("No such customer")) {
+              await supabase.from("organizations").update({ stripe_customer_id: null }).eq("owner_id", userId);
+              subscriptions = { data: [] };
+            } else {
+              throw err;
+            }
+          }
 
           const active = subscriptions.data.find(
             (s) => s.status === "active" || s.status === "trialing"

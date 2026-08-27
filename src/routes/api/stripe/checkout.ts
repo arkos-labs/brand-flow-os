@@ -77,7 +77,26 @@ export const Route = createFileRoute("/api/stripe/checkout")({
             sessionOptions.metadata.user_id = userId;
           }
 
-          const session = await stripe.checkout.sessions.create(sessionOptions);
+          let session;
+          try {
+            session = await stripe.checkout.sessions.create(sessionOptions);
+          } catch (err: any) {
+            // Si le client Stripe n'existe plus (ex: supprimé manuellement ou passage Live/Test), on le détache et on réessaie
+            if (err.message && err.message.includes("No such customer")) {
+              console.warn("Client Stripe introuvable, création d'un nouveau client.");
+              if (userId) {
+                const supabase = getSupabaseAdmin();
+                await supabase.from("organizations").update({ stripe_customer_id: null }).eq("owner_id", userId);
+              }
+              delete sessionOptions.customer;
+              if (email) {
+                sessionOptions.customer_email = email;
+              }
+              session = await stripe.checkout.sessions.create(sessionOptions);
+            } else {
+              throw err;
+            }
+          }
 
           return new Response(JSON.stringify({ url: session.url }), {
             status: 200,
