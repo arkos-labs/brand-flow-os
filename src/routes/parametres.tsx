@@ -343,15 +343,19 @@ function SettingsPage() {
   const handleCancelSubscription = async () => {
     setIsCancelling(true);
     try {
-      const res = await fetch("/api/stripe/cancel", {
+      const res = await fetch("/api/stripe/portal", {
         method: "POST",
         headers: authHeaders(session, { "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          action: "cancel",
+          returnUrl: window.location.href,
+        }),
       });
       const data = await res.json();
-      if (data.ok) {
-        window.location.reload();
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        throw new Error(data.error || "Erreur lors de la résiliation");
+        throw new Error(data.error || "Erreur de redirection vers le portail");
       }
     } catch (err: any) {
       alert(err.message || "Erreur lors de la redirection");
