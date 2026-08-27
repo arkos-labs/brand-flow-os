@@ -34,17 +34,21 @@ export const Route = createFileRoute("/api/stripe/portal")({
             .eq("owner_id", userId)
             .single();
 
-          if (!org?.stripe_customer_id) {
+          const downgradeToSoloAndReload = async () => {
+            await Promise.all([
+              supabase.from("organizations").update({ plan_tier: "solo", stripe_customer_id: null }).eq("owner_id", userId),
+              supabase.from("profiles").update({ plan_tier: "solo" }).eq("id", userId),
+            ]);
             return new Response(
               JSON.stringify({
-                error:
-                  "Aucun abonnement actif trouvé. Choisissez un forfait pour créer votre abonnement.",
+                url: body.returnUrl || "http://localhost:5173/parametres",
               }),
-              {
-                status: 404,
-                headers: { "Content-Type": "application/json" },
-              }
+              { status: 200, headers: { "Content-Type": "application/json" } }
             );
+          };
+
+          if (!org?.stripe_customer_id) {
+            return await downgradeToSoloAndReload();
           }
 
           // Vérifie qu'une subscription active existe avant d'ouvrir le portail
@@ -57,13 +61,7 @@ export const Route = createFileRoute("/api/stripe/portal")({
             });
           } catch (err: any) {
             if (err.message && err.message.includes("No such customer")) {
-              await supabase.from("organizations").update({ stripe_customer_id: null }).eq("owner_id", userId);
-              return new Response(
-                JSON.stringify({
-                  error: "Aucun abonnement actif trouvé. Choisissez un forfait pour créer votre abonnement.",
-                }),
-                { status: 404, headers: { "Content-Type": "application/json" } }
-              );
+              return await downgradeToSoloAndReload();
             }
             throw err;
           }
@@ -73,16 +71,7 @@ export const Route = createFileRoute("/api/stripe/portal")({
           );
 
           if (!activeSub) {
-            return new Response(
-              JSON.stringify({
-                error:
-                  "Aucun abonnement actif trouvé. Souscrivez d'abord à un forfait payant.",
-              }),
-              {
-                status: 404,
-                headers: { "Content-Type": "application/json" },
-              }
-            );
+            return await downgradeToSoloAndReload();
           }
 
           const flowData: any = {};
