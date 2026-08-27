@@ -322,6 +322,8 @@ function SettingsPage() {
   const [requiredPlan, setRequiredPlan] = useState<"pro" | "agency">("pro");
   const [downgradePlanId, setDowngradePlanId] = useState<string | null>(null);
   const [cancelPlanAlert, setCancelPlanAlert] = useState(false);
+  const [upgradePlanTarget, setUpgradePlanTarget] = useState<string | null>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
 
@@ -365,6 +367,33 @@ function SettingsPage() {
     }
   };
 
+  const handleUpgradeSubscription = async () => {
+    if (!upgradePlanTarget) return;
+    setIsUpgrading(true);
+    try {
+      const targetPriceId = PRICE_IDS[upgradePlanTarget];
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: authHeaders(session, { "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          targetPriceId,
+          returnUrl: window.location.href,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Erreur lors du changement de forfait");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la modification");
+    } finally {
+      setIsUpgrading(false);
+      setUpgradePlanTarget(null);
+    }
+  };
+
   // Mapping plan → Stripe price ID (live mode)
   const PRICE_IDS: Record<string, string> = {
     pro: import.meta.env['VITE_STRIPE_PRICE_PRO'] || "price_1U6E5F7tsPmmReQdupg0eEY2",
@@ -402,20 +431,8 @@ function SettingsPage() {
         if (data.url) window.location.href = data.url;
         else throw new Error(data.error);
       } else {
-        // Pro ↔ Agency : changement via Customer Portal
-        const targetPriceId = PRICE_IDS[targetPlanId];
-        const res = await fetch("/api/stripe/portal", {
-          method: "POST",
-          headers: authHeaders(session, { "Content-Type": "application/json" }),
-          body: JSON.stringify({
-            customerId: organization?.stripe_customer_id,
-            targetPriceId,
-            returnUrl: window.location.href,
-          }),
-        });
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-        else throw new Error(data.error || "Lien introuvable. Avez-vous déjà un abonnement ?");
+        // Pro ↔ Agency : affichage de la modale de confirmation
+        setUpgradePlanTarget(targetPlanId);
       }
     } catch (err: any) {
       alert(err.message || "Erreur de redirection");
