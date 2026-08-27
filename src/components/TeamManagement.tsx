@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSupabaseData } from "@/lib/supabase-context";
+import { supabase } from "@/lib/supabase";
 import { authHeaders } from "@/lib/utils";
 
 export function TeamManagement() {
@@ -24,10 +25,51 @@ export function TeamManagement() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('member');
   
-  // Données fictives pour l'instant
-  const mockMembers = [
-    { id: '1', email: 'admin@exemple.com', role: 'admin', status: 'active', date: '2026-01-10' },
-  ];
+  const [members, setMembers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Charger les membres depuis la base de données
+  const fetchMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      
+      let fetchedMembers = data || [];
+      
+      // S'assurer que l'administrateur connecté apparaît toujours dans la liste
+      // même s'il n'a pas encore été ajouté manuellement à la table team_members
+      if (session?.user?.email) {
+        const isAdminInList = fetchedMembers.some((m: any) => m.user_id === session.user.id);
+        if (!isAdminInList) {
+          fetchedMembers = [
+            {
+              id: session.user.id,
+              user_id: session.user.id,
+              email: session.user.email,
+              role: 'admin',
+              status: 'active',
+              created_at: new Date().toISOString()
+            },
+            ...fetchedMembers
+          ];
+        }
+      }
+      
+      setMembers(fetchedMembers);
+    } catch (err) {
+      console.error("Erreur de chargement de l'équipe:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, [session]);
 
   const [isInviting, setIsInviting] = useState(false);
 
@@ -51,6 +93,8 @@ export function TeamManagement() {
       setPassword('');
       setRole('member');
       setInviteOpen(false);
+      // Recharger la liste après invitation
+      fetchMembers();
     } catch (err: any) {
       alert(`Erreur: ${err.message}`);
     } finally {
@@ -76,60 +120,70 @@ export function TeamManagement() {
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden mt-4">
-        {mockMembers.length === 0 ? (
-          <div className="p-12 text-center bg-muted/10">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Users className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="mt-4 text-sm font-medium">
-              {lang === "fr" ? "L'équipe est vide" : "Team is empty"}
-            </h3>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 border-b border-border text-xs">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-sidebar-border/40 text-muted-foreground">
+              <th className="p-4 text-left font-medium">{lang === "fr" ? "Utilisateur" : "User"}</th>
+              <th className="p-4 text-left font-medium">{lang === "fr" ? "Rôle" : "Role"}</th>
+              <th className="p-4 text-left font-medium">{lang === "fr" ? "Statut" : "Status"}</th>
+              <th className="p-4 text-left font-medium">{lang === "fr" ? "Ajouté le" : "Added"}</th>
+              <th className="p-4 text-right font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
               <tr>
-                <th className="py-3 px-4 text-left font-medium text-muted-foreground">Membre</th>
-                <th className="py-3 px-4 text-left font-medium text-muted-foreground">Rôle</th>
-                <th className="py-3 px-4 text-left font-medium text-muted-foreground">Statut</th>
-                <th className="py-3 px-4 text-right font-medium text-muted-foreground">Actions</th>
+                <td colSpan={5} className="p-4 text-center text-muted-foreground text-xs">
+                  Chargement...
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {mockMembers.map((member) => (
-                <tr key={member.id} className="bg-card hover:bg-muted/30 transition-colors">
+            ) : members.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-muted-foreground text-xs">
+                  Aucun membre dans l'équipe
+                </td>
+              </tr>
+            ) : (
+              members.map((member) => (
+                <tr key={member.id} className="border-b border-sidebar-border/20 last:border-0 hover:bg-sidebar-accent/10 transition-colors">
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px]">
-                        {member.email.substring(0, 2).toUpperCase()}
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs">
+                        {member.email.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-medium text-xs text-foreground">{member.email}</p>
-                        <p className="text-[10px] text-muted-foreground">Ajouté le {new Date(member.date).toLocaleDateString()}</p>
-                      </div>
+                      <span className="font-medium">{member.email}</span>
                     </div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="flex items-center gap-1.5">
-                      {member.role === 'admin' ? <Shield className="h-3.5 w-3.5 text-primary" /> : <Users className="h-3.5 w-3.5 text-muted-foreground" />}
-                      <span className="capitalize text-xs font-medium">{member.role}</span>
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                      {member.role === 'admin' ? <Shield className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                      {member.role === 'admin' ? 'Administrateur' : 'Membre'}
+                    </span>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-success/10 text-success">
-                      {member.status === 'active' ? 'Actif' : 'En attente'}
-                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      member.status === 'active' 
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
+                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    }`}>
+                      {member.status === 'active' ? (lang === "fr" ? 'Actif' : 'Active') : (lang === "fr" ? 'En attente' : 'Pending')}
+                    </span>
+                  </td>
+                  <td className="p-4 align-middle text-muted-foreground text-xs">
+                    {new Date(member.created_at || member.date).toLocaleDateString()}
                   </td>
                   <td className="p-4 align-middle text-right">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-                      <Trash className="h-3.5 w-3.5" />
-                    </Button>
+                    {member.user_id !== session?.user?.id && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                        <Trash className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
