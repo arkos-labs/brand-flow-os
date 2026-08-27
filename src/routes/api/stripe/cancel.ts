@@ -70,10 +70,14 @@ export const Route = createFileRoute("/api/stripe/cancel")({
             });
           }
 
-          // Résiliation à la fin de la période en cours (pas immédiate)
-          await stripe.subscriptions.update(active.id, {
-            cancel_at_period_end: true,
-          });
+          // Résiliation IMMÉDIATE de l'abonnement
+          await stripe.subscriptions.cancel(active.id);
+
+          // Downgrade immédiat en base de données pour refléter le changement instantanément
+          await Promise.all([
+            supabase.from("organizations").update({ plan_tier: "solo", stripe_customer_id: null }).eq("owner_id", userId),
+            supabase.from("profiles").update({ plan_tier: "solo" }).eq("id", userId),
+          ]);
 
           // PAF : log de résiliation
           try {
