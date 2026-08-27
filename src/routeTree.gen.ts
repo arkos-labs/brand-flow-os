@@ -56,6 +56,7 @@ import { Route as ApiStripePortalRouteImport } from './routes/api/stripe/portal'
 import { Route as ApiStripeStatusRouteImport } from './routes/api/stripe/status'
 import { Route as ApiStripeVerifySessionRouteImport } from './routes/api/stripe/verify-session'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
+import { Route as ApiTeamInviteRouteImport } from './routes/api/team/invite'
 import { Route as ApiViesCheckRouteImport } from './routes/api/vies/check'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
 import { Route as ApiAuthGoogleConsumeTokenRouteImport } from './routes/api/auth/google/consume-token'
@@ -297,6 +298,11 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTeamInviteRoute = ApiTeamInviteRouteImport.update({
+  id: '/api/team/invite',
+  path: '/api/team/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiViesCheckRoute = ApiViesCheckRouteImport.update({
   id: '/api/vies/check',
   path: '/api/vies/check',
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/team/invite': typeof ApiTeamInviteRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -420,6 +427,7 @@ export interface FileRoutesByTo {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/team/invite': typeof ApiTeamInviteRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -474,6 +482,7 @@ export interface FileRoutesById {
   '/api/stripe/status': typeof ApiStripeStatusRoute
   '/api/stripe/verify-session': typeof ApiStripeVerifySessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/team/invite': typeof ApiTeamInviteRoute
   '/api/vies/check': typeof ApiViesCheckRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/google/consume-token': typeof ApiAuthGoogleConsumeTokenRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
+    | '/api/team/invite'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -582,6 +592,7 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
+    | '/api/team/invite'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/api/stripe/status'
     | '/api/stripe/verify-session'
     | '/api/stripe/webhook'
+    | '/api/team/invite'
     | '/api/vies/check'
     | '/api/auth/google/callback'
     | '/api/auth/google/consume-token'
@@ -689,6 +701,7 @@ export interface RootRouteChildren {
   ApiStripeStatusRoute: typeof ApiStripeStatusRoute
   ApiStripeVerifySessionRoute: typeof ApiStripeVerifySessionRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiTeamInviteRoute: typeof ApiTeamInviteRoute
   ApiViesCheckRoute: typeof ApiViesCheckRoute
   ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
   ApiAuthGoogleConsumeTokenRoute: typeof ApiAuthGoogleConsumeTokenRoute
@@ -1026,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/team/invite': {
+      id: '/api/team/invite'
+      path: '/api/team/invite'
+      fullPath: '/api/team/invite'
+      preLoaderRoute: typeof ApiTeamInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/vies/check': {
       id: '/api/vies/check'
       path: '/api/vies/check'
@@ -1105,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStripeStatusRoute: ApiStripeStatusRoute,
   ApiStripeVerifySessionRoute: ApiStripeVerifySessionRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiTeamInviteRoute: ApiTeamInviteRoute,
   ApiViesCheckRoute: ApiViesCheckRoute,
   ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
   ApiAuthGoogleConsumeTokenRoute: ApiAuthGoogleConsumeTokenRoute,

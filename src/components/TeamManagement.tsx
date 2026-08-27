@@ -25,13 +25,32 @@ export function TeamManagement() {
     { id: '1', email: 'admin@exemple.com', role: 'admin', status: 'active', date: '2026-01-10' },
   ];
 
-  const handleInvite = (e: React.FormEvent) => {
+  const [isInviting, setIsInviting] = useState(false);
+
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    alert(`Invitation envoyée à ${email} avec le rôle ${role}`);
-    setEmail('');
-    setRole('member');
-    setInviteOpen(false);
+    
+    setIsInviting(true);
+    try {
+      const res = await fetch('/api/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de l\'invitation');
+      
+      alert(`Invitation envoyée à ${email} avec le rôle ${role}`);
+      setEmail('');
+      setRole('member');
+      setInviteOpen(false);
+    } catch (err: any) {
+      alert(`Erreur: ${err.message}`);
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   return (
@@ -144,12 +163,12 @@ export function TeamManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setInviteOpen(false)} className="h-9 text-xs">
+              <Button type="button" variant="outline" onClick={() => setInviteOpen(false)} className="h-9 text-xs" disabled={isInviting}>
                 Annuler
               </Button>
-              <Button type="submit" className="h-9 text-xs">
+              <Button type="submit" className="h-9 text-xs" disabled={isInviting}>
                 <Mail className="mr-2 h-3.5 w-3.5" />
-                Envoyer l'invitation
+                {isInviting ? (lang === "fr" ? "Envoi..." : "Sending...") : (lang === "fr" ? "Envoyer l'invitation" : "Send invitation")}
               </Button>
             </DialogFooter>
           </form>
