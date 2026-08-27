@@ -8,10 +8,10 @@ export const Route = createFileRoute("/api/team/invite")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { email, role } = body;
+          const { email, role, password } = body;
 
-          if (!email || !role) {
-            return new Response(JSON.stringify({ error: "Email et rôle requis" }), {
+          if (!email || !role || !password) {
+            return new Response(JSON.stringify({ error: "Email, rôle et mot de passe requis" }), {
               status: 400,
               headers: { "Content-Type": "application/json" },
             });
@@ -38,11 +38,15 @@ export const Route = createFileRoute("/api/team/invite")({
             });
           }
 
-          // Inviter l'utilisateur via Supabase Auth
-          const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+          // Créer l'utilisateur avec le mot de passe fourni via Supabase Auth
+          const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.createUser({
+            email: email,
+            password: password,
+            email_confirm: true, // Auto-confirmer l'email pour éviter la vérification
+          });
 
           if (inviteError) {
-            console.error("Erreur d'invitation:", inviteError);
+            console.error("Erreur de création:", inviteError);
             return new Response(JSON.stringify({ error: inviteError.message }), {
               status: 400,
               headers: { "Content-Type": "application/json" },
@@ -60,7 +64,7 @@ export const Route = createFileRoute("/api/team/invite")({
 
             if (dbError) {
               console.error("Erreur insertion BDD:", dbError);
-              // On ne bloque pas pour autant l'invitation qui est déjà partie
+              // On ne bloque pas pour autant la création qui est déjà faite
             }
           }
 

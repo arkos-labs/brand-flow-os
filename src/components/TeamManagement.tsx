@@ -21,6 +21,7 @@ export function TeamManagement() {
   const { session } = useSupabaseData();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('member');
   
   // Données fictives pour l'instant
@@ -32,21 +33,22 @@ export function TeamManagement() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
     
     setIsInviting(true);
     try {
       const res = await fetch('/api/team/invite', {
         method: 'POST',
         headers: authHeaders(session, { 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ email, role })
+        body: JSON.stringify({ email, role, password })
       });
       
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur lors de l\'invitation');
       
-      alert(`Invitation envoyée à ${email} avec le rôle ${role}`);
+      alert(`Utilisateur créé : ${email} avec le rôle ${role}`);
       setEmail('');
+      setPassword('');
       setRole('member');
       setInviteOpen(false);
     } catch (err: any) {
@@ -136,7 +138,7 @@ export function TeamManagement() {
             <DialogHeader>
               <DialogTitle>{lang === "fr" ? "Inviter un membre" : "Invite a member"}</DialogTitle>
               <DialogDescription>
-                {lang === "fr" ? "Entrez l'adresse email de la personne à inviter. Elle recevra un lien d'accès." : "Enter the email address of the person to invite."}
+                {lang === "fr" ? "Créez un compte pour un membre de votre équipe en lui attribuant un mot de passe provisoire." : "Create an account for a team member and assign a temporary password."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -163,6 +165,18 @@ export function TeamManagement() {
                     <SelectItem value="member">Membre</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password" className="text-xs">{lang === "fr" ? "Mot de passe provisoire" : "Temporary password"}</Label>
+                <Input
+                  id="password"
+                  type="text"
+                  placeholder={lang === "fr" ? "ex: @Bienvenue2026!" : "e.g. @Welcome2026!"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-9 text-sm"
+                  required
+                />
               </div>
             </div>
             <DialogFooter>
