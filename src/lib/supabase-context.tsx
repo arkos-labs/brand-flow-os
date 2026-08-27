@@ -209,11 +209,22 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
         // Passage automatique en overdue retiré car la fonction n'existe plus
         // Charger toutes les orgs de l'utilisateur pour le switcher
-        const { data: allOrgs } = await supabase
-          .from("organizations")
-          .select("*")
-          .eq("owner_id", user.id);
-        setOwnedOrganizations(allOrgs ?? []);
+        const [ { data: ownerOrgs }, { data: memberOrgs } ] = await Promise.all([
+          supabase.from("organizations").select("*").eq("owner_id", user.id),
+          supabase.from("team_members").select("organizations(*)").eq("user_id", user.id).eq("status", "active")
+        ]);
+
+        const orgsMap = new Map<string, DbOrganization>();
+        if (ownerOrgs) ownerOrgs.forEach(o => orgsMap.set(o.id, o));
+        if (memberOrgs) {
+          memberOrgs.forEach((m: any) => {
+            if (m.organizations) {
+              const o = Array.isArray(m.organizations) ? m.organizations[0] : m.organizations;
+              if (o) orgsMap.set(o.id, o);
+            }
+          });
+        }
+        setOwnedOrganizations(Array.from(orgsMap.values()));
 
         // Déterminer le rôle
         let role: 'admin' | 'member' = 'member';
@@ -224,6 +235,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             .from('team_members')
             .select('role')
             .eq('user_id', user.id)
+            .eq('organization_id', org.id)
             .single();
           if (memberData && memberData.role === 'admin') {
             role = 'admin';

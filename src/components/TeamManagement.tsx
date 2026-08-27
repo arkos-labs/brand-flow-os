@@ -19,7 +19,7 @@ import { authHeaders } from "@/lib/utils";
 
 export function TeamManagement() {
   const { lang } = useI18n();
-  const { session } = useSupabaseData();
+  const { session, organization } = useSupabaseData();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +34,7 @@ export function TeamManagement() {
       const { data, error } = await supabase
         .from('team_members')
         .select('*')
+        .eq('organization_id', session?.user?.id ? organization?.id : undefined)
         .order('created_at', { ascending: true });
         
       if (error) throw error;
@@ -68,8 +69,10 @@ export function TeamManagement() {
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, [session]);
+    if (organization?.id) {
+      fetchMembers();
+    }
+  }, [session, organization?.id]);
 
   const [isInviting, setIsInviting] = useState(false);
 

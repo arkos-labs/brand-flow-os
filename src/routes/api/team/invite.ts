@@ -90,6 +90,7 @@ export const Route = createFileRoute("/api/team/invite")({
             }).eq('id', inviteData.user.id);
 
             const { error: dbError } = await supabaseAdmin.from('team_members').insert({
+              organization_id: adminProfile.organization_id,
               user_id: inviteData.user.id,
               email: email,
               role: role,
