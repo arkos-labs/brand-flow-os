@@ -24,14 +24,43 @@ export const Route = createFileRoute("/api/team/invite")({
 
           const supabaseAdmin = getSupabaseAdmin();
 
-          // Optionnel : vérifier que le callerId est bien admin
-          const { data: callerData } = await supabaseAdmin
-            .from('team_members')
-            .select('role')
-            .eq('user_id', callerId)
+          // Récupérer le profile de l'admin pour avoir son organization_id
+          const { data: adminProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', callerId)
             .single();
 
-          if (callerData && callerData.role !== 'admin') {
+          if (!adminProfile || !adminProfile.organization_id) {
+            return new Response(JSON.stringify({ error: "L'administrateur n'a pas d'organisation" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // Optionnel : vérifier que le callerId est bien admin
+          // (Si owner_id de l'organisation = callerId, il est admin)
+          const { data: orgData } = await supabaseAdmin
+            .from('organizations')
+            .select('owner_id')
+            .eq('id', adminProfile.organization_id)
+            .single();
+
+          let isAdmin = false;
+          if (orgData && orgData.owner_id === callerId) {
+            isAdmin = true;
+          } else {
+            const { data: callerData } = await supabaseAdmin
+              .from('team_members')
+              .select('role')
+              .eq('user_id', callerId)
+              .single();
+            if (callerData && callerData.role === 'admin') {
+              isAdmin = true;
+            }
+          }
+
+          if (!isAdmin) {
             return new Response(JSON.stringify({ error: "Seuls les administrateurs peuvent inviter" }), {
               status: 403,
               headers: { "Content-Type": "application/json" },
@@ -53,13 +82,18 @@ export const Route = createFileRoute("/api/team/invite")({
             });
           }
 
-          // L'utilisateur a été invité, on l'ajoute dans team_members
+          // L'utilisateur a été créé, on l'ajoute dans team_members
           if (inviteData.user) {
+            // Mettre à jour le profil de l'utilisateur pour le lier à l'organisation de l'admin
+            await supabaseAdmin.from('profiles').update({
+              organization_id: adminProfile.organization_id
+            }).eq('id', inviteData.user.id);
+
             const { error: dbError } = await supabaseAdmin.from('team_members').insert({
               user_id: inviteData.user.id,
               email: email,
               role: role,
-              status: 'pending'
+              status: 'active' // Directement actif car créé avec un mot de passe
             });
 
             if (dbError) {

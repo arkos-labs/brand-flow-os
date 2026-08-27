@@ -484,7 +484,7 @@ function SettingsPage() {
         </div>
         <h2 className="text-xl font-semibold text-center">Accès non autorisé</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          {lang === "fr" ? "Vous êtes connecté en tant que" : "You are logged in as"} <strong>{currentUserRole === 'admin' ? "Administrateur" : "Membre"}</strong>. Seuls les administrateurs peuvent accéder à la page des paramètres.
+          {lang === "fr" ? "Vous êtes connecté en tant que" : "You are logged in as"} <strong>Membre</strong>. Seuls les administrateurs peuvent accéder à la page des paramètres.
         </p>
       </div>
     );
