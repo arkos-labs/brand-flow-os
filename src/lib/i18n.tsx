@@ -21,6 +21,7 @@ export const dict = {
   "nav.section.finance": { fr: "Finance", en: "Finance" },
   "nav.section.tools": { fr: "Outils connectés", en: "Connected tools" },
   "nav.appointments": { fr: "Rendez-vous", en: "Appointments" },
+  "nav.team": { fr: "Équipe", en: "Team" },
   "app.rendezvous.title": { fr: "Rendez-vous", en: "Appointments" },
   "app.rendezvous.subtitle": { fr: "Gérez vos appels de découverte et réunions synchronisés depuis Google Calendar.", en: "Manage your discovery calls and meetings synced from Google Calendar." },
   "demo.badge": { fr: "Démo — données fictives", en: "Demo — sample data" },

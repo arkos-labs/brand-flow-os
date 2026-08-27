@@ -25,6 +25,7 @@ import {
   Paintbrush,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
+import { TeamManagement } from "@/components/TeamManagement";
 import { useI18n, type Key } from "@/lib/i18n";
 import { useData, Invoice } from "@/lib/data-context";
 import { generateAccountingExportCSV, downloadCSV } from "@/lib/export-compta";
@@ -196,6 +197,9 @@ function SettingsPage() {
   const [isFetchingSiret, setIsFetchingSiret] = useState(false);
   const [isCheckingVat, setIsCheckingVat] = useState(false);
   const [vatCheckResult, setVatCheckResult] = useState<VatCheckResult | null | "error">(null);
+  
+  // Simulation du rôle de l'utilisateur (à remplacer par la vraie donnée backend)
+  const [currentUserRole, setCurrentUserRole] = useState<'admin'|'member'>('admin');
 
   useEffect(() => {
     // Check if we just returned from Google OAuth. Le refresh token ne
@@ -474,13 +478,49 @@ function SettingsPage() {
     setActiveSection(id);
   };
 
+  if (currentUserRole !== 'admin') {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-4">
+        {/* Toggle de rôle pour test */}
+        <select 
+          value={currentUserRole} 
+          onChange={(e) => setCurrentUserRole(e.target.value as 'admin'|'member')}
+          className="absolute top-4 right-4 text-xs bg-muted/50 border-transparent rounded-md px-2 py-1.5 focus:ring-primary/30"
+          title="Tester les permissions"
+        >
+          <option value="admin">Test: Vue Admin</option>
+          <option value="member">Test: Vue Employé</option>
+        </select>
+        <div className="rounded-full bg-destructive/10 p-4">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+        </div>
+        <h2 className="text-xl font-semibold text-center">Accès non autorisé</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          Seuls les administrateurs peuvent accéder à la page des paramètres.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <PageHeader
         title={t("set.title")}
         subtitle={t("set.subtitle")}
         action={
-          activeSection !== "prefs" ? (
+          <div className="flex items-center gap-4">
+            {/* Toggle de rôle (pour test UI) */}
+            <select 
+              value={currentUserRole} 
+              onChange={(e) => setCurrentUserRole(e.target.value as 'admin'|'member')}
+              className="text-xs bg-muted/50 border-transparent rounded-md px-2 py-1.5 focus:ring-primary/30"
+              title="Tester les permissions"
+            >
+              <option value="admin">Test: Vue Admin</option>
+              <option value="member">Test: Vue Employé</option>
+            </select>
+
+            {activeSection !== "prefs" ? (
             <button
               onClick={handleSave}
               className={cn(
@@ -503,7 +543,8 @@ function SettingsPage() {
             <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
               {lang === "fr" ? "Enregistrement automatique" : "Auto-saved"}
             </span>
-          )
+          )}
+          </div>
         }
       />
 
@@ -1325,19 +1366,7 @@ function SettingsPage() {
 
           {/* ── Équipe ── */}
           {activeSection === "team" && (
-            <div className="card-elevated p-6 space-y-5">
-              <h2 className="text-sm font-semibold">{lang === "fr" ? "Gestion de l'équipe" : "Team Management"}</h2>
-              <p className="text-sm text-muted-foreground">
-                {lang === "fr"
-                  ? "Invitez jusqu'à 5 utilisateurs, gérez leurs rôles et permissions."
-                  : "Invite up to 5 users, manage their roles and permissions."}
-              </p>
-              <div className="rounded-lg border border-border p-8 text-center text-muted-foreground bg-muted/20">
-                <Users className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                <p className="text-sm font-medium">{lang === "fr" ? "Fonctionnalité en cours de développement" : "Feature under development"}</p>
-                <p className="text-xs mt-1">{lang === "fr" ? "La gestion fine des accès arrive bientôt." : "Granular access control is coming soon."}</p>
-              </div>
-            </div>
+            <TeamManagement />
           )}
 
           {/* ── Marque Blanche ── */}

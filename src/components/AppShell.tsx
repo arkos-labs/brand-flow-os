@@ -359,9 +359,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   }: {
     onNavigate?: () => void;
     onCloseDrawer?: () => void;
-  }) => (
-    <>
-      {/* ── Brand ── */}
+  }) => {
+    // Simulation du rôle (à synchroniser avec le backend réel plus tard)
+    const currentUserRole = 'admin';
+
+    return (
+      <>
+        {/* ── Brand ── */}
       <div className="flex items-center gap-2 border-b border-sidebar-border/50 px-2 pb-5">
         <div className="relative flex min-w-0 flex-1 items-center rounded-[var(--shape-control)] bg-white px-3 py-2">
           <BrandLogo compact={Boolean(onCloseDrawer)} className={onCloseDrawer ? "h-7 w-7" : "h-7 w-auto"} priority />
@@ -427,20 +431,22 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* ── Settings Link ── */}
-      <div className="mt-2 px-1">
-        <Link
-          to="/parametres"
-          onClick={onNavigate}
-          className="group flex items-center gap-3 rounded-[2px] border border-transparent px-3 py-2 text-[12px] text-sidebar-foreground/65 transition-all duration-150 hover:border-sidebar-border hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
-          activeProps={{
-            className:
-              "border-primary bg-primary text-primary-foreground font-semibold shadow-[3px_3px_0_rgba(255,255,255,0.22)]",
-          }}
-        >
-          <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
-          <span className="flex-1 truncate">{t("nav.settings")}</span>
-        </Link>
-      </div>
+      {currentUserRole === 'admin' && (
+        <div className="mt-2 px-1">
+          <Link
+            to="/parametres"
+            onClick={onNavigate}
+            className="group flex items-center gap-3 rounded-[2px] border border-transparent px-3 py-2 text-[12px] text-sidebar-foreground/65 transition-all duration-150 hover:border-sidebar-border hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+            activeProps={{
+              className:
+                "border-primary bg-primary text-primary-foreground font-semibold shadow-[3px_3px_0_rgba(255,255,255,0.22)]",
+            }}
+          >
+            <Settings className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
+            <span className="flex-1 truncate">{t("nav.settings")}</span>
+          </Link>
+        </div>
+      )}
 
       {/* ── User area + Logout ── */}
       <div className="mt-3 flex items-center gap-3 rounded-[var(--shape-control)] border-2 border-sidebar-border/40 bg-sidebar-accent/20 px-3 py-2.5">
@@ -484,7 +490,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
       </div>
     </>
-  );
+    );
+  };
 
   return (
     <div className="app-workspace min-h-screen overflow-x-hidden bg-background">
