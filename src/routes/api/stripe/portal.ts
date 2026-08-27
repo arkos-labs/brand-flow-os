@@ -74,37 +74,39 @@ export const Route = createFileRoute("/api/stripe/portal")({
             return await downgradeToSoloAndReload();
           }
 
-          const flowData: any = {};
-          if (!activeSub.cancel_at_period_end) {
-            if (body.targetPriceId) {
-              flowData.flow_data = {
-                type: "subscription_update_confirm",
-                subscription_update_confirm: {
-                  subscription: activeSub.id,
-                  items: [
-                    {
-                      id: activeSub.items.data[0].id,
-                      price: body.targetPriceId,
-                      quantity: 1,
-                    },
-                  ],
+          if (body.targetPriceId) {
+            // Mise à niveau (upgrade) instantanée via API pour une expérience fluide (1-click)
+            await stripe.subscriptions.update(activeSub.id, {
+              items: [
+                {
+                  id: activeSub.items.data[0].id,
+                  price: body.targetPriceId,
                 },
-              };
-            } else if (body.action === "cancel") {
-              flowData.flow_data = {
-                type: "subscription_cancel",
-                subscription_cancel: {
-                  subscription: activeSub.id,
-                },
-              };
-            }
+              ],
+              proration_behavior: "always_invoice", // facture le prorata immédiatement
+            });
+
+            // Déduction du nom du plan (pro ou agency) pour mettre à jour la base de données instantanément
+            const isAgency = body.targetPriceId.includes("price_1U6E5F7tsPmmReQdP1CVwC6X") || 
+                             (process.env.VITE_STRIPE_PRICE_AGENCY && body.targetPriceId === process.env.VITE_STRIPE_PRICE_AGENCY);
+            const newPlan = isAgency ? "agency" : "pro";
+
+            await Promise.all([
+              supabase.from("organizations").update({ plan_tier: newPlan }).eq("owner_id", userId),
+              supabase.from("profiles").update({ plan_tier: newPlan }).eq("id", userId),
+            ]);
+
+            // Retourne l'URL actuelle pour forcer le rafraîchissement de la page
+            return new Response(JSON.stringify({ url: body.returnUrl || "http://localhost:5173/parametres" }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
-          // Crée la session Customer Portal Stripe
+          // Crée la session Customer Portal Stripe (uniquement pour accéder au portail général maintenant)
           const session = await stripe.billingPortal.sessions.create({
             customer: org.stripe_customer_id,
             return_url: returnUrl,
-            ...flowData,
           });
 
           return new Response(JSON.stringify({ url: session.url }), {
