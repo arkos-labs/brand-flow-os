@@ -188,7 +188,7 @@ function PrefToggleRow({
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { company, updateCompany, invoices } = useData();
-  const { profile, session, organization, ownedOrganizations, createOrganization, switchOrganization, refresh } = useSupabaseData();
+  const { profile, session, organization, ownedOrganizations, createOrganization, switchOrganization, refresh, currentUserRole } = useSupabaseData();
   const [newOrgName, setNewOrgName] = useState("");
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const { prefs, setPrefs } = usePrefs();
@@ -198,8 +198,6 @@ function SettingsPage() {
   const [isCheckingVat, setIsCheckingVat] = useState(false);
   const [vatCheckResult, setVatCheckResult] = useState<VatCheckResult | null | "error">(null);
   
-  // Simulation du rôle de l'utilisateur (à remplacer par la vraie donnée backend)
-  const [currentUserRole, setCurrentUserRole] = useState<'admin'|'member'>('admin');
 
   useEffect(() => {
     // Check if we just returned from Google OAuth. Le refresh token ne
@@ -481,22 +479,12 @@ function SettingsPage() {
   if (currentUserRole !== 'admin') {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-4">
-        {/* Toggle de rôle pour test */}
-        <select 
-          value={currentUserRole} 
-          onChange={(e) => setCurrentUserRole(e.target.value as 'admin'|'member')}
-          className="absolute top-4 right-4 text-xs bg-muted/50 border-transparent rounded-md px-2 py-1.5 focus:ring-primary/30"
-          title="Tester les permissions"
-        >
-          <option value="admin">Test: Vue Admin</option>
-          <option value="member">Test: Vue Employé</option>
-        </select>
         <div className="rounded-full bg-destructive/10 p-4">
           <AlertCircle className="h-8 w-8 text-destructive" />
         </div>
         <h2 className="text-xl font-semibold text-center">Accès non autorisé</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          Seuls les administrateurs peuvent accéder à la page des paramètres.
+          {lang === "fr" ? "Vous êtes connecté en tant que" : "You are logged in as"} <strong>{currentUserRole === 'admin' ? "Administrateur" : "Membre"}</strong>. Seuls les administrateurs peuvent accéder à la page des paramètres.
         </p>
       </div>
     );
@@ -509,17 +497,6 @@ function SettingsPage() {
         subtitle={t("set.subtitle")}
         action={
           <div className="flex items-center gap-4">
-            {/* Toggle de rôle (pour test UI) */}
-            <select 
-              value={currentUserRole} 
-              onChange={(e) => setCurrentUserRole(e.target.value as 'admin'|'member')}
-              className="text-xs bg-muted/50 border-transparent rounded-md px-2 py-1.5 focus:ring-primary/30"
-              title="Tester les permissions"
-            >
-              <option value="admin">Test: Vue Admin</option>
-              <option value="member">Test: Vue Employé</option>
-            </select>
-
             {activeSection !== "prefs" ? (
             <button
               onClick={handleSave}

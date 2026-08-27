@@ -68,6 +68,7 @@ export type SupabaseContextType = {
   user: User | null;
   profile: DbProfile | null;
   organization: DbOrganization | null;
+  currentUserRole: 'admin' | 'member';
   isLoading: boolean;
 
   // Clients
@@ -126,6 +127,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [organization, setOrganization] = useState<DbOrganization | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<'admin' | 'member'>('member');
   const [ownedOrganizations, setOwnedOrganizations] = useState<DbOrganization[]>([]);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -212,6 +214,22 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           .select("*")
           .eq("owner_id", user.id);
         setOwnedOrganizations(allOrgs ?? []);
+
+        // Déterminer le rôle
+        let role: 'admin' | 'member' = 'member';
+        if (org.owner_id === user.id) {
+          role = 'admin';
+        } else {
+          const { data: memberData } = await supabase
+            .from('team_members')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+          if (memberData && memberData.role === 'admin') {
+            role = 'admin';
+          }
+        }
+        setCurrentUserRole(role);
 
       }
     } finally {
@@ -524,6 +542,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     user,
     profile,
     organization,
+    currentUserRole,
     isLoading,
     clients,
     addClient,

@@ -281,7 +281,7 @@ function ThemeToggle() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { lang, t, setLang } = useI18n();
-  const { invoices, quotes, organization, ownedOrganizations, switchOrganization, createOrganization, user } = useData();
+  const { invoices, quotes, organization, ownedOrganizations, switchOrganization, createOrganization, user, currentUserRole } = useData();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -360,8 +360,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     onNavigate?: () => void;
     onCloseDrawer?: () => void;
   }) => {
-    // Simulation du rôle (à synchroniser avec le backend réel plus tard)
-    const currentUserRole = 'admin';
 
     return (
       <>
