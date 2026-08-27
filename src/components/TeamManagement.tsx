@@ -13,9 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useSupabaseData } from "@/lib/supabase-context";
+import { authHeaders } from "@/lib/utils";
 
 export function TeamManagement() {
   const { lang } = useI18n();
+  const { session } = useSupabaseData();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
@@ -35,7 +38,7 @@ export function TeamManagement() {
     try {
       const res = await fetch('/api/team/invite', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(session, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({ email, role })
       });
       
