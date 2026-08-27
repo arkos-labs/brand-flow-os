@@ -1578,6 +1578,42 @@ function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirmation changement de forfait */}
+      <AlertDialog open={!!upgradePlanTarget} onOpenChange={(open) => !isUpgrading && !open && setUpgradePlanTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-primary flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              Confirmer le changement de forfait
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Vous êtes sur le point de passer au forfait <strong>{upgradePlanTarget === 'agency' ? 'Agency' : 'Pro'}</strong>.
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Le nouveau tarif de {upgradePlanTarget === 'agency' ? '49,99€' : '19,99€'} / mois sera appliqué.</li>
+                <li>Le montant au prorata sera appliqué automatiquement.</li>
+                <li>L'accès à vos nouvelles fonctionnalités sera instantané.</li>
+              </ul>
+              <p>Êtes-vous sûr de vouloir confirmer ?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpgrading}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleUpgradeSubscription();
+              }}
+              disabled={isUpgrading}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              {isUpgrading ? "Validation..." : "Confirmer et appliquer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
