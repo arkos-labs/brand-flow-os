@@ -98,7 +98,6 @@ export const Route = createFileRoute("/api/stripe/portal")({
                     {
                       id: activeSub.items.data[0].id,
                       price: body.targetPriceId,
-                      quantity: 1,
                     },
                   ],
                 },
